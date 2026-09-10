@@ -11,6 +11,8 @@ interface ApiPublicSettings {
   tikTok?: string | null;
   whatsappNumber: string;
   emailFromAddress?: string | null;
+  address: string;
+  businessHours: string;
   legalTermsUrl?: string | null;
   legalPrivacyUrl?: string | null;
   legalReturnsPolicy?: string | null;
@@ -25,6 +27,8 @@ const FALLBACK_SETTINGS: PublicSettings = {
   maintenanceMode: false,
   whatsappNumber: "573001234567",
   contactEmail: "marospijamas@gmail.com",
+  address: "Mz 3 Casa 98 Urb. Doña Clara, Valledupar",
+  businessHours: "Lunes a Sábado · 8:00 a.m. – 6:00 p.m.",
 };
 
 export async function getPublicSettings(): Promise<PublicSettings> {
@@ -40,6 +44,8 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       tiktok: s.tikTok ?? undefined,
       whatsappNumber: (s.whatsappNumber || FALLBACK_SETTINGS.whatsappNumber).replace(/\D/g, ""),
       contactEmail: s.emailFromAddress || FALLBACK_SETTINGS.contactEmail,
+      address: s.address || FALLBACK_SETTINGS.address,
+      businessHours: s.businessHours || FALLBACK_SETTINGS.businessHours,
       legalTermsUrl: s.legalTermsUrl ?? undefined,
       legalPrivacyUrl: s.legalPrivacyUrl ?? undefined,
       legalReturnsPolicy: s.legalReturnsPolicy ?? undefined,

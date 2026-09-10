@@ -8,6 +8,8 @@ export interface PublicSettings {
   tiktok?: string;
   whatsappNumber: string;
   contactEmail: string;
+  address: string;
+  businessHours: string;
   legalTermsUrl?: string;
   legalPrivacyUrl?: string;
   legalReturnsPolicy?: string;
