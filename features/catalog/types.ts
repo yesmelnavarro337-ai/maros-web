@@ -1,6 +1,3 @@
-export const PRODUCT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
-export type ProductSize = (typeof PRODUCT_SIZES)[number];
-
 export type SortOption = "recientes" | "precio-asc" | "precio-desc" | "nombre";
 
 export interface CatalogProductItem {

@@ -7,3 +7,10 @@ export interface HeroContent {
   primaryCta: { label: string; href: string };
   secondaryCta: { label: string; href: string };
 }
+
+export interface CategoryQuickLink {
+  id: string;
+  label: string;
+  image: string;
+  href: string;
+}

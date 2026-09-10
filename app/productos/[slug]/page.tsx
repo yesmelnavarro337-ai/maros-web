@@ -40,7 +40,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <ProductInfoPanel product={product} />
       </div>
 
-      <ProductFeaturesStrip />
+      <ProductFeaturesStrip deliveryTime={product.deliveryTime} />
     </div>
   );
 }

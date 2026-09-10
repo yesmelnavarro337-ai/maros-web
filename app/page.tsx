@@ -9,9 +9,10 @@ import { CtaBanner } from "@/features/home/components/cta-banner";
 import { PromoBannerStrip } from "@/features/banners/components/promo-banner-strip";
 import { GalleryPreviewSection } from "@/features/gallery/components/gallery-preview-section";
 import { HeroSection } from "@/features/home/components/hero-section";
-import { mockCategoryLinks } from "@/features/home/mocks/home.mock";
+import { getCategories } from "@/features/catalog/services/catalog.service";
 import { getHeroContent, getFeaturedProducts } from "@/features/home/services/home.service";
 import { getCollections } from "@/features/collections/services/collections.service";
+import type { CategoryQuickLink } from "@/features/home/types";
 
 const primaryBenefits = [
   { icon: Award, title: "+4 Años", subtitle: "de experiencia" },
@@ -28,12 +29,23 @@ const secondaryBenefits = [
   { icon: PackageCheck, title: "Pago al recibir" },
 ];
 
+async function getCategoryQuickLinks(): Promise<CategoryQuickLink[]> {
+  const categories = await getCategories();
+  return categories.map((c) => ({
+    id: c.id,
+    label: c.name,
+    image: "",
+    href: `/catalogo?categoria=${c.slug}`,
+  }));
+}
+
 export default async function HomePage() {
-const [hero, collections, featuredProducts] = await Promise.all([
+const [hero, collections, featuredProducts, categoryLinks] = await Promise.all([
   getHeroContent(),
   getCollections(),
   getFeaturedProducts(),
-]);
+  getCategoryQuickLinks(),
+  ]);
 
   return (
     <div className="flex flex-col">
@@ -44,7 +56,7 @@ const [hero, collections, featuredProducts] = await Promise.all([
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <CategoryQuickLinks categories={mockCategoryLinks} />
+        <CategoryQuickLinks categories={categoryLinks} />
       </div>
 
       <PersonalizeSteps />

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { ImageOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getBlogPostBySlug } from "@/features/blog/services/blog.service";
@@ -33,7 +34,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <article className="max-w-3xl mx-auto px-4 py-8">
       <nav className="text-xs text-muted-foreground mb-4">
-        Inicio / <a href="/blog" className="hover:text-foreground">Blog</a> / <span className="text-foreground">{post.title}</span>
+        Inicio / <Link href="/blog" className="hover:text-foreground">Blog</Link> / <span className="text-foreground">{post.title}</span>
       </nav>
 
       <Badge variant="secondary" className="mb-3">{post.category}</Badge>

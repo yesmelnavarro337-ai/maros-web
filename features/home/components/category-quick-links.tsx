@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ImageOff } from "lucide-react";
-import type { CategoryQuickLink } from "../mocks/home.mock";
+import type { CategoryQuickLink } from "../types";
 
 export function CategoryQuickLinks({ categories }: { categories: CategoryQuickLink[] }) {
   return (

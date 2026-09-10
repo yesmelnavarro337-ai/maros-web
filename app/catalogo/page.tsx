@@ -1,7 +1,11 @@
 import { ProductCard } from "@/components/shared/product-card";
 import { CatalogFilterSidebar } from "@/features/catalog/components/catalog-filter-sidebar";
 import { CatalogToolbar } from "@/features/catalog/components/catalog-toolbar";
-import { getCatalogProducts, getCategories } from "@/features/catalog/services/catalog.service";
+import {
+  getCatalogFilterOptions,
+  getCatalogProducts,
+  getCategories,
+} from "@/features/catalog/services/catalog.service";
 import type { CatalogSearchParams, SortOption } from "@/features/catalog/types";
 
 
@@ -24,9 +28,10 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
     orden: rawParams.orden as SortOption | undefined,
   };
 
-  const [products, categories] = await Promise.all([
+  const [products, categories, filterOptions] = await Promise.all([
     getCatalogProducts(params),
     getCategories(),
+    getCatalogFilterOptions({ categoria: params.categoria, buscar: params.buscar }),
   ]);
 
   return (
@@ -43,12 +48,22 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
         <details className="lg:hidden rounded-lg border border-border bg-card px-4 py-3">
           <summary className="text-sm font-medium text-foreground cursor-pointer">Filtros</summary>
           <div className="mt-4">
-            <CatalogFilterSidebar categories={categories} current={params} />
+            <CatalogFilterSidebar
+              categories={categories}
+              sizes={filterOptions.sizes}
+              colors={filterOptions.colors}
+              current={params}
+            />
           </div>
         </details>
 
         <div className="hidden lg:block">
-          <CatalogFilterSidebar categories={categories} current={params} />
+          <CatalogFilterSidebar
+            categories={categories}
+            sizes={filterOptions.sizes}
+            colors={filterOptions.colors}
+            current={params}
+          />
         </div>
 
         <div className="flex-1">

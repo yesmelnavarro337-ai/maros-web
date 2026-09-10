@@ -61,7 +61,7 @@ export async function getCatalogProducts(params: CatalogSearchParams): Promise<C
 
   if (params.buscar) query.set("search", params.buscar);
 
-  let products = await serverApiFetch<ApiCatalogProduct[]>(`products?${query.toString()}`);
+  const products = await serverApiFetch<ApiCatalogProduct[]>(`products?${query.toString()}`);
   let adapted = products.map(adaptProduct);
 
   // Talla y Color se filtran en memoria: el backend ya redujo el conjunto
@@ -77,4 +77,30 @@ export async function getCatalogProducts(params: CatalogSearchParams): Promise<C
   }
 
   return applySort(adapted, params.orden);
+}
+
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL"];
+
+export async function getCatalogFilterOptions(filters: {
+  categoria?: string;
+  buscar?: string;
+}): Promise<{ sizes: string[]; colors: { hex: string; label: string }[] }> {
+  const products = await getCatalogProducts({ ...filters, orden: "recientes" });
+
+  const sizes = [...new Set(products.flatMap((p) => p.sizes))].sort((a, b) => {
+    const ia = SIZE_ORDER.indexOf(a);
+    const ib = SIZE_ORDER.indexOf(b);
+    return (ia === -1 ? SIZE_ORDER.length : ia) - (ib === -1 ? SIZE_ORDER.length : ib);
+  });
+
+  const colorMap = new Map<string, { hex: string; label: string }>();
+  products.forEach((p) =>
+    p.colors.forEach((c) => {
+      const key = c.hex.toLowerCase();
+      if (!colorMap.has(key)) colorMap.set(key, { hex: c.hex, label: c.name });
+    })
+  );
+  const colors = [...colorMap.values()].sort((a, b) => a.label.localeCompare(b.label));
+
+  return { sizes, colors };
 }

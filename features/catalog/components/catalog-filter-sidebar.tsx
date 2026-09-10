@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { PRODUCT_SIZES } from "../types";
 import type { CatalogSearchParams } from "../types";
 
 interface CategoryOption {
@@ -9,15 +8,10 @@ interface CategoryOption {
   slug: string;
 }
 
-const AVAILABLE_COLORS: { hex: string; label: string }[] = [
-  { hex: "#6B6832", label: "Verde oliva" },
-  { hex: "#B6AE3A", label: "Dorado" },
-  { hex: "#EFE8D8", label: "Beige" },
-  { hex: "#C98BA0", label: "Rosa" },
-  { hex: "#4A6B7A", label: "Azul" },
-  { hex: "#34351F", label: "Oliva oscuro" },
-  { hex: "#B3453A", label: "Terracota" },
-];
+interface ColorOption {
+  hex: string;
+  label: string;
+}
 
 function buildHref(current: CatalogSearchParams, patch: Partial<CatalogSearchParams>): string {
   const merged = { ...current, ...patch };
@@ -31,10 +25,12 @@ function buildHref(current: CatalogSearchParams, patch: Partial<CatalogSearchPar
 
 interface CatalogFilterSidebarProps {
   categories: CategoryOption[];
+  sizes: string[];
+  colors: ColorOption[];
   current: CatalogSearchParams;
 }
 
-export function CatalogFilterSidebar({ categories, current }: CatalogFilterSidebarProps) {
+export function CatalogFilterSidebar({ categories, sizes, colors, current }: CatalogFilterSidebarProps) {
   return (
     <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-6">
       <div>
@@ -67,7 +63,7 @@ export function CatalogFilterSidebar({ categories, current }: CatalogFilterSideb
       <div>
         <p className="text-sm font-medium text-foreground mb-2.5">Talla</p>
         <div className="flex flex-wrap gap-2">
-          {PRODUCT_SIZES.map((s) => (
+          {sizes.map((s) => (
             <Link
               key={s}
               href={buildHref(current, { talla: current.talla === s ? undefined : s })}
@@ -87,7 +83,7 @@ export function CatalogFilterSidebar({ categories, current }: CatalogFilterSideb
       <div>
         <p className="text-sm font-medium text-foreground mb-2.5">Color</p>
         <div className="flex flex-wrap gap-2">
-          {AVAILABLE_COLORS.map((c) => (
+          {colors.map((c) => (
             <Link
               key={c.hex}
               href={buildHref(current, { color: current.color === c.hex ? undefined : c.hex })}
