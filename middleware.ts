@@ -8,9 +8,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/public/settings`, {
-      next: { revalidate: 30 },
-    });
+    const response = await fetch(`${API_URL}/api/public/settings`);
 
     if (response.ok) {
       const settings = await response.json();
