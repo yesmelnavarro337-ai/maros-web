@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HeroContent } from "../types";
@@ -39,6 +39,11 @@ export function HeroSection({ hero, benefits }: { hero: HeroContent; benefits: H
             </h1>
             <p className="text-foreground/80 mt-5 text-base md:text-lg leading-relaxed">
               {hero.subtitle}
+            </p>
+            <p className="mt-3 flex items-center gap-2 text-sm md:text-base text-brand-gold">
+              <Star className="h-3.5 w-3.5 fill-brand-gold" />
+              <span className="font-medium">Pijamas versátiles y cómodas para toda la familia</span>
+              <Star className="h-3.5 w-3.5 fill-brand-gold" />
             </p>
             <div className="flex items-center gap-4 mt-8">
               <Button
