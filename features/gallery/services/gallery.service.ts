@@ -33,7 +33,12 @@ function adaptImage(img: ApiGalleryImage, index: number): GalleryImageItem {
 }
 
 export async function getGalleryImages(category?: GalleryCategory): Promise<GalleryImageItem[]> {
-  const query = category ? `?category=${encodeURIComponent(CATEGORY_TO_API[category])}` : "";
-  const images = await serverApiFetch<ApiGalleryImage[]>(`gallery${query}`);
-  return images.map(adaptImage);
+  try {
+    const query = category ? `?category=${encodeURIComponent(CATEGORY_TO_API[category])}` : "";
+    const images = await serverApiFetch<ApiGalleryImage[]>(`gallery${query}`);
+    return images.map(adaptImage);
+  } catch (error) {
+    console.error("Error fetching gallery images:", error);
+    return [];
+  }
 }

@@ -14,6 +14,9 @@ import { getHeroContent, getFeaturedProducts } from "@/features/home/services/ho
 import { getCollections } from "@/features/collections/services/collections.service";
 import type { CategoryQuickLink } from "@/features/home/types";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const primaryBenefits = [
   { icon: Award, title: "+4 Años", subtitle: "de experiencia" },
   { icon: Heart, title: "Hecho en", subtitle: "Colombia" },

@@ -4,7 +4,7 @@ import { GalleryGrid } from "./gallery-grid";
 import { getGalleryImages } from "../services/gallery.service";
 
 export async function GalleryPreviewSection() {
-  const allImages = await getGalleryImages();
+  const allImages = (await getGalleryImages()) || [];
   const images = allImages.slice(0, 8);
 
   if (images.length === 0) return null;
