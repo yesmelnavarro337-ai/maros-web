@@ -47,8 +47,12 @@ function adaptProduct(p: ApiProductListItem): ProductPreview {
 }
 
 export async function getCollections(): Promise<CollectionSummary[]> {
-  const data = await serverApiFetch<ApiCollectionSummary[]>("collection");
-  return data.map(adaptCollection);
+  try {
+    const data = await serverApiFetch<ApiCollectionSummary[]>("collection");
+    return data.map(adaptCollection);
+  } catch {
+    return [];
+  }
 }
 
 export async function getCollectionById(id: string): Promise<CollectionSummary | undefined> {
@@ -57,6 +61,10 @@ export async function getCollectionById(id: string): Promise<CollectionSummary |
 }
 
 export async function getProductsByCollection(id: string): Promise<ProductPreview[]> {
-  const data = await serverApiFetch<ApiProductListItem[]>(`products?collectionId=${id}`);
-  return data.map(adaptProduct);
+  try {
+    const data = await serverApiFetch<ApiProductListItem[]>(`products?collectionId=${id}`);
+    return data.map(adaptProduct);
+  } catch {
+    return [];
+  }
 }
