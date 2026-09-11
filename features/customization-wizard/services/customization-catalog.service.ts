@@ -29,11 +29,22 @@ function adapt(option: ApiCustomizationOption): CustomizationChoice {
 const NO_PRINT_OPTION: CustomizationChoice = { id: "none", name: "Liso (sin estampado)", priceModifier: 0 };
 const NO_EMBROIDERY_OPTION: CustomizationChoice = { id: "none", name: "Sin bordado", priceModifier: 0 };
 
+const EMPTY_CATALOG: CustomizationCatalogResponse = { catalogs: {} };
+
 let cachedCatalogs: CustomizationCatalogResponse | null = null;
 
 async function getCatalogs(): Promise<CustomizationCatalogResponse> {
-  if (!cachedCatalogs) {
-    cachedCatalogs = await clientApiFetch<CustomizationCatalogResponse>("customization/options");
+  if (cachedCatalogs) return cachedCatalogs;
+  try {
+    // La API puede responder con `{ catalogs: {...} }` o, si está detrás de un
+    // proxy/genérico, envuelta en `{ data: {...} }`. Se normaliza aquí.
+    const raw = await clientApiFetch<CustomizationCatalogResponse | { data: CustomizationCatalogResponse }>(
+      "customization/options"
+    );
+    const parsed = (raw as { data?: CustomizationCatalogResponse }).data ?? (raw as CustomizationCatalogResponse);
+    cachedCatalogs = parsed?.catalogs ? parsed : EMPTY_CATALOG;
+  } catch {
+    cachedCatalogs = EMPTY_CATALOG;
   }
   return cachedCatalogs;
 }
@@ -69,17 +80,31 @@ interface ApiProductListItem {
 
 let cachedModels: CustomizationModel[] | null = null;
 
+// Algunas respuestas llegan como arreglo directo; otras vienen envueltas en
+// `{ data: [...] }`, `{ items: [...] }` o `{ products: [...] }`. Se extrae el
+// arreglo real para que el componente consumidor reciba siempre una lista.
+function unwrapList<T>(payload: unknown): T[] {
+  const data = (payload as { data?: unknown; items?: unknown; products?: unknown })?.data
+    ?? (payload as { items?: unknown })?.items
+    ?? (payload as { products?: unknown })?.products
+    ?? payload;
+  return Array.isArray(data) ? (data as T[]) : [];
+}
+
 export async function getModels(): Promise<CustomizationModel[]> {
-  if (!cachedModels) {
-    const list = await clientApiFetch<ApiProductListItem[]>("products");
+  if (cachedModels) return cachedModels;
+  try {
+    const list = unwrapList<ApiProductListItem>(await clientApiFetch("products"));
     cachedModels = list.map((p) => ({
       id: p.id,
       slug: p.slug,
       name: p.name,
       price: p.basePrice,
       image: p.thumbnailUrl ?? "",
-      sizes: p.sizes,
+      sizes: Array.isArray(p.sizes) ? p.sizes : [],
     }));
+  } catch {
+    cachedModels = [];
   }
   return cachedModels;
 }

@@ -66,6 +66,14 @@ export default function PersonalizaPage() {
               }
             });
           }
+          // El slug viene por URL aunque la lista de modelos no esté cargada.
+          setLoadingModelSlug(productSlug);
+          return getProductSummaryClient(productSlug).then((detail) => {
+            setProduct(detail?.allowCustomization ? detail : null);
+            if (detail?.sizes?.length) {
+              setSize((current) => (current && detail.sizes.includes(current)) ? current : detail.sizes[0]);
+            }
+          });
         }
         return undefined;
       })
@@ -328,7 +336,7 @@ export default function PersonalizaPage() {
             )}
             {step === "resumen" ? (
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <Button onClick={handleAddToCart} className="flex-1">
+                <Button onClick={handleAddToCart} className="flex-1 bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90">
                   <ShoppingBag className="h-4 w-4 mr-2" />
                   Agregar al carrito
                 </Button>
@@ -337,7 +345,7 @@ export default function PersonalizaPage() {
                 </Button>
               </div>
             ) : (
-              <Button onClick={goNext} disabled={!canAdvance()}>Siguiente</Button>
+              <Button onClick={goNext} disabled={!canAdvance()} className="bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90">Siguiente</Button>
             )}
           </div>
         </div>

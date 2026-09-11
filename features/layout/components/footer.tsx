@@ -20,7 +20,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
   const footerNav = mainNavLinks.filter((link) => link.href !== "/");
 
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer className="bg-brand-gold text-brand-gold-foreground">
       <div className="max-w-7xl mx-auto px-4 py-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
@@ -29,14 +29,14 @@ export function Footer({ settings }: { settings: PublicSettings }) {
               alt={settings.siteName}
               width={40}
               height={40}
-              className="rounded-full"
+              className="rounded-full ring-2 ring-brand-gold-foreground/30"
             />
             <div className="leading-tight">
-              <p className="font-heading text-lg text-primary-foreground">MARO&apos;S</p>
-              <p className="text-[9px] tracking-widest text-primary-foreground/70 -mt-0.5">PIJAMAS</p>
+              <p className="font-heading text-lg text-brand-gold-foreground">MARO&apos;S</p>
+              <p className="text-[9px] tracking-widest text-brand-gold-foreground/70 -mt-0.5">PIJAMAS</p>
             </div>
           </div>
-          <p className="text-sm text-primary-foreground/80 leading-relaxed">{settings.description}</p>
+          <p className="text-sm text-brand-gold-foreground/85 leading-relaxed">{settings.description}</p>
           <div className="flex items-center gap-3">
             {settings.instagram && (
               <a
@@ -44,7 +44,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="rounded-full bg-primary-foreground/10 p-2 hover:bg-primary-foreground/20 transition-colors"
+                className="rounded-full bg-brand-gold-foreground/15 p-2 hover:bg-brand-gold-foreground/25 transition-colors"
               >
                 <FaInstagram className="h-4 w-4" />
               </a>
@@ -55,7 +55,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="rounded-full bg-primary-foreground/10 p-2 hover:bg-primary-foreground/20 transition-colors"
+                className="rounded-full bg-brand-gold-foreground/15 p-2 hover:bg-brand-gold-foreground/25 transition-colors"
               >
                 <FaFacebook className="h-4 w-4" />
               </a>
@@ -114,7 +114,7 @@ export function Footer({ settings }: { settings: PublicSettings }) {
         </div>
       </div>
 
-      <div className="border-t border-primary-foreground/15">
+      <div className="border-t border-brand-gold-foreground/15">
         <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs opacity-75">
           <span>© {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.</span>
           <span>Diseñado con ♥ para ti</span>

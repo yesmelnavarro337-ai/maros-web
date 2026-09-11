@@ -35,7 +35,7 @@ export function AddToCartButton({
   return (
     <Button
       size="lg"
-      className="w-full h-12"
+      className="w-full h-12 bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90"
       disabled={disabled || !size}
       onClick={() => {
         addItem({ productId, slug, name, price, image, size, colorName, colorHex, quantity });

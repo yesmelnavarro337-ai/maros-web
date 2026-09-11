@@ -16,7 +16,7 @@ export function DismissibleAnnouncementBar({ message, ctaLabel, ctaHref }: Dismi
   if (!visible) return null;
 
   return (
-    <div className="bg-primary text-primary-foreground text-sm">
+    <div className="bg-brand-gold text-brand-gold-foreground text-sm border-b border-black/10">
       <div className="max-w-7xl mx-auto px-4 h-9 flex items-center justify-center gap-3 relative">
         <span className="text-center">{message}</span>
         {ctaLabel && ctaHref && (

@@ -16,6 +16,8 @@
   --color-brand-warm-gray: #7b7b7b;
   --color-brand-border: #e4dfd2;
   --color-brand-terracotta: #b3453a;
+  --color-brand-gold: #a38a3e;
+  --color-brand-gold-foreground: #ffffff;
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);

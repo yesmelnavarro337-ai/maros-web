@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ImageOff } from "lucide-react";
 import type { QuotationItemDraft } from "../types";
 
@@ -15,8 +16,19 @@ export function OrderSummaryCard({ item }: { item: QuotationItemDraft }) {
     <div className="rounded-xl border border-border bg-card p-5">
       <p className="text-sm font-medium text-foreground mb-3">Tu pedido</p>
       <div className="flex gap-3">
-        <div className="h-16 w-16 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-          <ImageOff className="h-5 w-5 text-muted-foreground" />
+        <div className="h-16 w-16 rounded-lg bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
+          {item.image ? (
+            <Image
+              src={item.image}
+              alt={item.productName}
+              width={64}
+              height={64}
+              className="h-full w-full object-cover"
+              unoptimized
+            />
+          ) : (
+            <ImageOff className="h-5 w-5 text-muted-foreground" />
+          )}
         </div>
         <div className="min-w-0">
           <p className="text-sm text-foreground truncate">{item.productName}</p>

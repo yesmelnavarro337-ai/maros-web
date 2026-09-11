@@ -15,10 +15,10 @@ export async function AnnouncementBar() {
     <DismissibleAnnouncementBar
       message={
         <>
-          <span className="font-medium uppercase tracking-wide text-primary-foreground">
+          <span className="font-medium uppercase tracking-wide text-brand-gold-foreground">
             Colección {season.name}
           </span>
-          <span className="hidden sm:inline italic text-primary-foreground/85">
+          <span className="hidden sm:inline italic text-brand-gold-foreground/85">
             — Diseña pijamas únicas para quienes más amas
           </span>
         </>

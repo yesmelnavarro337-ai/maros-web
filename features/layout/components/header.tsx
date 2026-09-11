@@ -72,11 +72,11 @@ export function Header({ settings }: { settings: PublicSettings }) {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <Button
             variant="ghost"
             size="icon"
-            className="hidden sm:inline-flex"
+            className="inline-flex text-foreground"
             aria-label="Buscar"
             asChild
           >
@@ -87,7 +87,7 @@ export function Header({ settings }: { settings: PublicSettings }) {
           <Button
             variant="ghost"
             size="icon"
-            className="hidden sm:inline-flex relative"
+            className="inline-flex relative text-foreground"
             aria-label="Favoritos"
             asChild
           >
@@ -103,7 +103,7 @@ export function Header({ settings }: { settings: PublicSettings }) {
           <Button
             variant="ghost"
             size="icon"
-            className="hidden sm:inline-flex"
+            className="hidden sm:inline-flex text-foreground"
             aria-label="WhatsApp"
             asChild
           >
@@ -114,7 +114,7 @@ export function Header({ settings }: { settings: PublicSettings }) {
           <Button
             variant="ghost"
             size="icon"
-            className="hidden sm:inline-flex relative"
+            className="inline-flex relative text-foreground"
             aria-label="Carrito"
             asChild
           >
@@ -127,7 +127,7 @@ export function Header({ settings }: { settings: PublicSettings }) {
               )}
             </Link>
           </Button>
-          <Button asChild className="hidden md:inline-flex">
+          <Button asChild className="hidden md:inline-flex bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90">
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-4 w-4 mr-2" />
               Cotizar por WhatsApp
@@ -167,7 +167,7 @@ export function Header({ settings }: { settings: PublicSettings }) {
                     {link.label}
                   </Link>
                 ))}
-                <Button asChild className="mt-3">
+                <Button asChild className="mt-3 bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90">
                   <a
                     href={whatsappHref}
                     target="_blank"

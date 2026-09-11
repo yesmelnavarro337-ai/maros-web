@@ -2,6 +2,7 @@ export interface QuotationItemDraft {
   productId: string;
   productName: string;
   productSlug: string;
+  image?: string;
   size: string;
   quantity: number;
   baseColor?: string;

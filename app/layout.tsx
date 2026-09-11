@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/features/layout/components/header";
 import { AnnouncementBar } from "@/features/layout/components/announcement-bar";
 import { Footer } from "@/features/layout/components/footer";
+import { WhatsAppFloatButton } from "@/features/layout/components/whatsapp-float-button";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/features/cart/cart-context";
 import { WishlistProvider } from "@/features/wishlist/wishlist-context";
@@ -56,6 +57,7 @@ export default async function RootLayout({
             <Header settings={settings} />
             <main>{children}</main>
             <Footer settings={settings} />
+            <WhatsAppFloatButton settings={settings} />
           </WishlistProvider>
         </CartProvider>
         <JsonLd

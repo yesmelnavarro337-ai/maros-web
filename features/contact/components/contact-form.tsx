@@ -108,7 +108,12 @@ export function ContactForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" size="lg" disabled={submitting}>
+          <Button
+            type="submit"
+            size="lg"
+            className="bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90"
+            disabled={submitting}
+          >
             {submitting ? "Enviando..." : "Enviar mensaje"}
           </Button>
         </form>
