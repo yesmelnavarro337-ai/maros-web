@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_URL = process.env.API_URL ?? "http://localhost:5072";
+const API_URL = process.env.API_URL ?? "https://maros-backend-pjvy.onrender.com";
 
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/mantenimiento")) {

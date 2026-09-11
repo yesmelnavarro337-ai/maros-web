@@ -48,9 +48,10 @@ function adaptProduct(p: ApiProductListItem): ProductPreview {
 
 export async function getCollections(): Promise<CollectionSummary[]> {
   try {
-    const data = await serverApiFetch<ApiCollectionSummary[]>("collection");
+    const data = await serverApiFetch<ApiCollectionSummary[]>("collection", { revalidateSeconds: 0 });
     return data.map(adaptCollection);
-  } catch {
+  } catch (error) {
+    console.error("Error fetching collections:", error);
     return [];
   }
 }
@@ -62,9 +63,10 @@ export async function getCollectionById(id: string): Promise<CollectionSummary |
 
 export async function getProductsByCollection(id: string): Promise<ProductPreview[]> {
   try {
-    const data = await serverApiFetch<ApiProductListItem[]>(`products?collectionId=${id}`);
+    const data = await serverApiFetch<ApiProductListItem[]>(`products?collectionId=${id}`, { revalidateSeconds: 0 });
     return data.map(adaptProduct);
-  } catch {
+  } catch (error) {
+    console.error(`Error fetching products by collection ${id}:`, error);
     return [];
   }
 }

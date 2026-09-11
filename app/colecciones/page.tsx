@@ -4,6 +4,7 @@ import { getCollections } from "@/features/collections/services/collections.serv
 import { getPageHeader } from "@/features/page-headers/services/page-headers.service";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata = {
   title: "Colecciones",
