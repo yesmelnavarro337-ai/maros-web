@@ -23,6 +23,8 @@ export interface ProductDetail {
   colors: ProductColorOption[];
   variants: ProductVariantAvailability[];
   categoryName: string;
+  categoryId: string;
+  collectionIds: string[];
   available: boolean;
   allowCustomization: boolean;
   deliveryTime: string;

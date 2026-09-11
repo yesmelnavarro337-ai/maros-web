@@ -6,6 +6,7 @@ export interface CatalogProductItem {
   name: string;
   price: number;
   image: string;
+  images?: string[];
   available: boolean;
   categoryName: string;
   sizes: string[];
@@ -17,5 +18,7 @@ export interface CatalogSearchParams {
   talla?: string;
   color?: string;
   buscar?: string;
+  precioMin?: string;
+  precioMax?: string;
   orden?: SortOption;
 }

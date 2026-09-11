@@ -1,4 +1,5 @@
 import { serverApiFetch } from "@/lib/api/server-fetch";
+import { readingTimeMinutes } from "../utils/reading-time";
 import type { BlogPostDetail, BlogPostPreview } from "../types";
 
 interface ApiBlogPost {
@@ -24,6 +25,7 @@ function adaptDetail(p: ApiBlogPost): BlogPostDetail {
     excerpt: buildExcerpt(p.content),
     publishDate: p.publishDate.slice(0, 10),
     content: p.content,
+    readingTimeMinutes: readingTimeMinutes(p.content),
   };
 }
 
@@ -45,4 +47,19 @@ export async function getBlogPosts(category?: string): Promise<BlogPostPreview[]
 export async function getBlogPostBySlug(slug: string): Promise<BlogPostDetail | undefined> {
   const posts = await getAllPosts();
   return posts.find((p) => p.slug === slug);
+}
+
+export async function getRecommendedPosts(currentSlug: string): Promise<BlogPostPreview[]> {
+  const posts = await getAllPosts();
+  const current = posts.find((p) => p.slug === currentSlug);
+  const others = posts.filter((p) => p.slug !== currentSlug);
+
+  if (!current) return others.slice(0, 3);
+
+  const sameCategory = others.filter((p) => p.category === current.category);
+  const filled = sameCategory.length >= 3
+    ? sameCategory
+    : [...sameCategory, ...others.filter((p) => p.category !== current.category)];
+
+  return filled.slice(0, 3);
 }

@@ -7,29 +7,27 @@ interface ApiGalleryImage {
   caption: string;
 }
 
-// El backend usa "Ninos" (sin ñ, restricción de nombres de enum en C#) —
-// mismo mapeo que ya resolvimos en la integración de maros-admin (Fase 11).
+// El backend serializa el enum sin espacios (ClientesReales, DetallesBordado);
+// la UI usa etiquetas legibles.
 const CATEGORY_TO_API: Record<GalleryCategory, string> = {
-  Familia: "Familia",
+  "Clientes reales": "ClientesReales",
+  Navidad: "Navidad",
   Parejas: "Parejas",
-  Niños: "Ninos",
-  Batas: "Batas",
-  Empresas: "Empresas",
+  "Detalles de bordado": "DetallesBordado",
 };
 
 const CATEGORY_FROM_API: Record<string, GalleryCategory> = {
-  Familia: "Familia",
+  ClientesReales: "Clientes reales",
+  Navidad: "Navidad",
   Parejas: "Parejas",
-  Ninos: "Niños",
-  Batas: "Batas",
-  Empresas: "Empresas",
+  DetallesBordado: "Detalles de bordado",
 };
 
 function adaptImage(img: ApiGalleryImage, index: number): GalleryImageItem {
   return {
     id: `${img.category}-${index}`,
     url: img.url,
-    category: CATEGORY_FROM_API[img.category] ?? "Familia",
+    category: CATEGORY_FROM_API[img.category] ?? "Clientes reales",
     caption: img.caption,
   };
 }

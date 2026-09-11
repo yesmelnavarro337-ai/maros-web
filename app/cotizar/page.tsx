@@ -101,7 +101,7 @@ export default function CotizarPage() {
     if (!item) return;
     setSubmitting(true);
     try {
-      const response = await submitQuotation(values, item);
+      const response = await submitQuotation(values, [item]);
       clearCustomizationDraft();
       setResult(response);
     } finally {

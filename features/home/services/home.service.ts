@@ -28,7 +28,7 @@ interface SiteSettingsPublicResponse {
 const DEFAULT_HERO: HeroContent = {
   title: "Diseña la pijama que siempre imaginaste",
   subtitle: "Personalizadas a tu gusto, hechas con amor y los mejores materiales para cada momento.",
-  primaryCta: { label: "Personalizar ahora", href: "/personaliza" },
+  primaryCta: { label: "Ver colección", href: "/colecciones" },
   secondaryCta: { label: "Ver catálogo", href: "/catalogo" },
 };
 
@@ -45,7 +45,7 @@ export async function getHeroContent(): Promise<HeroContent> {
       image: season.heroImageUrl ?? undefined,
       badgeLabel: "Colección",
       badgeSeason: season.name,
-      primaryCta: { label: season.ctaText || "Personalizar ahora", href: season.ctaLink || "/personaliza" },
+      primaryCta: { label: season.ctaText || "Ver colección", href: season.ctaLink || "/colecciones" },
       secondaryCta: { label: "Ver catálogo", href: "/catalogo" },
     };
   }
@@ -64,6 +64,7 @@ interface ApiProductSummary {
   slug: string;
   basePrice: number;
   thumbnailUrl?: string | null;
+  images?: string[] | null;
 }
 
 interface HomePageResponse {
@@ -78,5 +79,6 @@ export async function getFeaturedProducts(): Promise<ProductPreview[]> {
     name: p.name,
     price: p.basePrice,
     image: p.thumbnailUrl ?? "",
+    images: p.images ?? [],
   }));
 }

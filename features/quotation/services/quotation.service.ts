@@ -13,7 +13,7 @@ interface ApiQuotationResponse {
 
 export async function submitQuotation(
   customer: QuotationFormValues,
-  item: QuotationItemDraft
+  items: QuotationItemDraft[]
 ): Promise<QuotationResult> {
   const response = await clientApiFetch<ApiQuotationResponse>("quotation", {
     method: "POST",
@@ -22,15 +22,13 @@ export async function submitQuotation(
       customerPhone: customer.customerPhone,
       customerEmail: customer.customerEmail || null,
       customerCity: customer.customerCity,
-      items: [
-        {
-          productId: item.productId,
-          size: item.size,
-          quantity: item.quantity,
-          customizationOptionIds: item.customizationOptionIds,
-          embroideryText: item.embroideryText || null,
-        },
-      ],
+      items: items.map((item) => ({
+        productId: item.productId,
+        size: item.size,
+        quantity: item.quantity,
+        customizationOptionIds: item.customizationOptionIds,
+        embroideryText: item.embroideryText || null,
+      })),
       referenceImageUrls: [],
       notes: customer.notes || "",
     },

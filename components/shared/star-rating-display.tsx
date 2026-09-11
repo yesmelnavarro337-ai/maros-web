@@ -7,7 +7,7 @@ export function StarRatingDisplay({ rating, size = "sm" }: { rating: number; siz
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`${starSize} ${i <= Math.round(rating) ? "fill-accent text-accent" : "fill-none text-muted-foreground"}`}
+          className={`${starSize} ${i <= Math.round(rating) ? "fill-[#A38A3E] text-[#A38A3E]" : "fill-none text-muted-foreground"}`}
         />
       ))}
     </div>

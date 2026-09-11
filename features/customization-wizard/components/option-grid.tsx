@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CustomizationChoice } from "../types";
+import { cloudinaryUrl } from "@/lib/images/cloudinary";
 
 interface OptionGridProps {
   options: CustomizationChoice[];
@@ -40,7 +41,7 @@ export function OptionGrid({ options, selectedId, onSelect, variant = "image" }:
             ) : (
               <span className="relative h-12 w-12 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
                 {option.image ? (
-                  <Image src={option.image} alt={option.name} fill sizes="48px" className="object-cover" />
+                  <Image src={cloudinaryUrl(option.image)} alt={option.name} fill sizes="48px" className="object-cover" />
                 ) : (
                   <ImageOff className="h-4 w-4 text-muted-foreground" />
                 )}

@@ -13,7 +13,16 @@ export async function AnnouncementBar() {
 
   return (
     <DismissibleAnnouncementBar
-      message={`🎁 Colección ${season.name} — Diseña pijamas únicas para quienes más amas ✨`}
+      message={
+        <>
+          <span className="font-medium uppercase tracking-wide text-primary-foreground">
+            Colección {season.name}
+          </span>
+          <span className="hidden sm:inline italic text-primary-foreground/85">
+            — Diseña pijamas únicas para quienes más amas
+          </span>
+        </>
+      }
       ctaLabel="Ver colección"
       ctaHref={season.ctaLink || "/colecciones"}
     />

@@ -5,7 +5,10 @@ import { Header } from "@/features/layout/components/header";
 import { AnnouncementBar } from "@/features/layout/components/announcement-bar";
 import { Footer } from "@/features/layout/components/footer";
 import { Toaster } from "@/components/ui/sonner";
-import { getPublicSettings } from "@/features/settings/services/settings.service";
+import { CartProvider } from "@/features/cart/cart-context";
+import { WishlistProvider } from "@/features/wishlist/wishlist-context";
+import { getPublicSettings } from "@/features/settings/services/settings.server";
+import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,10 +50,25 @@ export default async function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
-        <AnnouncementBar />
-        <Header settings={settings} />
-        <main>{children}</main>
-        <Footer settings={settings} />
+        <CartProvider>
+          <WishlistProvider>
+            <AnnouncementBar />
+            <Header settings={settings} />
+            <main>{children}</main>
+            <Footer settings={settings} />
+          </WishlistProvider>
+        </CartProvider>
+        <JsonLd
+          data={organizationJsonLd({
+            name: settings.siteName,
+            description: settings.description,
+            logoUrl: settings.logoUrl,
+            whatsappNumber: settings.whatsappNumber,
+            instagram: settings.instagram,
+            facebook: settings.facebook,
+            tiktok: settings.tiktok,
+          })}
+        />
         <Toaster position="top-right" />
       </body>
     </html>

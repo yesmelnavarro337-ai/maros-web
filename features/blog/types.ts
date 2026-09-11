@@ -5,6 +5,7 @@ export interface BlogPostPreview {
   coverImage?: string;
   excerpt: string;
   publishDate: string;
+  readingTimeMinutes: number;
 }
 
 export interface BlogPostDetail extends BlogPostPreview {

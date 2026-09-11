@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { PageHeroSection } from "@/components/shared/page-hero-section";
 import { GalleryGrid } from "@/features/gallery/components/gallery-grid";
 import { getGalleryImages } from "@/features/gallery/services/gallery.service";
+import { getPageHeader } from "@/features/page-headers/services/page-headers.service";
 import { GALLERY_CATEGORIES } from "@/features/gallery/types";
 import type { GalleryCategory } from "@/features/gallery/types";
 
@@ -20,17 +22,22 @@ export default async function GaleriaPage({ searchParams }: GaleriaPageProps) {
     ? (categoria as GalleryCategory)
     : undefined;
 
-  const images = await getGalleryImages(activeCategory);
+  const [images, header] = await Promise.all([
+    getGalleryImages(activeCategory),
+    getPageHeader("gallery"),
+  ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <nav className="text-xs text-muted-foreground mb-3">
-        Inicio / <span className="text-foreground">Galería</span>
-      </nav>
-      <h1 className="font-heading text-3xl text-foreground">Galería</h1>
-      <p className="text-muted-foreground mt-1 mb-6">Momentos especiales con Maro&apos;s Pijamas.</p>
-
-      <div className="flex flex-wrap gap-2 mb-6">
+    <>
+      <PageHeroSection
+        header={header}
+        fallback={{
+          title: "Galería",
+          subtitle: "Momentos especiales con Maro's Pijamas.",
+        }}
+      />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-wrap gap-2 mb-6">
         <Link
           href="/galeria"
           className={cn(
@@ -65,6 +72,7 @@ export default async function GaleriaPage({ searchParams }: GaleriaPageProps) {
       ) : (
         <GalleryGrid images={images} />
       )}
-    </div>
+      </div>
+    </>
   );
 }

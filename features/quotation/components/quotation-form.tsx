@@ -107,7 +107,7 @@ export function QuotationForm({ onSubmit, submitting }: QuotationFormProps) {
         />
 
         <Button type="submit" size="lg" className="mt-2" disabled={submitting}>
-          {submitting ? "Enviando..." : "Enviar cotización"}
+          {submitting ? "Enviando..." : "Solicitar cotización"}
         </Button>
       </form>
     </Form>

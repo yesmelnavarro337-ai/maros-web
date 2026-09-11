@@ -44,6 +44,22 @@ export function CatalogToolbar({
           />
         )}
 
+        {current.precioMin && (
+          <input
+            type="hidden"
+            name="precioMin"
+            value={current.precioMin}
+          />
+        )}
+
+        {current.precioMax && (
+          <input
+            type="hidden"
+            name="precioMax"
+            value={current.precioMax}
+          />
+        )}
+
         {current.orden && (
           <input
             type="hidden"
@@ -100,6 +116,22 @@ export function CatalogToolbar({
               type="hidden"
               name="buscar"
               value={current.buscar}
+            />
+          )}
+
+          {current.precioMin && (
+            <input
+              type="hidden"
+              name="precioMin"
+              value={current.precioMin}
+            />
+          )}
+
+          {current.precioMax && (
+            <input
+              type="hidden"
+              name="precioMax"
+              value={current.precioMax}
             />
           )}
 

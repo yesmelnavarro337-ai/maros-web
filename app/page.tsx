@@ -1,4 +1,4 @@
-import { Award, Home as HomeIcon, Heart, Truck, Tag, Scissors, Gem, ShieldCheck, PackageCheck } from "lucide-react";
+import { Award, Heart, Truck, Tag, Scissors, Gem, ShieldCheck, PackageCheck, Users } from "lucide-react";
 import { BenefitsStrip } from "@/features/home/components/benefits-strip";
 import { CategoryQuickLinks } from "@/features/home/components/category-quick-links";
 import { PersonalizeSteps } from "@/features/home/components/personalize-steps";
@@ -16,17 +16,17 @@ import type { CategoryQuickLink } from "@/features/home/types";
 
 const primaryBenefits = [
   { icon: Award, title: "+4 Años", subtitle: "de experiencia" },
-  { icon: HomeIcon, title: "Hecho en Colombia", subtitle: "con amor" },
-  { icon: Heart, title: "Atención 100%", subtitle: "personalizada" },
-  { icon: Truck, title: "Envíos a todo", subtitle: "el país" },
+  { icon: Heart, title: "Hecho en", subtitle: "Colombia" },
+  { icon: Users, title: "Atención", subtitle: "100% personalizada" },
+  { icon: Truck, title: "Envíos", subtitle: "a todo el país" },
 ];
 
 const secondaryBenefits = [
-  { icon: Tag, title: "Telas premium" },
-  { icon: Scissors, title: "Hechas a mano" },
-  { icon: Gem, title: "Diseños únicos" },
-  { icon: ShieldCheck, title: "Calidad garantizada" },
-  { icon: PackageCheck, title: "Pago al recibir" },
+  { icon: Tag, title: "Telas premium", subtitle: "Suaves, frescas y duraderas" },
+  { icon: Scissors, title: "Hechas a mano", subtitle: "Con amor en cada costura" },
+  { icon: Gem, title: "Diseños únicos", subtitle: "100% personalizados para ti" },
+  { icon: ShieldCheck, title: "Calidad garantizada", subtitle: "Pijamas que te acompañan siempre" },
+  { icon: PackageCheck, title: "Pago al recibir", subtitle: "Comodidad y confianza en cada compra" },
 ];
 
 async function getCategoryQuickLinks(): Promise<CategoryQuickLink[]> {
@@ -49,15 +49,9 @@ const [hero, collections, featuredProducts, categoryLinks] = await Promise.all([
 
   return (
     <div className="flex flex-col">
-      <HeroSection hero={hero} />
+      <HeroSection hero={hero} benefits={primaryBenefits} />
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <BenefitsStrip items={primaryBenefits} />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <CategoryQuickLinks categories={categoryLinks} />
-      </div>
+      <div className="max-w-7xl mx-auto px-4 py-6"><CategoryQuickLinks categories={categoryLinks} /></div>
 
       <PersonalizeSteps />
       <FeaturedCollections collections={collections.slice(0, 5)} />

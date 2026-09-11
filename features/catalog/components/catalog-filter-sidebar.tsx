@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { PriceRangeFilter } from "./price-range-filter";
 import type { CatalogSearchParams } from "../types";
 
 interface CategoryOption {
@@ -27,10 +28,12 @@ interface CatalogFilterSidebarProps {
   categories: CategoryOption[];
   sizes: string[];
   colors: ColorOption[];
+  priceMin: number;
+  priceMax: number;
   current: CatalogSearchParams;
 }
 
-export function CatalogFilterSidebar({ categories, sizes, colors, current }: CatalogFilterSidebarProps) {
+export function CatalogFilterSidebar({ categories, sizes, colors, priceMin, priceMax, current }: CatalogFilterSidebarProps) {
   return (
     <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-6">
       <div>
@@ -96,6 +99,17 @@ export function CatalogFilterSidebar({ categories, sizes, colors, current }: Cat
             />
           ))}
         </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-medium text-foreground mb-2.5">Rango de precio</p>
+        <PriceRangeFilter
+          min={priceMin}
+          max={priceMax}
+          currentMin={current.precioMin}
+          currentMax={current.precioMax}
+          preserve={current}
+        />
       </div>
     </aside>
   );

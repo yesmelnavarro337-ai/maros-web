@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,16 +31,29 @@ export function ContactForm() {
     setSubmitting(true);
     try {
       await submitContactMessage(values);
-      toast.success("Mensaje enviado — te responderemos pronto.");
+      toast.success("Mensaje enviado — te responderemos pronto.", {
+        description: "Gracias por escribirnos, valoramos mucho tu contacto.",
+      });
       form.reset();
+    } catch {
+      toast.error("No pudimos enviar tu mensaje.", {
+        description: "Intenta de nuevo en unos minutos o escríbenos por WhatsApp.",
+      });
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
-      <p className="text-sm font-medium text-foreground mb-4">Envíanos un mensaje</p>
+    <div className="rounded-2xl border border-brand-border bg-white p-6 sm:p-8 shadow-sm">
+      <div className="flex items-center gap-2 mb-1">
+        <MessageCircle className="h-4 w-4 text-brand-olive-gold" />
+        <p className="font-heading text-xl text-brand-dark-olive">Envíanos un mensaje</p>
+      </div>
+      <p className="text-sm text-muted-foreground mb-6">
+        Completa el formulario y te contactaremos a la brevedad.
+      </p>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <FormField
@@ -48,7 +62,9 @@ export function ContactForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Nombre completo</FormLabel>
-                <FormControl><Input placeholder="Tu nombre" {...field} /></FormControl>
+                <FormControl>
+                  <Input placeholder="Tu nombre" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -59,7 +75,9 @@ export function ContactForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>WhatsApp</FormLabel>
-                <FormControl><Input placeholder="Ej. 300 123 4567" {...field} /></FormControl>
+                <FormControl>
+                  <Input placeholder="Ej. 300 123 4567" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -70,7 +88,9 @@ export function ContactForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Correo electrónico (opcional)</FormLabel>
-                <FormControl><Input placeholder="tu@email.com" {...field} /></FormControl>
+                <FormControl>
+                  <Input placeholder="tu@email.com" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -81,7 +101,9 @@ export function ContactForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>¿En qué podemos ayudarte?</FormLabel>
-                <FormControl><Textarea rows={4} {...field} /></FormControl>
+                <FormControl>
+                  <Textarea rows={4} placeholder="Cuéntanos tu idea o duda..." {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

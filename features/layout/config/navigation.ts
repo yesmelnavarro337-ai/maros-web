@@ -15,8 +15,8 @@ export const mainNavLinks: NavLink[] = [
 
 export const footerHelpLinks: NavLink[] = [
   { label: "Preguntas frecuentes", href: "/preguntas-frecuentes" },
-  { label: "Envíos y entregas", href: "/envios" },
-  { label: "Cambios y devoluciones", href: "/devoluciones" },
-  { label: "Términos y condiciones", href: "/terminos" },
-  { label: "Políticas de privacidad", href: "/privacidad" },
+  { label: "Envíos y entregas", href: "/envios-y-entregas" },
+  { label: "Cambios y devoluciones", href: "/cambios-y-devoluciones" },
+  { label: "Términos y condiciones", href: "/terminos-y-condiciones" },
+  { label: "Políticas de privacidad", href: "/politicas-de-privacidad" },
 ];

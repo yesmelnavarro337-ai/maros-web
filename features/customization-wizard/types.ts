@@ -1,4 +1,4 @@
-export type WizardStepKey = "tela" | "color" | "estampado" | "bordado" | "resumen";
+export type WizardStepKey = "modelo" | "tela" | "color" | "estampado" | "bordado" | "talla" | "resumen";
 
 export interface CustomizationChoice {
   id: string;
@@ -6,6 +6,15 @@ export interface CustomizationChoice {
   image?: string;
   hex?: string;
   priceModifier: number;
+}
+
+export interface CustomizationModel {
+  id: string;
+  slug: string;
+  name: string;
+  price: number;
+  image: string;
+  sizes: string[];
 }
 
 export interface CustomizationSelections {

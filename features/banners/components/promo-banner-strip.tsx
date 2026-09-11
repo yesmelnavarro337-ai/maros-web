@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Truck } from "lucide-react";
 import { getActiveBanners } from "../services/banners.service";
+import { cloudinaryUrl } from "@/lib/images/cloudinary";
 
 export async function PromoBannerStrip() {
   const banners = await getActiveBanners("Home - Medio");
@@ -17,7 +18,7 @@ export async function PromoBannerStrip() {
           className="relative rounded-2xl overflow-hidden bg-primary flex items-center min-h-[140px] block"
         >
           {banner.image ? (
-            <Image src={banner.image} alt={banner.title} fill sizes="100vw" className="object-cover opacity-25" />
+            <Image src={cloudinaryUrl(banner.image)} alt={banner.title} fill sizes="100vw" className="object-cover opacity-25" />
           ) : null}
           <div className="relative z-10 px-8 py-6 flex items-center gap-4">
             <div className="rounded-full bg-primary-foreground/15 p-3 shrink-0">

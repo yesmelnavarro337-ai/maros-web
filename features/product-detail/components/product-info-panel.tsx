@@ -9,6 +9,8 @@ import { StarRatingDisplay } from "@/components/shared/star-rating-display";
 import { SizeSelector } from "@/components/shared/size-selector";
 import { ColorSwatchSelector } from "@/components/shared/color-swatch-selector";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
+import { AddToCartButton } from "@/features/cart/add-to-cart-button";
+import { SizeGuideModal } from "@/features/products/components/size-guide-modal";
 import type { ProductDetail } from "../types";
 
 export function ProductInfoPanel({ product }: { product: ProductDetail }) {
@@ -60,7 +62,10 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
       <p className="text-sm text-muted-foreground">{product.description}</p>
 
       <div>
-        <p className="text-sm font-medium text-foreground mb-2">Talla</p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-medium text-foreground">Talla</p>
+          <SizeGuideModal />
+        </div>
         <SizeSelector sizes={product.sizes} selected={size} onChange={setSize} disabledSizes={disabledSizes} />
       </div>
 
@@ -87,21 +92,35 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
         </p>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-3 mt-2">
-        {product.allowCustomization && (
-          <Button size="lg" asChild className="flex-1">
-            <Link href={customizeHref}>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Personalizar
+      <div className="flex flex-col gap-3 mt-2">
+        <AddToCartButton
+          productId={product.id}
+          slug={product.slug}
+          name={product.name}
+          price={product.price}
+          image={product.images[0] ?? ""}
+          size={size}
+          colorName={product.colors.find((c) => c.hex === color)?.name ?? ""}
+          colorHex={color}
+          quantity={quantity}
+        />
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          {product.allowCustomization && (
+            <Button size="lg" variant="outline" asChild className="flex-1 h-12">
+              <Link href={customizeHref}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Personalizar
+              </Link>
+            </Button>
+          )}
+          <Button size="lg" variant="outline" asChild className="flex-1 h-12">
+            <Link href={quoteHref}>
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Solicitar cotización
             </Link>
           </Button>
-        )}
-        <Button size="lg" variant="outline" asChild className="flex-1">
-          <Link href={quoteHref}>
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Solicitar cotización
-          </Link>
-        </Button>
+        </div>
       </div>
     </div>
   );

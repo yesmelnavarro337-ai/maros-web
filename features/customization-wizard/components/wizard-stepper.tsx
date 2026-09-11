@@ -3,10 +3,12 @@ import { cn } from "@/lib/utils";
 import type { WizardStepKey } from "../types";
 
 const STEPS: { key: WizardStepKey; label: string }[] = [
+  { key: "modelo", label: "Modelo" },
   { key: "tela", label: "Tela" },
   { key: "color", label: "Color" },
   { key: "estampado", label: "Estampado" },
   { key: "bordado", label: "Bordado" },
+  { key: "talla", label: "Talla" },
   { key: "resumen", label: "Resumen" },
 ];
 
@@ -14,7 +16,7 @@ export function WizardStepper({ current }: { current: WizardStepKey }) {
   const currentIndex = STEPS.findIndex((s) => s.key === current);
 
   return (
-    <div className="flex items-center justify-between max-w-md overflow-x-auto pb-1 [scrollbar-width:none]">
+    <div className="flex items-center justify-between max-w-3xl overflow-x-auto pb-1 [scrollbar-width:none]">
       {STEPS.map((step, i) => {
         const isDone = i < currentIndex;
         const isActive = i === currentIndex;
@@ -23,7 +25,7 @@ export function WizardStepper({ current }: { current: WizardStepKey }) {
             <div className="flex flex-col items-center gap-1">
               <div
                 className={cn(
-                  "h-7 w-7 rounded-full flex items-center justify-center text-xs font-medium shrink-0",
+                  "h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium shrink-0",
                   isDone && "bg-primary text-primary-foreground",
                   isActive && "bg-primary text-primary-foreground ring-4 ring-primary/20",
                   !isDone && !isActive && "bg-secondary text-muted-foreground"

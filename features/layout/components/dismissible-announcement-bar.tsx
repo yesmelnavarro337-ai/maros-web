@@ -5,7 +5,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 
 interface DismissibleAnnouncementBarProps {
-  message: string;
+  message: React.ReactNode;
   ctaLabel?: string;
   ctaHref?: string;
 }

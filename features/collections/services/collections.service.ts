@@ -18,6 +18,7 @@ interface ApiProductListItem {
   categoryName: string;
   basePrice: number;
   thumbnailUrl?: string | null;
+  images?: string[] | null;
   available: boolean;
 }
 
@@ -41,6 +42,7 @@ function adaptProduct(p: ApiProductListItem): ProductPreview {
     name: p.name,
     price: p.basePrice,
     image: p.thumbnailUrl ?? "",
+    images: p.images ?? [],
   };
 }
 

@@ -1,5 +1,5 @@
 import { clientApiFetch } from "@/lib/api/client-fetch";
-import type { CustomizationChoice } from "../types";
+import type { CustomizationChoice, CustomizationModel } from "../types";
 
 interface ApiCustomizationOption {
   id: string;
@@ -56,4 +56,30 @@ export async function getPrints(): Promise<CustomizationChoice[]> {
 export async function getEmbroideries(): Promise<CustomizationChoice[]> {
   const { catalogs } = await getCatalogs();
   return [NO_EMBROIDERY_OPTION, ...(catalogs.Bordado ?? []).map(adapt)];
+}
+
+interface ApiProductListItem {
+  id: string;
+  name: string;
+  slug: string;
+  basePrice: number;
+  thumbnailUrl?: string | null;
+  sizes: string[];
+}
+
+let cachedModels: CustomizationModel[] | null = null;
+
+export async function getModels(): Promise<CustomizationModel[]> {
+  if (!cachedModels) {
+    const list = await clientApiFetch<ApiProductListItem[]>("products");
+    cachedModels = list.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      price: p.basePrice,
+      image: p.thumbnailUrl ?? "",
+      sizes: p.sizes,
+    }));
+  }
+  return cachedModels;
 }
