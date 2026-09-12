@@ -11,13 +11,6 @@ import { WishlistProvider } from "@/features/wishlist/wishlist-context";
 import { getPublicSettings } from "@/features/settings/services/settings.server";
 import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
 
-export const metadata: Metadata = {
-  title: "Maro's Pijamas | Comodidad y Estilo",
-  description: "Tienda de pijamas personalizadas y colecciones exclusivas.",
-  verification: {
-    google: 'xS87nYrcGhqV26ETGsaf7Ahk', 
-  },
-};
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,6 +38,9 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "es_CO",
       type: "website",
       images: settings.seoSocialImageUrl ? [{ url: settings.seoSocialImageUrl }] : undefined,
+    },
+    verification: {
+      google: "xS87nYrcGhqV26ETGsaf7Ahk",
     },
   };
 }
