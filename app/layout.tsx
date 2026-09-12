@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: settings.seoSocialImageUrl ? [{ url: settings.seoSocialImageUrl }] : undefined,
     },
     verification: {
-      google: "xS87nYrcGhqV26ETGsaf7Ahk",
+      google: "Q5wqYq7C3Vuv",
     },
   };
 }
