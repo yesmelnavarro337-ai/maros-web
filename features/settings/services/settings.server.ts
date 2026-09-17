@@ -25,7 +25,7 @@ const FALLBACK_SETTINGS: PublicSettings = {
   siteName: "Maro's Pijamas",
   description: "Pijamas personalizadas hechas a mano con los mejores materiales.",
   maintenanceMode: false,
-  whatsappNumber: "573001234567",
+  whatsappNumber: "573013169974",
   contactEmail: "marospijamas@gmail.com",
   address: "Mz 3 Casa 98 Urb. Doña Clara, Valledupar",
   businessHours: "Lunes a Sábado · 8:00 a.m. – 6:00 p.m.",
