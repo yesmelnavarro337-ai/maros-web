@@ -41,7 +41,7 @@ function adaptProduct(p: ApiCatalogProduct): CatalogProductItem {
 }
 
 export async function getCategories(): Promise<ApiCategory[]> {
-  return serverApiFetch<ApiCategory[]>("categories");
+  return serverApiFetch<ApiCategory[]>("categories", { tags: ["categories"] });
 }
 
 function applySort(products: CatalogProductItem[], sort?: SortOption): CatalogProductItem[] {
@@ -63,7 +63,9 @@ export async function getCatalogProducts(params: CatalogSearchParams): Promise<C
 
   if (params.buscar) query.set("search", params.buscar);
 
-  const products = await serverApiFetch<ApiCatalogProduct[]>(`products?${query.toString()}`);
+  const products = await serverApiFetch<ApiCatalogProduct[]>(`products?${query.toString()}`, {
+    tags: ["products", "categories"],
+  });
   let adapted = products.map(adaptProduct);
 
   // Talla, Color y Precio se filtran en memoria: el backend ya redujo el

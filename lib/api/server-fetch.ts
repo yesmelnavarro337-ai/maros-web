@@ -5,6 +5,7 @@ import { throwIfError } from "./errors";
 
 interface ServerFetchOptions {
   revalidateSeconds?: number;
+  tags?: string[];
 }
 
 /**
@@ -14,12 +15,25 @@ interface ServerFetchOptions {
  * se encarga de la deduplicación entre renders.
  */
 const cachedServerFetch = cache(async (key: string) => {
-  const separator = key.lastIndexOf("|revalidate:");
-  const revalidate = separator === -1 ? 60 : Number(key.slice(separator + 12));
-  const path = separator === -1 ? key : key.slice(0, separator);
+  const parts = key.split("|");
+  const path = parts[0];
+  let revalidate = 60;
+  let tags: string[] = [];
+
+  for (let i = 1; i < parts.length; i++) {
+    if (parts[i].startsWith("revalidate:")) {
+      revalidate = Number(parts[i].slice(11));
+    } else if (parts[i].startsWith("tags:")) {
+      const rawTags = parts[i].slice(5);
+      tags = rawTags ? rawTags.split(",") : [];
+    }
+  }
 
   const response = await fetch(`${API_URL}/api/public/${path}`, {
-    next: { revalidate },
+    next: {
+      revalidate,
+      ...(tags.length > 0 ? { tags } : {}),
+    },
   });
 
   await throwIfError(response);
@@ -28,5 +42,6 @@ const cachedServerFetch = cache(async (key: string) => {
 
 export function serverApiFetch<T>(path: string, options: ServerFetchOptions = {}): Promise<T> {
   const revalidate = options.revalidateSeconds ?? 60;
-  return cachedServerFetch(`${path}|revalidate:${revalidate}`) as Promise<T>;
+  const tagsStr = options.tags ? options.tags.join(",") : "";
+  return cachedServerFetch(`${path}|revalidate:${revalidate}|tags:${tagsStr}`) as Promise<T>;
 }

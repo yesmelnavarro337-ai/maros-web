@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +25,7 @@ import { cloudinaryUrl } from "@/lib/images/cloudinary";
 export function Header({ settings }: { settings: PublicSettings }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const mounted = useMounted();
   const { count: cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
@@ -33,19 +34,37 @@ export function Header({ settings }: { settings: PublicSettings }) {
     "¡Hola! Me interesa hacer un pedido de pijamas personalizadas.",
   );
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 15);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+    <header
+      className={cn(
+        "sticky top-0 z-40 transition-all duration-300",
+        isScrolled
+          ? "bg-background/85 backdrop-blur-lg border-b border-border/80 shadow-sm"
+          : "bg-background/70 backdrop-blur-md border-b border-border/30 shadow-none"
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+        <Link href="/" className="flex items-center gap-2 shrink-0 group">
           <Image
             src={cloudinaryUrl(settings.logoUrl || "/logo.png")}
             alt={settings.siteName}
             width={36}
             height={36}
-            className="rounded-full"
+            className="rounded-full transition-transform duration-300 group-hover:scale-105"
           />
           <div className="leading-tight hidden sm:block">
-            <p className="font-heading text-base text-foreground">MARO&apos;S</p>
+            <p className="font-heading text-base text-foreground transition-colors group-hover:text-primary">
+              MARO&apos;S
+            </p>
             <p className="text-[9px] tracking-widest text-muted-foreground -mt-0.5">
               PIJAMAS
             </p>
@@ -60,10 +79,10 @@ export function Header({ settings }: { settings: PublicSettings }) {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-sm transition-colors",
+                  "text-sm font-medium transition-all duration-200 relative py-1",
                   isActive
-                    ? "text-primary font-medium"
-                    : "text-foreground hover:text-primary",
+                    ? "text-primary font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full"
+                    : "text-foreground/90 hover:text-primary hover:scale-[1.02]",
                 )}
               >
                 {link.label}

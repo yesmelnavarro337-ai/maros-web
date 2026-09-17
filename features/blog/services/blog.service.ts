@@ -29,37 +29,42 @@ function adaptDetail(p: ApiBlogPost): BlogPostDetail {
   };
 }
 
-async function getAllPosts(): Promise<BlogPostDetail[]> {
-  const posts = await serverApiFetch<ApiBlogPost[]>("blog");
-  return posts.map(adaptDetail).sort((a, b) => (a.publishDate < b.publishDate ? 1 : -1));
+// Cache timeout en segundos (por defecto 60)
+const CACHE_TIMEOUT = 60;
+
+async function getAllPosts(revalidate: number = CACHE_TIMEOUT): Promise<ApiBlogPost[]> {
+  const posts = await serverApiFetch<ApiBlogPost[]>("blog", { revalidateSeconds: revalidate });
+  return posts;
 }
 
-export async function getBlogCategories(): Promise<string[]> {
-  const posts = await getAllPosts();
+export async function getBlogCategories(revalidate: number = CACHE_TIMEOUT): Promise<string[]> {
+  const posts = await getAllPosts(revalidate);
   return Array.from(new Set(posts.map((p) => p.category))).sort();
 }
 
-export async function getBlogPosts(category?: string): Promise<BlogPostPreview[]> {
-  const posts = await getAllPosts();
-  return category ? posts.filter((p) => p.category === category) : posts;
+export async function getBlogPosts(category?: string, revalidate: number = CACHE_TIMEOUT): Promise<BlogPostPreview[]> {
+  const posts = await getAllPosts(revalidate);
+  const filtered = category ? posts.filter((p) => p.category === category) : posts;
+  return filtered.map(adaptDetail);
 }
 
-export async function getBlogPostBySlug(slug: string): Promise<BlogPostDetail | undefined> {
-  const posts = await getAllPosts();
-  return posts.find((p) => p.slug === slug);
+export async function getBlogPostBySlug(slug: string, revalidate: number = CACHE_TIMEOUT): Promise<BlogPostDetail | undefined> {
+  const posts = await getAllPosts(revalidate);
+  const match = posts.find((p) => p.slug === slug);
+  return match ? adaptDetail(match) : undefined;
 }
 
-export async function getRecommendedPosts(currentSlug: string): Promise<BlogPostPreview[]> {
-  const posts = await getAllPosts();
+export async function getRecommendedPosts(currentSlug: string, revalidate: number = CACHE_TIMEOUT): Promise<BlogPostPreview[]> {
+  const posts = await getAllPosts(revalidate);
   const current = posts.find((p) => p.slug === currentSlug);
   const others = posts.filter((p) => p.slug !== currentSlug);
 
-  if (!current) return others.slice(0, 3);
+  if (!current) return others.slice(0, 3).map(adaptDetail);
 
   const sameCategory = others.filter((p) => p.category === current.category);
   const filled = sameCategory.length >= 3
     ? sameCategory
     : [...sameCategory, ...others.filter((p) => p.category !== current.category)];
 
-  return filled.slice(0, 3);
+  return filled.slice(0, 3).map(adaptDetail);
 }

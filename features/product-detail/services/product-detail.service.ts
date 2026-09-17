@@ -61,7 +61,7 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
 
 export async function getProductDetail(slug: string): Promise<ProductDetail | undefined> {
   try {
-    const product = await serverApiFetch<ApiProductDetail>(`products/${slug}`);
+    const product = await serverApiFetch<ApiProductDetail>(`products/${slug}`, { tags: ["products"] });
     return adaptDetail(product);
   } catch {
     return undefined;
@@ -106,7 +106,7 @@ function adaptListItem(p: ApiProductListItem): RelatedProduct {
 async function fetchRelatedList(query: URLSearchParams): Promise<RelatedProduct[]> {
   try {
     const qs = query.toString();
-    const products = await serverApiFetch<ApiProductListItem[]>(`products?${qs}`);
+    const products = await serverApiFetch<ApiProductListItem[]>(`products?${qs}`, { tags: ["products"] });
     return products.map(adaptListItem);
   } catch {
     return [];
