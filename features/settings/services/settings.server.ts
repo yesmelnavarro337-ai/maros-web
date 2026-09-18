@@ -33,12 +33,7 @@ const FALLBACK_SETTINGS: PublicSettings = {
 
 export async function getPublicSettings(): Promise<PublicSettings> {
   try {
-    // FORZAR actualización en cada petición (sin cacheo)
-    // Usamos fetch directo con cache: "no-store" para asegurar el modo mantenimiento
-    // se refleja inmediatamente en el frontend
-    const s = await fetch(new Request("/api/settings", { cache: "no-store" }), {
-      credentials: "include"
-    }).then(res => res.json());
+    const s = await serverApiFetch<ApiPublicSettings>("settings", { revalidateSeconds: 0 });
     
     return {
       siteName: s.siteName || FALLBACK_SETTINGS.siteName,
