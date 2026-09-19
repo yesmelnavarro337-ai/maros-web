@@ -13,14 +13,22 @@ interface ApiProductVariant {
   available: boolean;
 }
 
+interface ApiProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface ApiProductDetail {
   id: string;
   name: string;
   slug: string;
   description: string;
   basePrice: number;
+  categoryIds?: string[] | null;
+  categories?: ApiProductCategory[] | null;
   categoryName: string;
-  categoryId: string;
+  categoryId?: string | null;
   images: string[];
   sizes: string[];
   colors: ApiProductColor[];
@@ -36,6 +44,13 @@ interface ApiProductDetail {
 }
 
 function adaptDetail(p: ApiProductDetail): ProductDetail {
+  const categoryIds = p.categoryIds?.length ? p.categoryIds : p.categoryId ? [p.categoryId] : [];
+  const categories = p.categories?.length
+    ? p.categories
+    : p.categoryId
+      ? [{ id: p.categoryId, name: p.categoryName || "Pijamas de mujer", slug: "" }]
+      : [];
+
   return {
     id: p.id,
     slug: p.slug,
@@ -46,8 +61,10 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
     sizes: p.sizes,
     colors: p.colors,
     variants: p.variants,
-    categoryName: p.categoryName,
-    categoryId: p.categoryId,
+    categoryIds,
+    categories,
+    categoryName: p.categoryName || categories.map((c) => c.name).join(", "),
+    categoryId: categoryIds[0] ?? "",
     collectionIds: p.collectionIds ?? [],
     available: p.available,
     allowCustomization: p.allowCustomization,
@@ -125,8 +142,9 @@ export async function getRelatedProducts(product: ProductDetail, currentSlug: st
     }
   };
 
-  if (product.categoryId) {
-    const categoryProducts = await fetchRelatedList(new URLSearchParams({ categoryId: product.categoryId }));
+  for (const categoryId of product.categoryIds) {
+    if (results.length >= 4) break;
+    const categoryProducts = await fetchRelatedList(new URLSearchParams({ categoryId }));
     push(categoryProducts.filter((p) => p.available));
   }
 

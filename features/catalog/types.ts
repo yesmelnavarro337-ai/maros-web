@@ -8,6 +8,8 @@ export interface CatalogProductItem {
   image: string;
   images?: string[];
   available: boolean;
+  categoryIds: string[];
+  categories: { id: string; name: string; slug: string }[];
   categoryName: string;
   sizes: string[];
   colors: { name: string; hex: string }[];

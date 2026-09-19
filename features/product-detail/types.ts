@@ -22,6 +22,8 @@ export interface ProductDetail {
   sizes: string[];
   colors: ProductColorOption[];
   variants: ProductVariantAvailability[];
+  categoryIds: string[];
+  categories: { id: string; name: string; slug: string }[];
   categoryName: string;
   categoryId: string;
   collectionIds: string[];

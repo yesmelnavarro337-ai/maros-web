@@ -6,11 +6,20 @@ interface ApiProductColor {
   hex: string;
 }
 
+interface ApiProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface ApiCatalogProduct {
   id: string;
   name: string;
   slug: string;
+  categoryId?: string | null;
   categoryName: string;
+  categoryIds?: string[] | null;
+  categories?: ApiProductCategory[] | null;
   basePrice: number;
   thumbnailUrl?: string | null;
   images?: string[] | null;
@@ -26,6 +35,13 @@ interface ApiCategory {
 }
 
 function adaptProduct(p: ApiCatalogProduct): CatalogProductItem {
+  const categoryIds = p.categoryIds?.length ? p.categoryIds : p.categoryId ? [p.categoryId] : [];
+  const categories = p.categories?.length
+    ? p.categories
+    : p.categoryId
+      ? [{ id: p.categoryId, name: p.categoryName || "Pijamas de mujer", slug: "" }]
+      : [];
+
   return {
     id: p.id,
     slug: p.slug,
@@ -34,7 +50,9 @@ function adaptProduct(p: ApiCatalogProduct): CatalogProductItem {
     image: p.thumbnailUrl ?? "",
     images: p.images ?? [],
     available: p.available,
-    categoryName: p.categoryName,
+    categoryIds,
+    categories,
+    categoryName: p.categoryName || categories.map((c) => c.name).join(", "),
     sizes: p.sizes,
     colors: p.colors,
   };
