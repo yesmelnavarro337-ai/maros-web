@@ -8,12 +8,15 @@ export interface ProductVariantAvailability {
   colorName: string;
   colorHex: string;
   available: boolean;
+  stock: number;
+  price?: number | null;
 }
 
 export interface ProductDetail {
   id: string;
   slug: string;
   name: string;
+  basePrice: number;
   price: number;
   description: string;
   images: string[];

@@ -18,9 +18,17 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
   const [color, setColor] = useState(product.colors[0]?.hex ?? "");
   const [quantity, setQuantity] = useState(1);
 
+  const selectedVariant = useMemo(() => {
+    return product.variants.find((v) => v.size === size && v.colorHex === color);
+  }, [product.variants, size, color]);
+
+  const effectivePrice = selectedVariant?.price ?? product.basePrice;
+  const hasAdjustedPrice = effectivePrice > product.basePrice;
+  const priceAdjustment = effectivePrice - product.basePrice;
+
   // Tallas que no tienen NINGUNA combinación con stock, sin importar el color.
   const disabledSizes = useMemo(
-    () => product.sizes.filter((s) => !product.variants.some((v) => v.size === s && v.available)),
+    () => product.sizes.filter((s) => !product.variants.some((v) => v.size === s && v.stock > 0)),
     [product.sizes, product.variants]
   );
 
@@ -29,15 +37,12 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
     return product.colors
       .filter((c) => {
         const variant = product.variants.find((v) => v.size === size && v.colorName === c.name);
-        return variant ? !variant.available : false;
+        return variant ? variant.stock <= 0 : false;
       })
       .map((c) => c.hex);
   }, [product.colors, product.variants, size]);
 
-  const selectedCombinationAvailable = useMemo(() => {
-    const variant = product.variants.find((v) => v.size === size && v.colorHex === color);
-    return variant?.available ?? false;
-  }, [product.variants, size, color]);
+  const selectedCombinationAvailable = (selectedVariant?.stock ?? 0) > 0;
 
   const customizeHref = `/personaliza?producto=${product.slug}&talla=${size}&color=${encodeURIComponent(color)}&cantidad=${quantity}`;
   const quoteHref = `/cotizar?producto=${product.slug}&talla=${size}&color=${encodeURIComponent(color)}&cantidad=${quantity}`;
@@ -55,9 +60,16 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
         )}
       </div>
 
-      <span className="font-heading text-2xl text-foreground">
-        ${product.price.toLocaleString("es-CO")} COP
-      </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-heading text-2xl text-foreground">
+          ${effectivePrice.toLocaleString("es-CO")} COP
+        </span>
+        {hasAdjustedPrice && (
+          <Badge variant="secondary" className="bg-brand-gold/15 text-foreground">
+            Precio ajustado +${priceAdjustment.toLocaleString("es-CO")} COP
+          </Badge>
+        )}
+      </div>
 
       <p className="text-sm text-muted-foreground">{product.description}</p>
 
@@ -86,9 +98,15 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
         <QuantityStepper value={quantity} onChange={setQuantity} />
       </div>
 
-      {!selectedCombinationAvailable && (
+      {hasAdjustedPrice && (
+        <p className="text-sm text-muted-foreground bg-secondary/60 rounded-md px-3 py-2">
+          Esta combinación tiene un precio especial por talla, modelo o combinación seleccionada.
+        </p>
+      )}
+
+      {selectedVariant && selectedVariant.stock <= 0 && (
         <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
-          Esta combinación de talla y color está agotada. Puedes solicitar cotización de todas formas — te contactaremos con alternativas disponibles.
+          Agotado. Esta combinación de talla y color no tiene stock disponible.
         </p>
       )}
 
@@ -97,12 +115,13 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
           productId={product.id}
           slug={product.slug}
           name={product.name}
-          price={product.price}
+          price={effectivePrice}
           image={product.images[0] ?? ""}
           size={size}
           colorName={product.colors.find((c) => c.hex === color)?.name ?? ""}
           colorHex={color}
           quantity={quantity}
+          disabled={!selectedCombinationAvailable}
         />
 
         <div className="flex flex-col sm:flex-row gap-3">

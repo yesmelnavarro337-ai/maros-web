@@ -12,6 +12,11 @@ import { getPublicSettings } from "@/features/settings/services/settings.server"
 import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
 
 
+import { MaintenanceView } from "@/features/settings/components/maintenance-view";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -51,6 +56,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const settings = await getPublicSettings();
+
+  if (settings.maintenanceMode) {
+    return (
+      <html lang="es">
+        <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+          <MaintenanceView settings={settings} />
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="es">

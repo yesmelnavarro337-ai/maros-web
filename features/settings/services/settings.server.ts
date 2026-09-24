@@ -33,7 +33,7 @@ const FALLBACK_SETTINGS: PublicSettings = {
 
 export async function getPublicSettings(): Promise<PublicSettings> {
   try {
-    const s = await serverApiFetch<ApiPublicSettings>("settings", { revalidateSeconds: 0 });
+    const s = await serverApiFetch<ApiPublicSettings>("settings", { cache: "no-store", revalidateSeconds: 0 });
     
     return {
       siteName: s.siteName || FALLBACK_SETTINGS.siteName,

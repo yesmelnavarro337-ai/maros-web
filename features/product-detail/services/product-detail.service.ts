@@ -11,6 +11,8 @@ interface ApiProductVariant {
   colorName: string;
   colorHex: string;
   available: boolean;
+  stock: number;
+  price?: number | null;
 }
 
 interface ApiProductCategory {
@@ -43,6 +45,21 @@ interface ApiProductDetail {
   collectionIds?: string[] | null;
 }
 
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "XXL", "3XL", "XXXL", "4XL", "XXXXL", "5XL"];
+
+function getSizeRank(size: string): number {
+  const normalized = size.trim().toUpperCase();
+  const rank = SIZE_ORDER.indexOf(normalized);
+  return rank === -1 ? SIZE_ORDER.length : rank;
+}
+
+function sortSizes(sizes: string[]): string[] {
+  return [...sizes].sort((a, b) => {
+    const rank = getSizeRank(a) - getSizeRank(b);
+    return rank !== 0 ? rank : a.localeCompare(b, "es");
+  });
+}
+
 function adaptDetail(p: ApiProductDetail): ProductDetail {
   const categoryIds = p.categoryIds?.length ? p.categoryIds : p.categoryId ? [p.categoryId] : [];
   const categories = p.categories?.length
@@ -55,12 +72,17 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
     id: p.id,
     slug: p.slug,
     name: p.name,
+    basePrice: p.basePrice,
     price: p.basePrice,
     description: p.description,
     images: p.images,
-    sizes: p.sizes,
+    sizes: sortSizes(p.sizes),
     colors: p.colors,
-    variants: p.variants,
+    variants: p.variants.map((v) => ({
+      ...v,
+      stock: v.stock ?? (v.available ? 1 : 0),
+      price: v.price ?? null,
+    })),
     categoryIds,
     categories,
     categoryName: p.categoryName || categories.map((c) => c.name).join(", "),
