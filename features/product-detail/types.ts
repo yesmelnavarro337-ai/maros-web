@@ -12,6 +12,14 @@ export interface ProductVariantAvailability {
   price?: number | null;
 }
 
+export interface ProductDetailCategory {
+  id: string;
+  name: string;
+  slug: string;
+  defaultPrice?: number | null;
+  surchargeReason?: string | null;
+}
+
 export interface ProductDetail {
   id: string;
   slug: string;
@@ -26,7 +34,7 @@ export interface ProductDetail {
   colors: ProductColorOption[];
   variants: ProductVariantAvailability[];
   categoryIds: string[];
-  categories: { id: string; name: string; slug: string }[];
+  categories: ProductDetailCategory[];
   categoryName: string;
   categoryId: string;
   collectionIds: string[];

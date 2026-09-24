@@ -19,6 +19,8 @@ interface ApiProductCategory {
   id: string;
   name: string;
   slug: string;
+  defaultPrice?: number | null;
+  surchargeReason?: string | null;
 }
 
 interface ApiProductDetail {

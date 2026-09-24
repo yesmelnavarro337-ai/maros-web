@@ -12,6 +12,7 @@ import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { AddToCartButton } from "@/features/cart/add-to-cart-button";
 import { SizeGuideModal } from "@/features/products/components/size-guide-modal";
 import type { ProductDetail } from "../types";
+import { PriceNoticeBanner } from "./price-notice-banner";
 
 export function ProductInfoPanel({ product }: { product: ProductDetail }) {
   const [size, setSize] = useState(product.sizes[0]);
@@ -97,6 +98,12 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
         <p className="text-sm font-medium text-foreground mb-2">Cantidad</p>
         <QuantityStepper value={quantity} onChange={setQuantity} />
       </div>
+
+      <PriceNoticeBanner
+        selectedSize={size}
+        categories={product.categories}
+        categoryName={product.categoryName}
+      />
 
       {hasAdjustedPrice && (
         <p className="text-sm text-muted-foreground bg-secondary/60 rounded-md px-3 py-2">
