@@ -1,5 +1,5 @@
 import { serverApiFetch } from "@/lib/api/server-fetch";
-import type { HeroContent } from "../types";
+import type { HeroContent, HeroSlide } from "../types";
 import { ProductPreview } from "@/types/product";
 
 interface SeasonColorsResponse {
@@ -25,11 +25,14 @@ interface SiteSettingsPublicResponse {
   description: string;
 }
 
-const DEFAULT_HERO: HeroContent = {
-  title: "Diseña la pijama que siempre imaginaste",
-  subtitle: "Personalizadas a tu gusto, hechas con amor y los mejores materiales para cada momento.",
+const DEFAULT_HERO_SLIDE: HeroSlide = {
+  id: "default-hero",
+  badgeLabel: "COLECCIÓN ESPECIAL",
+  title: "Pijamas que se sienten, se comparten y se recuerdan",
+  subtitle: "Personalizadas a tu gusto, hechas a mano con amor y las mejores telas para cada momento en familia.",
+  overlayNote: "Juntos en pijama ♡",
   primaryCta: { label: "Ver colección", href: "/colecciones" },
-  secondaryCta: { label: "Ver catálogo", href: "/catalogo" },
+  secondaryCta: { label: "Personalizar pijama", href: "/personaliza" },
 };
 
 export async function getHeroContent(): Promise<HeroContent> {
@@ -38,23 +41,63 @@ export async function getHeroContent(): Promise<HeroContent> {
     serverApiFetch<SiteSettingsPublicResponse>("settings").catch(() => null),
   ]);
 
+  const slides: HeroSlide[] = [];
+
   if (season) {
-    return {
-      title: season.heroTitle,
-      subtitle: season.heroSubtitle,
-      image: season.heroImageUrl ?? undefined,
-      badgeLabel: "Colección",
+    slides.push({
+      id: "season-active",
+      badgeLabel: "COLECCIÓN ESPECIAL",
       badgeSeason: season.name,
-      primaryCta: { label: season.ctaText || "Ver colección", href: season.ctaLink || "/colecciones" },
-      secondaryCta: { label: "Ver catálogo", href: "/catalogo" },
-    };
+      title: season.heroTitle || season.name,
+      subtitle: season.heroSubtitle || "Pijamas que se sienten, se comparten y se recuerdan.",
+      image: season.heroImageUrl ?? undefined,
+      overlayNote: "Juntos en pijama ♡",
+      primaryCta: {
+        label: season.ctaText || "Ver colección",
+        href: season.ctaLink || "/colecciones",
+      },
+      secondaryCta: {
+        label: "Personalizar pijama",
+        href: "/personaliza",
+      },
+    });
+  } else {
+    slides.push({
+      ...DEFAULT_HERO_SLIDE,
+      subtitle: settings?.description || DEFAULT_HERO_SLIDE.subtitle,
+    });
   }
 
-  // Sin temporada activa: usamos el hero por defecto, opcionalmente con
-  // la descripción real del sitio si logramos obtenerla.
+  // Slide adicional de personalización para enriquecer la experiencia editorial
+  slides.push({
+    id: "personaliza-slide",
+    badgeLabel: "PERSONALIZACIÓN TOTAL",
+    badgeSeason: "Diseño a tu medida",
+    title: "Crea tu pijama desde cero",
+    subtitle: "Elige corte, tela, estampado y detalles únicos. Nosotros confeccionamos tu idea con amor en Colombia.",
+    overlayNote: "Tu idea, nuestra experiencia ♡",
+    primaryCta: {
+      label: "Diseñar pijama",
+      href: "/personaliza",
+    },
+    secondaryCta: {
+      label: "Ver catálogo",
+      href: "/catalogo",
+    },
+  });
+
+  const main = slides[0];
+
   return {
-    ...DEFAULT_HERO,
-    subtitle: settings?.description || DEFAULT_HERO.subtitle,
+    title: main.title,
+    subtitle: main.subtitle,
+    image: main.image,
+    badgeLabel: main.badgeLabel,
+    badgeSeason: main.badgeSeason,
+    overlayNote: main.overlayNote,
+    primaryCta: main.primaryCta,
+    secondaryCta: main.secondaryCta,
+    slides,
   };
 }
 

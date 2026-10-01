@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
     if ((!tag && !path) || tag === "all") {
       revalidateTag("categories", { expire: 0 });
       revalidateTag("products", { expire: 0 });
+      revalidateTag("home-content", { expire: 0 });
       revalidatePath("/", "page");
       revalidatePath("/catalogo", "page");
       revalidatePath("/colecciones", "page");
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
   if (!tag && !path) {
     revalidateTag("categories", { expire: 0 });
     revalidateTag("products", { expire: 0 });
+    revalidateTag("home-content", { expire: 0 });
     revalidatePath("/", "page");
     revalidatePath("/catalogo", "page");
   }

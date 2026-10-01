@@ -9,9 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/features/cart/cart-context";
 import { WishlistProvider } from "@/features/wishlist/wishlist-context";
 import { getPublicSettings } from "@/features/settings/services/settings.server";
-import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
-
-
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/json-ld";
 import { MaintenanceView } from "@/features/settings/components/maintenance-view";
 
 export const dynamic = "force-dynamic";
@@ -20,12 +18,15 @@ export const revalidate = 0;
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
 });
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
-  weight: ["500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -69,7 +70,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground`}>
         <CartProvider>
           <WishlistProvider>
             <AnnouncementBar />
@@ -89,6 +90,9 @@ export default async function RootLayout({
             facebook: settings.facebook,
             tiktok: settings.tiktok,
           })}
+        />
+        <JsonLd
+          data={websiteJsonLd(settings.siteName, settings.seoMetaDescription || settings.description)}
         />
         <Toaster position="top-right" />
       </body>

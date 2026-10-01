@@ -52,7 +52,7 @@ export function Header({ settings }: { settings: PublicSettings }) {
           : "bg-background/70 backdrop-blur-md border-b border-border/30 shadow-none"
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 shrink-0 group">
           <Image
             src={cloudinaryUrl(settings.logoUrl || "/logo.png")}

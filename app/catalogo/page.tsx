@@ -133,7 +133,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 mt-6">
                 {pageProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                  <ProductCard key={p.id} product={p} categorySlug={params.categoria} />
                 ))}
               </div>
 

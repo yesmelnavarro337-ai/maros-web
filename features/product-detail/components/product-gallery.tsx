@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ImageOff, X, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,10 +12,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export function ProductGallery({ images, productName }: { images: string[]; productName: string }) {
+export function ProductGallery({
+  images,
+  productName,
+  selectedColorHex,
+}: {
+  images: string[];
+  productName: string;
+  selectedColorHex?: string;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const activeImage = images[activeIndex];
+
+  // Reset active image index to 0 whenever filtered images or selected color changes
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [images, selectedColorHex]);
+  const safeActiveIndex = activeIndex < images.length ? activeIndex : 0;
+  const activeImage = images[safeActiveIndex];
   const lightboxImage = lightboxIndex !== null ? images[lightboxIndex] : undefined;
 
   function stepLightbox(dir: 1 | -1) {
@@ -32,7 +46,7 @@ export function ProductGallery({ images, productName }: { images: string[]; prod
             onClick={() => setActiveIndex(i)}
             className={cn(
               "relative h-16 w-16 rounded-lg bg-secondary flex items-center justify-center overflow-hidden border-2 transition-colors",
-              i === activeIndex ? "border-primary" : "border-transparent"
+              i === safeActiveIndex ? "border-primary" : "border-transparent"
             )}
           >
             {img ? (

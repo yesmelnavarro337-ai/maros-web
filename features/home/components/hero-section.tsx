@@ -1,89 +1,160 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Star } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { HeroContent } from "../types";
+import type { HeroContent, HeroSlide } from "../types";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
 
-export interface HeroBenefit {
-  icon: LucideIcon;
-  title: string;
-  subtitle: string;
-}
+export function HeroSection({ hero }: { hero: HeroContent }) {
+  const slides: HeroSlide[] =
+    hero.slides && hero.slides.length > 0
+      ? hero.slides
+      : [
+          {
+            id: "main-slide",
+            badgeLabel: hero.badgeLabel || "COLECCIÓN ESPECIAL",
+            badgeSeason: hero.badgeSeason,
+            title: hero.title,
+            subtitle: hero.subtitle,
+            image: hero.image,
+            overlayNote: hero.overlayNote || "Juntos en pijama ♡",
+            primaryCta: hero.primaryCta,
+            secondaryCta: hero.secondaryCta,
+          },
+        ];
 
-export function HeroSection({ hero, benefits }: { hero: HeroContent; benefits: HeroBenefit[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const current = slides[currentIndex] || slides[0];
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  };
+
   return (
-    <section>
-      {/* Banner de fotografía con overlay de legibilidad, sin la barra de pilares */}
-      <div className="relative overflow-hidden">
-        {hero.image ? (
-          <Image
-            src={cloudinaryUrl(hero.image)}
-            alt={hero.title}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-right"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-ivory via-brand-ivory to-brand-warm-beige" />
-        )}
+    <section className="relative w-full overflow-hidden bg-brand-dark border-b border-brand-border/40">
+      {/* Contenedor principal del Hero con imagen de fondo completa (Full Bleed) */}
+      <div className="relative min-h-[520px] sm:min-h-[580px] lg:min-h-[640px] xl:min-h-[700px] w-full flex items-center">
+        
+        {/* FOTOGRAFÍA DE FONDO COMPLETA */}
+        <div className="absolute inset-0 w-full h-full z-0">
+          {current.image ? (
+            <Image
+              src={cloudinaryUrl(current.image)}
+              alt={current.title}
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-[center_35%] lg:object-[65%_center] transition-all duration-700 ease-out"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#EFE8D8] via-[#FAF8F4] to-[#D8CEBA]" />
+          )}
 
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-full md:w-[55%] lg:w-[52%] bg-gradient-to-r from-[#FAF8F5] via-[#FAF8F5]/80 via-70% to-transparent" />
+          {/* DEGRADADO DE SOMBRA DESDE LA IZQUIERDA PARA MÁXIMA LEGIBILIDAD */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 sm:via-black/40 to-transparent z-[1]" />
+        </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 min-h-[600px] md:min-h-[680px] flex items-center pt-20 pb-16">
-          <div className="max-w-xl">
-            <h1 className="font-heading text-4xl md:text-6xl text-foreground leading-[1.05] tracking-tight">
-              {hero.title}
+        {/* NOTA MANUSCRITA FLOTANTE (Superior Derecha) */}
+        <div className="absolute top-5 right-5 sm:top-8 sm:right-10 lg:top-12 lg:right-14 z-10 pointer-events-none">
+          <span className="font-heading italic text-base sm:text-2xl lg:text-3xl text-white/95 font-medium tracking-wide drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
+            {current.overlayNote || "Juntos en pijama ♡"}
+          </span>
+        </div>
+
+        {/* CONTENIDO ALINEADO A LA IZQUIERDA DIRECTO SOBRE EL DEGRADADO */}
+        <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-16 lg:py-20 flex items-center">
+          <div className="w-full max-w-xl text-left">
+            
+            {/* Tag / Etiqueta de Colección */}
+            <div className="mb-3 sm:mb-4">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-[#EFE8D8] text-[10px] sm:text-xs font-semibold tracking-[0.18em] uppercase">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#B6AE3A]" />
+                {current.badgeSeason ? `Colección Especial` : current.badgeLabel || "Colección Especial"}
+              </span>
+            </div>
+
+            {/* Título Principal */}
+            <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl xl:text-6xl text-white font-normal leading-[1.1] sm:leading-[1.08] tracking-tight mb-3 sm:mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
+              {current.title}
             </h1>
-            <p className="text-foreground/80 mt-5 text-base md:text-lg leading-relaxed">
-              {hero.subtitle}
+
+            {/* Subtítulo */}
+            <p className="font-sans text-xs sm:text-sm lg:text-base text-white/90 leading-relaxed mb-6 sm:mb-8 max-w-lg drop-shadow-[0_1px_6px_rgba(0,0,0,0.3)]">
+              {current.subtitle}
             </p>
-            <p className="mt-3 flex items-center gap-2 text-sm md:text-base text-brand-gold">
-              <Star className="h-3.5 w-3.5 fill-brand-gold" />
-              <span className="font-medium">Pijamas versátiles y cómodas para toda la familia</span>
-              <Star className="h-3.5 w-3.5 fill-brand-gold" />
-            </p>
-            <div className="flex items-center gap-4 mt-8">
+
+            {/* Botones de Acción */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
               <Button
                 size="lg"
-                className="rounded-full px-7 bg-brand-dark-olive text-brand-ivory hover:bg-brand-olive"
+                className="rounded-full px-7 sm:px-8 py-3.5 bg-brand-gold hover:bg-[#8C7633] text-white font-medium text-xs sm:text-sm transition-all duration-300 shadow-md hover:shadow-lg group w-full sm:w-auto justify-center"
                 asChild
               >
-                <Link href="/colecciones">
-                  Ver colección
-                  <ArrowRight className="ml-1" />
+                <Link href={current.primaryCta.href}>
+                  <span>{current.primaryCta.label}</span>
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
+
               <Button
                 size="lg"
                 variant="outline"
-                className="rounded-full px-7 bg-brand-ivory/60 hover:bg-brand-ivory hover:border-brand-olive/40"
+                className="rounded-full px-7 sm:px-8 py-3.5 border-white/40 hover:border-white bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm backdrop-blur-xs transition-all duration-300 shadow-none w-full sm:w-auto justify-center"
                 asChild
               >
-                <Link href="/personaliza">Personalizar pijama</Link>
+                <Link href={current.secondaryCta.href}>
+                  <span>{current.secondaryCta.label}</span>
+                </Link>
               </Button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Pilares de confianza: barra de cierre inferior completa, fuera de la fotografía */}
-      <div className="w-full bg-[#FAF8F5] border-t border-[#3B4228]/10 py-5 px-8 md:px-16">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 lg:gap-x-12">
-          {benefits.map((b) => {
-            const Icon = b.icon;
-            return (
-              <div key={b.title} className="flex items-center gap-3">
-                <Icon className="h-[34px] w-[34px] text-brand-olive-gold shrink-0" strokeWidth={1.5} />
-                <div className="leading-tight">
-                  <p className="font-semibold text-sm text-brand-dark-olive">{b.title}</p>
-                  <p className="text-xs font-medium text-muted-foreground">{b.subtitle}</p>
-                </div>
+            {/* Controles del Slider */}
+            <div className="flex items-center gap-3 sm:gap-4 text-xs font-mono text-white/80">
+              <span className="font-semibold text-white tracking-widest text-[11px] sm:text-xs">
+                {String(currentIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handlePrev}
+                  aria-label="Campaña anterior"
+                  className="h-8 w-8 rounded-full border border-white/30 bg-black/25 backdrop-blur-xs flex items-center justify-center hover:bg-white/20 hover:border-white text-white transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleNext}
+                  aria-label="Siguiente campaña"
+                  className="h-8 w-8 rounded-full border border-white/30 bg-black/25 backdrop-blur-xs flex items-center justify-center hover:bg-white/20 hover:border-white text-white transition-all"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-            );
-          })}
+
+              {slides.length > 1 && (
+                <div className="flex items-center gap-1 ml-2">
+                  {slides.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentIndex(idx)}
+                      aria-label={`Ir al slide ${idx + 1}`}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === currentIndex ? "w-6 bg-brand-gold" : "w-1.5 bg-white/40 hover:bg-white/70"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
       </div>
     </section>

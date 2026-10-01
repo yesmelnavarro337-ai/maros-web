@@ -6,13 +6,16 @@ import { WishlistButton } from "./wishlist-button";
 import type { ProductPreview } from "@/types/product";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
 
-export function ProductCard({ product }: { product: ProductPreview }) {
+export function ProductCard({ product, categorySlug }: { product: ProductPreview; categorySlug?: string }) {
   const soldOut = product.available === false;
   const productImages = product.images ?? [];
   const secondImage = productImages.length > 1 ? productImages[1] : undefined;
+  const href = categorySlug
+    ? `/productos/${product.slug}?categoria=${encodeURIComponent(categorySlug)}`
+    : `/productos/${product.slug}`;
 
   return (
-    <Link href={`/productos/${product.slug}`} className="group">
+    <Link href={href} className="group">
       <div className="relative aspect-square rounded-xl bg-secondary overflow-hidden">
         {product.image ? (
           <>

@@ -3,6 +3,14 @@ export interface ProductColorOption {
   hex: string;
 }
 
+export interface ProductDetailImage {
+  id?: string;
+  url: string;
+  order?: number;
+  colorHex?: string | null;
+  colorName?: string | null;
+}
+
 export interface ProductVariantAvailability {
   size: string;
   colorName: string;
@@ -18,6 +26,8 @@ export interface ProductDetailCategory {
   slug: string;
   defaultPrice?: number | null;
   surchargeReason?: string | null;
+  price?: number | null;
+  productSurchargeReason?: string | null;
 }
 
 export interface ProductDetail {
@@ -28,6 +38,7 @@ export interface ProductDetail {
   price: number;
   description: string;
   images: string[];
+  imageDetails?: ProductDetailImage[];
   rating?: number;
   reviewCount?: number;
   sizes: string[];

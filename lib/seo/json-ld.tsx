@@ -99,3 +99,41 @@ export function productJsonLd(product: ProductJsonLdInput): Record<string, unkno
     },
   };
 }
+
+export function websiteJsonLd(siteName: string, description?: string): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    url: SITE_URL,
+    name: siteName,
+    description: description || "Pijamas personalizadas para toda la familia hechas en Colombia.",
+    inLanguage: "es-CO",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/catalogo?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+export function itemListJsonLd(
+  name: string,
+  items: Array<{ name: string; url: string; image?: string; position: number }>
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    itemListElement: items.map((item) => ({
+      "@type": "ListItem",
+      position: item.position,
+      name: item.name,
+      url: item.url.startsWith("http") ? item.url : `${SITE_URL}${item.url}`,
+      ...(item.image ? { image: item.image } : {}),
+    })),
+  };
+}

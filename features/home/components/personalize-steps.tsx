@@ -1,68 +1,135 @@
-import { Fragment } from "react";
 import Link from "next/link";
-import { Shirt, Palette, Heart } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
+import Image from "next/image";
+import { ArrowRight, Shirt, Layers, Palette, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { orFallback, type HomeSectionContent } from "../home-content.types";
 
-function InitialsGlyph() {
-  return <span className="text-[#A38A3E] font-heading text-3xl md:text-4xl font-semibold leading-none">A</span>;
-}
+const DEFAULT_IMAGE =
+  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=900&auto=format&fit=crop";
+const DEFAULT_TITLE = "Personaliza tu pijama";
+const DEFAULT_SUBTITLE = "Elige cada detalle y crea algo único.";
+const DEFAULT_CTA = "Diseñar mi pijama";
+const DEFAULT_CTA_LINK = "/personaliza";
 
 const steps = [
-  { icon: Shirt, title: "1. Elige el modelo", subtitle: "Tu estilo favorito" },
-  { icon: Palette, title: "2. Selecciona la tela", subtitle: "Color y estampado" },
-  { icon: InitialsGlyph, title: "3. Agrega detalles", subtitle: "Iniciales, bordados, etc." },
-  { icon: Heart, title: "4. Cuéntanos tu idea", subtitle: "Y la hacemos realidad" },
+  {
+    number: "01",
+    label: "1. Modelo",
+    title: "Modelo",
+    subtitle: "Elige el estilo y corte",
+    icon: Shirt,
+  },
+  {
+    number: "02",
+    label: "2. Tela",
+    title: "Tela",
+    subtitle: "Selecciona el material",
+    icon: Layers,
+  },
+  {
+    number: "03",
+    label: "3. Estampado",
+    title: "Estampado",
+    subtitle: "Elige el diseño",
+    icon: Palette,
+  },
+  {
+    number: "04",
+    label: "4. Detalles",
+    title: "Detalles",
+    subtitle: "Añade tu toque",
+    icon: Sparkles,
+  },
 ];
 
-export function PersonalizeSteps() {
+interface PersonalizeStepsProps {
+  content?: HomeSectionContent;
+}
+
+export function PersonalizeSteps({ content }: PersonalizeStepsProps) {
+  const title = orFallback(content?.sectionTitle, DEFAULT_TITLE);
+  const subtitle = orFallback(content?.sectionSubtitle, DEFAULT_SUBTITLE);
+  const ctaText = orFallback(content?.ctaText, DEFAULT_CTA);
+  const ctaLink = orFallback(content?.ctaLink, DEFAULT_CTA_LINK);
+
   return (
-    <section className="max-w-6xl mx-auto px-4 py-8">
-      <h2 className="font-serif text-2xl md:text-3xl text-center text-stone-900">
-        Personaliza tu pijama en{" "}
-        <span className="text-[#A38A3E]">4 simples pasos</span>
-      </h2>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
+      <div className="relative rounded-3xl lg:rounded-[2.5rem] bg-[#F7F4EC] border border-[#E6DFC9]/70 overflow-hidden shadow-sm grid grid-cols-1 lg:grid-cols-12">
+        
+        {/* COLUMNA IZQUIERDA: Fotografía Lifestyle de la experiencia de diseño */}
+        <div className="lg:col-span-5 relative min-h-[260px] sm:min-h-[340px] lg:min-h-[420px] w-full overflow-hidden bg-stone-200">
+          <Image
+            src={orFallback(content?.mainImageUrl, DEFAULT_IMAGE)}
+            alt={orFallback(content?.mainImageAlt, "Diseña tu pijama personalizada")}
+            fill
+            sizes="(max-width: 1024px) 100vw, 40vw"
+            className="object-cover object-center transition-transform duration-700 ease-out hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent lg:hidden" />
+        </div>
 
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mt-8">
-        <div className="flex-1 w-full grid grid-cols-2 lg:flex lg:items-center lg:justify-between gap-2 lg:gap-4">
-          {steps.map((step, i) => {
-            const Icon = step.icon;
-            return (
-              <Fragment key={i}>
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-[#FDFBF7] flex items-center justify-center mx-auto mb-3">
-                    <Icon className="text-[#A38A3E] h-9 w-9 md:h-10 md:w-10" strokeWidth={1.5} />
+        {/* COLUMNA DERECHA: Título, 4 Pasos del Asistente y Botón de Acción */}
+        <div className="lg:col-span-7 p-6 sm:p-8 lg:p-12 flex flex-col justify-center relative">
+          
+          {/* Ilustración botánica sutil en esquina superior derecha */}
+          <div className="absolute top-4 right-4 sm:top-6 sm:right-6 pointer-events-none opacity-20 text-[#A38A3E]">
+            <svg width="90" height="90" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 90C50 60 70 30 90 20C70 40 50 60 50 90Z" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M50 90C50 60 30 30 10 20C30 40 50 60 50 90Z" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M50 10V90" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="50" cy="15" r="4" fill="currentColor" />
+            </svg>
+          </div>
+
+          {/* Encabezado */}
+          <div className="mb-6 sm:mb-8 relative z-10">
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-[#34351F] font-medium tracking-tight mb-2">
+              {title}
+            </h2>
+            <p className="font-sans text-xs sm:text-sm text-stone-600">
+              {subtitle}
+            </p>
+          </div>
+
+          {/* 4 Pasos Reales del Asistente */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5 mb-8 relative z-10">
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.number}
+                  className="flex flex-col items-start bg-white/70 backdrop-blur-xs p-3.5 sm:p-4 rounded-2xl border border-brand-border/40 shadow-2xs hover:bg-white hover:border-[#6B6832]/40 transition-all group"
+                >
+                  <div className="h-9 w-9 rounded-xl bg-brand-warm-beige/60 flex items-center justify-center text-[#A38A3E] mb-3 group-hover:bg-[#6B6832] group-hover:text-white transition-colors">
+                    <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </div>
-                  <p className="text-sm font-bold text-stone-900 text-center">{step.title}</p>
-                  <p className="text-xs text-stone-500 text-center">{step.subtitle}</p>
+                  <p className="text-xs font-semibold text-[#34351F] leading-tight">
+                    {step.label}
+                  </p>
+                  <p className="text-[11px] text-stone-500 font-normal mt-1 leading-snug">
+                    {step.subtitle}
+                  </p>
                 </div>
+              );
+            })}
+          </div>
 
-                {i < steps.length - 1 && (
-                  <div
-                    aria-hidden
-                    className="hidden lg:block w-8 lg:w-12 shrink-0 border-t-2 border-dotted border-stone-300 self-start mt-10"
-                  />
-                )}
-              </Fragment>
-            );
-          })}
+          {/* Botón CTA al Personalizador Real */}
+          <div className="relative z-10">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full px-8 py-3.5 bg-[#6B6832] hover:bg-[#34351F] text-white font-medium text-xs sm:text-sm transition-all duration-300 shadow-sm hover:shadow-md group w-full sm:w-fit justify-center"
+            >
+              <Link href={ctaLink}>
+                <span>{ctaText}</span>
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </div>
+
         </div>
 
-        <div className="w-full lg:w-[320px] flex-shrink-0 max-w-sm bg-[#F9F7F1] rounded-3xl p-6 md:p-8 text-center flex flex-col items-center justify-center">
-          <p className="font-serif text-xl font-medium text-stone-900 mb-2">¿Tienes una idea especial?</p>
-          <p className="text-xs text-stone-600 mb-6 max-w-[220px] mx-auto">
-            Envíanos tu diseño o inspiración y la hacemos posible ✨
-          </p>
-          <Button
-            asChild
-            className="w-full rounded-full bg-[#A38A3E] hover:bg-[#8C7432] text-white py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
-          >
-            <Link href="/personaliza">
-              Personalizar ahora
-              <FaWhatsapp className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
       </div>
     </section>
   );

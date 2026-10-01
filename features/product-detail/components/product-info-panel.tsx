@@ -7,25 +7,67 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StarRatingDisplay } from "@/components/shared/star-rating-display";
 import { SizeSelector } from "@/components/shared/size-selector";
-import { ColorSwatchSelector } from "@/components/shared/color-swatch-selector";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { AddToCartButton } from "@/features/cart/add-to-cart-button";
 import { SizeGuideModal } from "@/features/products/components/size-guide-modal";
+import { ColorSelector } from "./color-selector";
 import type { ProductDetail } from "../types";
 import { PriceNoticeBanner } from "./price-notice-banner";
+import {
+  isLargeSize,
+  computeSizeSurcharge,
+  computeCategorySurcharge,
+  findActiveCategory,
+} from "../utils/price-helpers";
 
-export function ProductInfoPanel({ product }: { product: ProductDetail }) {
+interface ProductInfoPanelProps {
+  product: ProductDetail;
+  /** Controlled color hex from parent (used for gallery sync). */
+  selectedColor?: string;
+  /** Callback when color changes (used for gallery sync). */
+  onColorChange?: (hex: string) => void;
+  /** Category slug from URL query param, used to filter notice banners. */
+  categorySlug?: string;
+}
+
+export function ProductInfoPanel({
+  product,
+  selectedColor,
+  onColorChange,
+  categorySlug,
+}: ProductInfoPanelProps) {
+  // Internal color state (used when not controlled by parent)
+  const [internalColor, setInternalColor] = useState(
+    product.colors[0]?.hex ?? ""
+  );
+
+  // Use controlled color if provided, otherwise use internal state
+  const color = selectedColor ?? internalColor;
+  const handleColorChange = onColorChange ?? setInternalColor;
+
   const [size, setSize] = useState(product.sizes[0]);
-  const [color, setColor] = useState(product.colors[0]?.hex ?? "");
   const [quantity, setQuantity] = useState(1);
 
   const selectedVariant = useMemo(() => {
     return product.variants.find((v) => v.size === size && v.colorHex === color);
   }, [product.variants, size, color]);
 
-  const effectivePrice = selectedVariant?.price ?? product.basePrice;
-  const hasAdjustedPrice = effectivePrice > product.basePrice;
-  const priceAdjustment = effectivePrice - product.basePrice;
+  // ── Precio: desglose con helpers compartidos ──
+  const basePrice = product.basePrice;
+  const sizeSurcharge = computeSizeSurcharge(selectedVariant?.price, basePrice);
+  const isPlusSize = isLargeSize(size);
+
+  // Categoría activa (solo cuando se seleccionó una en el filtro del catálogo)
+  const activeCategory = useMemo(
+    () => findActiveCategory(product.categories, categorySlug),
+    [product.categories, categorySlug]
+  );
+  const categorySurcharge = computeCategorySurcharge(activeCategory, basePrice);
+
+  // Precio final = base + recargo por talla + recargo por categoría
+  const finalPrice = basePrice + sizeSurcharge + categorySurcharge;
+  const totalSurcharge = sizeSurcharge + categorySurcharge;
+  const hasSurcharge = totalSurcharge > 0;
 
   // Tallas que no tienen NINGUNA combinación con stock, sin importar el color.
   const disabledSizes = useMemo(
@@ -61,14 +103,32 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-heading text-2xl text-foreground">
-          ${effectivePrice.toLocaleString("es-CO")} COP
-        </span>
-        {hasAdjustedPrice && (
-          <Badge variant="secondary" className="bg-brand-gold/15 text-foreground">
-            Precio ajustado +${priceAdjustment.toLocaleString("es-CO")} COP
-          </Badge>
+      {/* ── Bloque de precio con desglose ── */}
+      <div className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="font-heading text-2xl text-foreground">
+            ${finalPrice.toLocaleString("es-CO")} COP
+          </span>
+          {hasSurcharge && (
+            <span className="text-sm text-muted-foreground line-through">
+              ${basePrice.toLocaleString("es-CO")} COP
+            </span>
+          )}
+        </div>
+
+        {hasSurcharge && (
+          <div className="flex flex-wrap items-center gap-2 mt-0.5">
+            {sizeSurcharge > 0 && (
+              <Badge variant="secondary" className="bg-amber-100/80 text-amber-900 border-amber-200/60">
+                Talla {size.toUpperCase()} +${sizeSurcharge.toLocaleString("es-CO")}
+              </Badge>
+            )}
+            {categorySurcharge > 0 && activeCategory && (
+              <Badge variant="secondary" className="bg-rose-100/80 text-rose-900 border-rose-200/60">
+                {activeCategory.name} +${categorySurcharge.toLocaleString("es-CO")}
+              </Badge>
+            )}
+          </div>
         )}
       </div>
 
@@ -83,15 +143,13 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
       </div>
 
       {product.colors.length > 0 && (
-        <div>
-          <p className="text-sm font-medium text-foreground mb-2">Color</p>
-          <ColorSwatchSelector
-            colors={product.colors}
-            selected={color}
-            onChange={setColor}
-            disabledHexes={disabledColorsForSize}
-          />
-        </div>
+        <ColorSelector
+          imageDetails={product.imageDetails ?? []}
+          colors={product.colors}
+          selectedColorHex={color}
+          onColorChange={handleColorChange}
+          disabledHexes={disabledColorsForSize}
+        />
       )}
 
       <div>
@@ -103,13 +161,9 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
         selectedSize={size}
         categories={product.categories}
         categoryName={product.categoryName}
+        basePrice={product.basePrice}
+        filterCategorySlug={categorySlug}
       />
-
-      {hasAdjustedPrice && (
-        <p className="text-sm text-muted-foreground bg-secondary/60 rounded-md px-3 py-2">
-          Esta combinación tiene un precio especial por talla, modelo o combinación seleccionada.
-        </p>
-      )}
 
       {selectedVariant && selectedVariant.stock <= 0 && (
         <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
@@ -122,27 +176,27 @@ export function ProductInfoPanel({ product }: { product: ProductDetail }) {
           productId={product.id}
           slug={product.slug}
           name={product.name}
-          price={effectivePrice}
-          image={product.images[0] ?? ""}
+          price={finalPrice}
           size={size}
           colorName={product.colors.find((c) => c.hex === color)?.name ?? ""}
           colorHex={color}
           quantity={quantity}
+          image={product.images[0] ?? ""}
           disabled={!selectedCombinationAvailable}
         />
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {product.allowCustomization && (
-            <Button size="lg" variant="outline" asChild className="flex-1 h-12">
+            <Button asChild variant="outline" className="w-full">
               <Link href={customizeHref}>
-                <Sparkles className="h-4 w-4 mr-2" />
+                <Sparkles className="mr-2 h-4 w-4 text-brand-rose" />
                 Personalizar
               </Link>
             </Button>
           )}
-          <Button size="lg" variant="outline" asChild className="flex-1 h-12">
+          <Button asChild variant="outline" className="w-full">
             <Link href={quoteHref}>
-              <MessageCircle className="h-4 w-4 mr-2" />
+              <MessageCircle className="mr-2 h-4 w-4" />
               Solicitar cotización
             </Link>
           </Button>

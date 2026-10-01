@@ -28,10 +28,13 @@ interface ApiCatalogProduct {
   colors: ApiProductColor[];
 }
 
-interface ApiCategory {
+export interface ApiCategory {
   id: string;
   name: string;
   slug: string;
+  imageUrl?: string | null;
+  defaultPrice?: number | null;
+  surchargeReason?: string | null;
 }
 
 function adaptProduct(p: ApiCatalogProduct): CatalogProductItem {
@@ -67,7 +70,7 @@ function applySort(products: CatalogProductItem[], sort?: SortOption): CatalogPr
   if (sort === "precio-asc") return list.sort((a, b) => a.price - b.price);
   if (sort === "precio-desc") return list.sort((a, b) => b.price - a.price);
   if (sort === "nombre") return list.sort((a, b) => a.name.localeCompare(b.name));
-  return list; // "recientes" = orden que ya entrega el backend (CreatedAt desc)
+  return list;
 }
 
 export async function getCatalogProducts(params: CatalogSearchParams): Promise<CatalogProductItem[]> {
@@ -86,11 +89,6 @@ export async function getCatalogProducts(params: CatalogSearchParams): Promise<C
   });
   let adapted = products.map(adaptProduct);
 
-  // Talla, Color y Precio se filtran en memoria: el backend ya redujo el
-  // conjunto por categoría/búsqueda, y estos atributos de variante/valor no
-  // son columnas indexables de forma simple en el listado — filtrar aquí
-  // sobre un conjunto ya acotado es más simple que agregar más query params
-  // combinables al backend por ahora.
   if (params.talla) {
     adapted = adapted.filter((p) => p.sizes.includes(params.talla!));
   }

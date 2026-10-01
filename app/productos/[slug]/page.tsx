@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ProductGallery } from "@/features/product-detail/components/product-gallery";
-import { ProductInfoPanel } from "@/features/product-detail/components/product-info-panel";
+import { ProductDetailClient } from "@/features/product-detail/components/product-detail-client";
 import { ProductInfoTabs } from "@/features/product-detail/components/product-info-tabs";
 import { RelatedProducts } from "@/features/product-detail/components/related-products";
 import { ProductFeaturesStrip } from "@/features/product-detail/components/product-features-strip";
@@ -26,8 +25,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
 }
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProductDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
   const { slug } = await params;
+  const rawSearchParams = await searchParams;
+  const categorySlug = rawSearchParams.categoria ?? undefined;
 
   const product = await getProductDetail(slug);
   if (!product) notFound();
@@ -65,10 +72,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         ])}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <ProductGallery images={product.images} productName={product.name} />
-        <ProductInfoPanel product={product} />
-      </div>
+      <ProductDetailClient product={product} categorySlug={categorySlug} />
 
       <ProductInfoTabs description={product.description} />
 

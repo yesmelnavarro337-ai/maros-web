@@ -17,7 +17,7 @@ export function DismissibleAnnouncementBar({ message, ctaLabel, ctaHref }: Dismi
 
   return (
     <div className="bg-brand-gold text-brand-gold-foreground text-sm border-b border-black/10">
-      <div className="max-w-7xl mx-auto px-4 h-9 flex items-center justify-center gap-3 relative">
+      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-9 flex items-center justify-center gap-3 relative">
         <span className="text-center">{message}</span>
         {ctaLabel && ctaHref && (
           <Link href={ctaHref} className="underline underline-offset-2 whitespace-nowrap hover:opacity-80">

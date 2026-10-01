@@ -1,40 +1,37 @@
-import { Quote } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { StarRatingDisplay } from "@/components/shared/star-rating-display";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { getTestimonials } from "@/features/testimonials/services/testimonials.service";
+import { TestimonialsCarousel } from "./testimonials-carousel";
 
 export async function TestimonialsSection() {
   const testimonials = await getTestimonials();
 
-  if (testimonials.length === 0) return null;
+  if (!testimonials || testimonials.length === 0) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-10">
-      <h2 className="font-heading text-2xl sm:text-3xl text-foreground text-center mb-8">
-        Lo que dicen nuestras <span className="text-primary">clientas</span>
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {testimonials.map((t) => (
-          <div key={t.id} className="rounded-2xl bg-[#F4EFE6] p-6 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <StarRatingDisplay rating={t.rating} />
-              <Quote className="h-5 w-5 text-[#A38A3E]" />
-            </div>
-            <p className="text-sm text-foreground italic leading-relaxed">&quot;{t.quote}&quot;</p>
-            <div className="flex items-center gap-2.5 mt-auto pt-3">
-              <Avatar className="h-10 w-10 ring-2 ring-[#A38A3E]/60">
-                <AvatarFallback className="bg-[#A38A3E] text-white text-xs">
-                  {t.clientName[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-semibold text-foreground leading-tight">{t.clientName}</p>
-                <p className="text-xs text-muted-foreground">Cliente verificada</p>
-              </div>
-            </div>
-          </div>
-        ))}
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
+      {/* Encabezado Editorial */}
+      <div className="flex items-end justify-between mb-6 sm:mb-8">
+        <div>
+          <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-[#34351F] font-medium tracking-tight">
+            Lo dicen nuestras <span className="italic font-normal">clientas</span>
+          </h2>
+          <p className="font-sans text-xs sm:text-sm text-stone-500 mt-1 sm:mt-1.5">
+            Historias reales, pijamas favoritas.
+          </p>
+        </div>
+
+        <Link
+          href="/nosotros"
+          className="group hidden sm:inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-[#6B6832] hover:text-[#34351F] transition-colors"
+        >
+          <span>Ver más</span>
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+        </Link>
       </div>
+
+      {/* Carrusel / Grid de Testimonios */}
+      <TestimonialsCarousel testimonials={testimonials} />
     </section>
   );
 }

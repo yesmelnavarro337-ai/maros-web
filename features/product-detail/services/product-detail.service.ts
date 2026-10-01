@@ -21,6 +21,16 @@ interface ApiProductCategory {
   slug: string;
   defaultPrice?: number | null;
   surchargeReason?: string | null;
+  price?: number | null;
+  productSurchargeReason?: string | null;
+}
+
+interface ApiProductImage {
+  id: string;
+  url: string;
+  order: number;
+  colorHex?: string | null;
+  colorName?: string | null;
 }
 
 interface ApiProductDetail {
@@ -34,6 +44,7 @@ interface ApiProductDetail {
   categoryName: string;
   categoryId?: string | null;
   images: string[];
+  imageDetails?: ApiProductImage[] | null;
   sizes: string[];
   colors: ApiProductColor[];
   variants: ApiProductVariant[];
@@ -65,10 +76,28 @@ function sortSizes(sizes: string[]): string[] {
 function adaptDetail(p: ApiProductDetail): ProductDetail {
   const categoryIds = p.categoryIds?.length ? p.categoryIds : p.categoryId ? [p.categoryId] : [];
   const categories = p.categories?.length
-    ? p.categories
+    ? p.categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        defaultPrice: c.defaultPrice,
+        surchargeReason: c.surchargeReason,
+        price: c.price,
+        productSurchargeReason: c.productSurchargeReason,
+      }))
     : p.categoryId
       ? [{ id: p.categoryId, name: p.categoryName || "Pijamas de mujer", slug: "" }]
       : [];
+
+  const imageDetails = p.imageDetails?.length
+    ? p.imageDetails.map((img) => ({
+        id: img.id,
+        url: img.url,
+        order: img.order,
+        colorHex: img.colorHex,
+        colorName: img.colorName,
+      }))
+    : p.images.map((url, idx) => ({ url, order: idx }));
 
   return {
     id: p.id,
@@ -78,6 +107,7 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
     price: p.basePrice,
     description: p.description,
     images: p.images,
+    imageDetails,
     sizes: sortSizes(p.sizes),
     colors: p.colors,
     variants: p.variants.map((v) => ({
