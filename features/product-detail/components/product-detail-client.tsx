@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ProductGallery } from "./product-gallery";
 import { ProductInfoPanel } from "./product-info-panel";
-import type { ProductColorOption, ProductDetail } from "../types";
+import type { ProductColorOption, ProductDetail, ProductDetailImage } from "../types";
 
 interface ProductDetailClientProps {
   product: ProductDetail;
@@ -79,16 +79,7 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
     }
   }, [availableColors, selectedColorName]);
 
-  // Determine if imageDetails contain color info
-  const hasColorTaggedImages = useMemo(() => {
-    return (product.imageDetails ?? []).some(
-      (img) =>
-        (img.colorHex && img.colorHex.trim() !== "") ||
-        (img.colorName && img.colorName.trim() !== "")
-    );
-  }, [product.imageDetails]);
-
-  // Find currently selected color object
+  // Encontrar objeto de color seleccionado
   const selectedColorObj = useMemo(() => {
     return (
       availableColors.find(
@@ -97,15 +88,29 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
     );
   }, [availableColors, selectedColorName]);
 
-  // Filter gallery images by the selected color, falling back to full gallery if untagged
-  const filteredImages = useMemo(() => {
-    if (!product.images || product.images.length === 0) return [];
+  // Normalizar lista completa de imágenes con metadatos de color
+  const allImageDetails = useMemo<ProductDetailImage[]>(() => {
+    if (product.imageDetails && product.imageDetails.length > 0) {
+      return product.imageDetails;
+    }
+    return (product.images || []).map((url, idx) => ({ url, order: idx }));
+  }, [product.imageDetails, product.images]);
+
+  // Comprobar si existen fotos etiquetadas con color
+  const hasColorTaggedImages = useMemo(() => {
+    return allImageDetails.some(
+      (img) => Boolean(img.colorName && img.colorName.trim() !== "")
+    );
+  }, [allImageDetails]);
+
+  // Filtrar las fotos de la galería según el color activo
+  const displayImages = useMemo<ProductDetailImage[]>(() => {
+    if (!allImageDetails || allImageDetails.length === 0) return [];
     if (!hasColorTaggedImages || !selectedColorObj) {
-      return product.images;
+      return allImageDetails;
     }
 
-    const imageDetails = product.imageDetails ?? [];
-    const colorFiltered = imageDetails
+    const filtered = allImageDetails
       .filter((img) => {
         // Coincidencia exacta por nombre de color prioritariamente
         if (img.colorName && selectedColorObj.name) {
@@ -113,7 +118,7 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
             return true;
           }
         }
-        // Coincidencia por colorHex si colorName no estuviera presente
+        // Coincidencia secundaria por hex
         if (img.colorHex && selectedColorObj.hex) {
           if (img.colorHex.trim().toLowerCase() === selectedColorObj.hex.trim().toLowerCase()) {
             return true;
@@ -121,12 +126,11 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
         }
         return false;
       })
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      .map((img) => img.url);
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     // Fallback: si el color seleccionado no tiene fotos asignadas aún, mostrar toda la galería
-    return colorFiltered.length > 0 ? colorFiltered : product.images;
-  }, [product.images, product.imageDetails, selectedColorObj, hasColorTaggedImages]);
+    return filtered.length > 0 ? filtered : allImageDetails;
+  }, [allImageDetails, selectedColorObj, hasColorTaggedImages]);
 
   const handleColorChange = (colorName: string) => {
     setSelectedColorName(colorName);
@@ -135,9 +139,10 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
       <ProductGallery
-        images={filteredImages}
+        images={displayImages}
         productName={product.name}
-        selectedColorHex={selectedColorObj?.hex}
+        selectedColorName={selectedColorObj?.name ?? selectedColorName}
+        onImageColorSelect={handleColorChange}
       />
       <ProductInfoPanel
         product={product}
