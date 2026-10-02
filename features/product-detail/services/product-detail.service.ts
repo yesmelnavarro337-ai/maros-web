@@ -4,12 +4,18 @@ import type { ProductDetail } from "../types";
 interface ApiProductColor {
   name: string;
   hex: string;
+  primaryHex?: string;
+  secondaryHex?: string | null;
+  isCombined?: boolean;
 }
 
 interface ApiProductVariant {
   size: string;
   colorName: string;
   colorHex: string;
+  primaryHex?: string;
+  secondaryHex?: string | null;
+  isCombined?: boolean;
   available: boolean;
   stock: number;
   price?: number | null;
@@ -31,6 +37,9 @@ interface ApiProductImage {
   order: number;
   colorHex?: string | null;
   colorName?: string | null;
+  primaryHex?: string | null;
+  secondaryHex?: string | null;
+  isCombined?: boolean | null;
 }
 
 interface ApiProductDetail {
@@ -96,8 +105,52 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
         order: img.order,
         colorHex: img.colorHex,
         colorName: img.colorName,
+        primaryHex: img.primaryHex || img.colorHex || undefined,
+        secondaryHex: img.secondaryHex || undefined,
+        isCombined: img.isCombined ?? undefined,
       }))
     : p.images.map((url, idx) => ({ url, order: idx }));
+
+  // Extraer lista de colores únicos considerando colors, variants e imageDetails
+  const colorMap = new Map<string, { name: string; hex: string; primaryHex?: string; secondaryHex?: string | null; isCombined?: boolean }>();
+
+  p.colors?.forEach((c) => {
+    if (c.name && !colorMap.has(c.name)) {
+      colorMap.set(c.name, {
+        name: c.name,
+        hex: c.primaryHex || c.hex || "#6B6832",
+        primaryHex: c.primaryHex || c.hex || "#6B6832",
+        secondaryHex: c.secondaryHex || null,
+        isCombined: Boolean(c.isCombined || c.secondaryHex),
+      });
+    }
+  });
+
+  p.variants?.forEach((v) => {
+    if (v.colorName && !colorMap.has(v.colorName)) {
+      colorMap.set(v.colorName, {
+        name: v.colorName,
+        hex: v.colorHex || "#6B6832",
+        primaryHex: v.primaryHex || v.colorHex || "#6B6832",
+        secondaryHex: v.secondaryHex || null,
+        isCombined: Boolean(v.isCombined || v.secondaryHex),
+      });
+    }
+  });
+
+  p.imageDetails?.forEach((img) => {
+    if (img.colorName && !colorMap.has(img.colorName)) {
+      colorMap.set(img.colorName, {
+        name: img.colorName,
+        hex: img.primaryHex || img.colorHex || "#6B6832",
+        primaryHex: img.primaryHex || img.colorHex || "#6B6832",
+        secondaryHex: img.secondaryHex || null,
+        isCombined: Boolean(img.isCombined || img.secondaryHex),
+      });
+    }
+  });
+
+  const uniqueColors = Array.from(colorMap.values());
 
   return {
     id: p.id,
@@ -109,9 +162,12 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
     images: p.images,
     imageDetails,
     sizes: sortSizes(p.sizes),
-    colors: p.colors,
+    colors: uniqueColors,
     variants: p.variants.map((v) => ({
       ...v,
+      primaryHex: v.primaryHex || v.colorHex,
+      secondaryHex: v.secondaryHex,
+      isCombined: v.isCombined,
       stock: v.stock ?? (v.available ? 1 : 0),
       price: v.price ?? null,
     })),

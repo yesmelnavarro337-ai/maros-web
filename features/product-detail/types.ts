@@ -1,6 +1,9 @@
 export interface ProductColorOption {
   name: string;
   hex: string;
+  primaryHex?: string;
+  secondaryHex?: string | null;
+  isCombined?: boolean;
 }
 
 export interface ProductDetailImage {
@@ -9,12 +12,18 @@ export interface ProductDetailImage {
   order?: number;
   colorHex?: string | null;
   colorName?: string | null;
+  primaryHex?: string | null;
+  secondaryHex?: string | null;
+  isCombined?: boolean | null;
 }
 
 export interface ProductVariantAvailability {
   size: string;
   colorName: string;
   colorHex: string;
+  primaryHex?: string;
+  secondaryHex?: string | null;
+  isCombined?: boolean;
   available: boolean;
   stock: number;
   price?: number | null;

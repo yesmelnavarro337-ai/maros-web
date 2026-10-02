@@ -3,26 +3,30 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
-import { ImageOff } from "lucide-react";
 import type { ProductDetailImage, ProductColorOption } from "../types";
 
 interface ColorGroup {
-  hex: string;
   name: string;
+  hex: string;
+  primaryHex?: string;
+  secondaryHex?: string | null;
+  isCombined?: boolean;
   thumbnail: string | null;
 }
 
 interface ColorSelectorProps {
   imageDetails: ProductDetailImage[];
   colors: ProductColorOption[];
-  selectedColorHex: string;
-  onColorChange: (hex: string) => void;
+  selectedColorName?: string;
+  selectedColorHex?: string;
+  onColorChange: (colorName: string) => void;
+  disabledColorNames?: string[];
   disabledHexes?: string[];
 }
 
 /**
- * Builds unique color groups from imageDetails (primary) and variant colors (fallback).
- * Each group has a representative thumbnail image for that color.
+ * Builds unique color groups from colors (primary) and imageDetails (fallback).
+ * Keyed by color name to support combined colors sharing the same base hex.
  */
 function buildColorGroups(
   imageDetails: ProductDetailImage[],
@@ -30,32 +34,40 @@ function buildColorGroups(
 ): ColorGroup[] {
   const groupMap = new Map<string, ColorGroup>();
 
-  // First pass: iterate over colors array to preserve color order
+  // Primer paso: iterar sobre colores del producto
   for (const color of colors) {
-    const key = color.hex.toLowerCase();
-    
-    // Find representative thumbnail image from imageDetails by colorHex or colorName
+    if (!color.name) continue;
+    const key = color.name.trim().toLowerCase();
+
+    // Buscar imagen asociada al color por colorName o colorHex
     const matchingImg = imageDetails.find(
       (img) =>
-        (img.colorHex && img.colorHex.toLowerCase() === key) ||
-        (img.colorName && color.name && img.colorName.toLowerCase() === color.name.toLowerCase())
+        (img.colorName && img.colorName.trim().toLowerCase() === key) ||
+        (img.colorHex && color.hex && img.colorHex.toLowerCase() === color.hex.toLowerCase())
     );
 
     groupMap.set(key, {
-      hex: color.hex,
       name: color.name,
+      hex: color.hex || color.primaryHex || "#6B6832",
+      primaryHex: color.primaryHex || color.hex || "#6B6832",
+      secondaryHex: color.secondaryHex || null,
+      isCombined: Boolean(color.isCombined || color.secondaryHex),
       thumbnail: matchingImg ? matchingImg.url : null,
     });
   }
 
-  // Second pass: include any color tagged in imageDetails that wasn't in colors array
+  // Segundo paso: incluir cualquier color presente en imageDetails que no estuviera en colors
   for (const img of imageDetails) {
-    if (!img.colorHex) continue;
-    const key = img.colorHex.toLowerCase();
+    if (!img.colorName && !img.colorHex) continue;
+    const name = img.colorName || img.colorHex || "";
+    const key = name.trim().toLowerCase();
     if (!groupMap.has(key)) {
       groupMap.set(key, {
-        hex: img.colorHex,
-        name: img.colorName || img.colorHex,
+        name,
+        hex: img.primaryHex || img.colorHex || "#6B6832",
+        primaryHex: img.primaryHex || img.colorHex || "#6B6832",
+        secondaryHex: img.secondaryHex || null,
+        isCombined: Boolean(img.isCombined || img.secondaryHex),
         thumbnail: img.url,
       });
     }
@@ -67,44 +79,58 @@ function buildColorGroups(
 export function ColorSelector({
   imageDetails,
   colors,
+  selectedColorName,
   selectedColorHex,
   onColorChange,
+  disabledColorNames = [],
   disabledHexes = [],
 }: ColorSelectorProps) {
   const colorGroups = buildColorGroups(imageDetails, colors);
 
   if (colorGroups.length === 0) return null;
 
-  const selectedGroup = colorGroups.find(
-    (g) => g.hex.toLowerCase() === selectedColorHex.toLowerCase()
-  );
-  const selectedColorName = selectedGroup?.name ?? "";
+  const selectedGroup =
+    colorGroups.find(
+      (g) =>
+        (selectedColorName && g.name.toLowerCase() === selectedColorName.toLowerCase()) ||
+        (selectedColorHex && g.hex.toLowerCase() === selectedColorHex.toLowerCase())
+    ) ?? colorGroups[0];
+
+  const activeName = selectedGroup?.name ?? "";
 
   return (
     <div>
       <p className="text-sm font-medium text-foreground mb-2">
         Color:{" "}
         <span className="font-semibold text-foreground capitalize">
-          {selectedColorName}
+          {activeName}
         </span>
       </p>
 
       <div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Colores disponibles">
         {colorGroups.map((group) => {
-          const isSelected =
-            group.hex.toLowerCase() === selectedColorHex.toLowerCase();
-          const isDisabled = disabledHexes.some(
-            (dh) => dh.toLowerCase() === group.hex.toLowerCase()
+          const isSelected = Boolean(
+            (selectedColorName && group.name.toLowerCase() === selectedColorName.toLowerCase()) ||
+            (!selectedColorName && selectedColorHex && group.hex.toLowerCase() === selectedColorHex.toLowerCase())
           );
+
+          const isDisabled =
+            disabledColorNames.some((dn) => dn.toLowerCase() === group.name.toLowerCase()) ||
+            disabledHexes.some((dh) => dh.toLowerCase() === group.hex.toLowerCase());
+
+          const swatchBackground =
+            group.isCombined && group.secondaryHex
+              ? `linear-gradient(135deg, ${group.primaryHex} 50%, ${group.secondaryHex} 50%)`
+              : (group.primaryHex || group.hex || "#6B6832");
 
           return (
             <button
-              key={group.hex}
+              key={group.name}
               type="button"
               role="radio"
               aria-checked={isSelected}
               disabled={isDisabled}
-              onClick={() => !isDisabled && onColorChange(group.hex)}
+              onClick={() => !isDisabled && onColorChange(group.name)}
               className={cn(
                 "relative w-16 h-20 rounded-lg border-2 overflow-hidden transition-all flex-shrink-0 group text-left",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
@@ -134,19 +160,26 @@ export function ColorSelector({
               ) : (
                 <div
                   className="w-full h-full flex items-center justify-center relative"
-                  style={{ backgroundColor: group.hex }}
+                  style={{ background: swatchBackground }}
                 >
-                  <ImageOff className="h-4 w-4 text-white/70" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 </div>
               )}
 
-              {/* Color name label banner at bottom */}
+              {/* Mini badge cromático en la esquina superior si tiene foto */}
+              {group.thumbnail && (
+                <span
+                  className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full border border-white shadow-xs z-10"
+                  style={{ background: swatchBackground }}
+                />
+              )}
+
+              {/* Banner inferior con nombre del color */}
               <span className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-[2px] text-[10px] text-white text-center py-0.5 truncate px-1 font-medium leading-tight z-10">
                 {group.name}
               </span>
 
-              {/* Disabled strikethrough */}
+              {/* Tachado cuando está deshabilitado */}
               {isDisabled && (
                 <span className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                   <span className="h-[2px] w-12 bg-destructive/80 rotate-45 shadow-xs" />

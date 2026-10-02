@@ -11,7 +11,7 @@ import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { AddToCartButton } from "@/features/cart/add-to-cart-button";
 import { SizeGuideModal } from "@/features/products/components/size-guide-modal";
 import { ColorSelector } from "./color-selector";
-import type { ProductDetail } from "../types";
+import type { ProductColorOption, ProductDetail } from "../types";
 import { PriceNoticeBanner } from "./price-notice-banner";
 import {
   isLargeSize,
@@ -22,35 +22,69 @@ import {
 
 interface ProductInfoPanelProps {
   product: ProductDetail;
-  /** Controlled color hex from parent (used for gallery sync). */
+  /** Lista de colores disponibles unificados (variantes + imágenes). */
+  availableColors?: ProductColorOption[];
+  /** Controlled color name from parent (used for gallery sync). */
+  selectedColorName?: string;
+  /** Controlled color hex from parent (fallback). */
   selectedColor?: string;
   /** Callback when color changes (used for gallery sync). */
-  onColorChange?: (hex: string) => void;
+  onColorChange?: (colorName: string) => void;
   /** Category slug from URL query param, used to filter notice banners. */
   categorySlug?: string;
 }
 
 export function ProductInfoPanel({
   product,
+  availableColors: propAvailableColors,
+  selectedColorName,
   selectedColor,
   onColorChange,
   categorySlug,
 }: ProductInfoPanelProps) {
-  // Internal color state (used when not controlled by parent)
-  const [internalColor, setInternalColor] = useState(
-    product.colors[0]?.hex ?? ""
+  const colorsList = useMemo(() => {
+    if (propAvailableColors && propAvailableColors.length > 0) {
+      return propAvailableColors;
+    }
+    return product.colors;
+  }, [propAvailableColors, product.colors]);
+
+  // Internal color name state (used when not controlled by parent)
+  const [internalColorName, setInternalColorName] = useState(
+    colorsList[0]?.name ?? ""
   );
 
-  // Use controlled color if provided, otherwise use internal state
-  const color = selectedColor ?? internalColor;
-  const handleColorChange = onColorChange ?? setInternalColor;
+  // Use controlled colorName if provided, otherwise use internal state
+  const colorName = selectedColorName ?? selectedColor ?? internalColorName;
+  const handleColorChange = onColorChange ?? setInternalColorName;
+
+  const selectedColorObj = useMemo(() => {
+    return (
+      colorsList.find((c) => c.name.toLowerCase() === colorName.toLowerCase()) ||
+      colorsList.find((c) => c.hex.toLowerCase() === colorName.toLowerCase()) ||
+      colorsList[0]
+    );
+  }, [colorsList, colorName]);
 
   const [size, setSize] = useState(product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
 
   const selectedVariant = useMemo(() => {
-    return product.variants.find((v) => v.size === size && v.colorHex === color);
-  }, [product.variants, size, color]);
+    return (
+      product.variants.find(
+        (v) =>
+          v.size === size &&
+          selectedColorObj?.name &&
+          v.colorName.toLowerCase() === selectedColorObj.name.toLowerCase()
+      ) ||
+      product.variants.find(
+        (v) =>
+          v.size === size &&
+          selectedColorObj?.hex &&
+          v.colorHex.toLowerCase() === selectedColorObj.hex.toLowerCase()
+      )
+    );
+  }, [product.variants, size, selectedColorObj]);
 
   // ── Precio: desglose con helpers compartidos ──
   const basePrice = product.basePrice;
@@ -77,18 +111,20 @@ export function ProductInfoPanel({
 
   // Colores sin stock específicamente para la talla actualmente seleccionada.
   const disabledColorsForSize = useMemo(() => {
-    return product.colors
+    return colorsList
       .filter((c) => {
-        const variant = product.variants.find((v) => v.size === size && v.colorName === c.name);
+        const variant = product.variants.find(
+          (v) => v.size === size && v.colorName.toLowerCase() === c.name.toLowerCase()
+        );
         return variant ? variant.stock <= 0 : false;
       })
-      .map((c) => c.hex);
-  }, [product.colors, product.variants, size]);
+      .map((c) => c.name);
+  }, [colorsList, product.variants, size]);
 
   const selectedCombinationAvailable = (selectedVariant?.stock ?? 0) > 0;
 
-  const customizeHref = `/personaliza?producto=${product.slug}&talla=${size}&color=${encodeURIComponent(color)}&cantidad=${quantity}`;
-  const quoteHref = `/cotizar?producto=${product.slug}&talla=${size}&color=${encodeURIComponent(color)}&cantidad=${quantity}`;
+  const customizeHref = `/personaliza?producto=${product.slug}&talla=${size}&color=${encodeURIComponent(selectedColorObj?.name ?? colorName)}&cantidad=${quantity}`;
+  const quoteHref = `/cotizar?producto=${product.slug}&talla=${size}&color=${encodeURIComponent(selectedColorObj?.name ?? colorName)}&cantidad=${quantity}`;
 
   return (
     <div className="flex flex-col gap-5">
@@ -142,13 +178,13 @@ export function ProductInfoPanel({
         <SizeSelector sizes={product.sizes} selected={size} onChange={setSize} disabledSizes={disabledSizes} />
       </div>
 
-      {product.colors.length > 0 && (
+      {colorsList.length > 0 && (
         <ColorSelector
           imageDetails={product.imageDetails ?? []}
-          colors={product.colors}
-          selectedColorHex={color}
+          colors={colorsList}
+          selectedColorName={selectedColorObj?.name ?? colorName}
           onColorChange={handleColorChange}
-          disabledHexes={disabledColorsForSize}
+          disabledColorNames={disabledColorsForSize}
         />
       )}
 
@@ -178,8 +214,8 @@ export function ProductInfoPanel({
           name={product.name}
           price={finalPrice}
           size={size}
-          colorName={product.colors.find((c) => c.hex === color)?.name ?? ""}
-          colorHex={color}
+          colorName={selectedColorObj?.name ?? ""}
+          colorHex={selectedColorObj?.primaryHex ?? selectedColorObj?.hex ?? ""}
           quantity={quantity}
           image={product.images[0] ?? ""}
           disabled={!selectedCombinationAvailable}
