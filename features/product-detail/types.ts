@@ -1,4 +1,5 @@
 export interface ProductColorOption {
+  id?: string;
   name: string;
   hex: string;
   primaryHex?: string;
@@ -10,11 +11,20 @@ export interface ProductDetailImage {
   id?: string;
   url: string;
   order?: number;
+  colorId?: string | null;
   colorHex?: string | null;
   colorName?: string | null;
   primaryHex?: string | null;
   secondaryHex?: string | null;
   isCombined?: boolean | null;
+  color?: {
+    id?: string;
+    name?: string;
+    hex?: string;
+    primaryHex?: string;
+    secondaryHex?: string | null;
+    isCombined?: boolean;
+  } | null;
 }
 
 export interface ProductVariantAvailability {

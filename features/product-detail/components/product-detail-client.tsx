@@ -96,41 +96,50 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
     return (product.images || []).map((url, idx) => ({ url, order: idx }));
   }, [product.imageDetails, product.images]);
 
-  // Comprobar si existen fotos etiquetadas con color
-  const hasColorTaggedImages = useMemo(() => {
-    return allImageDetails.some(
-      (img) => Boolean(img.colorName && img.colorName.trim() !== "")
-    );
-  }, [allImageDetails]);
-
-  // Filtrar las fotos de la galería según el color activo
+  // Filtrar las fotos de la galería según el color activo con lógica tolerante y robusta
   const displayImages = useMemo<ProductDetailImage[]>(() => {
     if (!allImageDetails || allImageDetails.length === 0) return [];
-    if (!hasColorTaggedImages || !selectedColorObj) {
-      return allImageDetails;
-    }
+    if (!selectedColorObj) return allImageDetails;
+
+    const normalize = (str?: string | null) =>
+      (str || "").trim().toLowerCase().replace(/\s+/g, " ");
+
+    const selectedName = normalize(selectedColorObj.name);
+    const selectedHex = normalize(selectedColorObj.hex || selectedColorObj.primaryHex);
+    const selectedId = (selectedColorObj as any)?.id;
 
     const filtered = allImageDetails
       .filter((img) => {
-        // Coincidencia exacta por nombre de color prioritariamente
-        if (img.colorName && selectedColorObj.name) {
-          if (img.colorName.trim().toLowerCase() === selectedColorObj.name.trim().toLowerCase()) {
+        // 1. Coincidencia por ID si existe
+        const imgColorId = (img as any).colorId || (img as any).color_id;
+        if (imgColorId && selectedId && String(imgColorId) === String(selectedId)) {
+          return true;
+        }
+
+        // 2. Coincidencia por Nombre de color normalizado (tolerante a espacios/mayúsculas)
+        const imgColorName = normalize(
+          img.colorName || (img as any).color?.name || (img as any).color_name
+        );
+        if (imgColorName && selectedName) {
+          if (imgColorName === selectedName) return true;
+          if (imgColorName.includes(selectedName) || selectedName.includes(imgColorName)) {
             return true;
           }
         }
-        // Coincidencia secundaria por hex
-        if (img.colorHex && selectedColorObj.hex) {
-          if (img.colorHex.trim().toLowerCase() === selectedColorObj.hex.trim().toLowerCase()) {
-            return true;
-          }
+
+        // 3. Coincidencia por Hexadecimal sólo si la imagen no tiene nombre definido
+        const imgHex = normalize(img.colorHex || img.primaryHex);
+        if (!imgColorName && imgHex && selectedHex) {
+          if (imgHex === selectedHex) return true;
         }
+
         return false;
       })
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-    // Fallback: si el color seleccionado no tiene fotos asignadas aún, mostrar toda la galería
+    // Si se encontraron imágenes específicas para ese color, retornarlas; de lo contrario retorno fallback de todas las fotos
     return filtered.length > 0 ? filtered : allImageDetails;
-  }, [allImageDetails, selectedColorObj, hasColorTaggedImages]);
+  }, [allImageDetails, selectedColorObj]);
 
   const handleColorChange = (colorName: string) => {
     setSelectedColorName(colorName);
@@ -139,9 +148,12 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
       <ProductGallery
-        images={displayImages}
+        images={allImageDetails}
         productName={product.name}
+        selectedColor={selectedColorObj}
         selectedColorName={selectedColorObj?.name ?? selectedColorName}
+        selectedColorId={selectedColorObj?.id}
+        selectedColorHex={selectedColorObj?.hex}
         onImageColorSelect={handleColorChange}
       />
       <ProductInfoPanel

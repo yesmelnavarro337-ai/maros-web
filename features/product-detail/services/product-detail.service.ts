@@ -98,26 +98,46 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
       ? [{ id: p.categoryId, name: p.categoryName || "Pijamas de mujer", slug: "" }]
       : [];
 
-  const imageDetails = p.imageDetails?.length
-    ? p.imageDetails.map((img) => ({
-        id: img.id,
-        url: img.url,
-        order: img.order,
-        colorHex: img.colorHex,
-        colorName: img.colorName,
-        primaryHex: img.primaryHex || img.colorHex || undefined,
-        secondaryHex: img.secondaryHex || undefined,
-        isCombined: img.isCombined ?? undefined,
-      }))
-    : p.images.map((url, idx) => ({ url, order: idx }));
+  const rawImages: any[] = p.imageDetails?.length
+    ? p.imageDetails
+    : Array.isArray(p.images)
+      ? p.images
+      : [];
+
+  const imageDetails = rawImages.map((img, idx) => {
+    if (typeof img === "string") {
+      return { url: img, order: idx };
+    }
+    const colorId = img.colorId || img.color_id || img.color?.id || undefined;
+    const colorName = (img.colorName || img.color_name || img.color?.name || "").trim() || undefined;
+    const colorHex = img.colorHex || img.hex || img.color?.hex || undefined;
+    const primaryHex = img.primaryHex || img.colorHex || img.hex || img.color?.primaryHex || undefined;
+    const secondaryHex = img.secondaryHex || img.color?.secondaryHex || undefined;
+    const isCombined = img.isCombined ?? img.color?.isCombined ?? undefined;
+
+    return {
+      id: img.id,
+      url: img.url || img.imageUrl || "",
+      order: img.order ?? idx,
+      colorId,
+      colorHex,
+      colorName,
+      primaryHex,
+      secondaryHex,
+      isCombined,
+      color: img.color ?? (colorName ? { id: colorId, name: colorName, hex: colorHex, primaryHex, secondaryHex, isCombined } : null),
+    };
+  });
 
   // Extraer lista de colores únicos considerando colors, variants e imageDetails
-  const colorMap = new Map<string, { name: string; hex: string; primaryHex?: string; secondaryHex?: string | null; isCombined?: boolean }>();
+  const colorMap = new Map<string, { id?: string; name: string; hex: string; primaryHex?: string; secondaryHex?: string | null; isCombined?: boolean }>();
 
-  p.colors?.forEach((c) => {
-    if (c.name && !colorMap.has(c.name)) {
-      colorMap.set(c.name, {
-        name: c.name,
+  p.colors?.forEach((c: any) => {
+    const name = (c.name || "").trim();
+    if (name && !colorMap.has(name.toLowerCase())) {
+      colorMap.set(name.toLowerCase(), {
+        id: c.id || c.colorId,
+        name,
         hex: c.primaryHex || c.hex || "#6B6832",
         primaryHex: c.primaryHex || c.hex || "#6B6832",
         secondaryHex: c.secondaryHex || null,
@@ -126,26 +146,30 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
     }
   });
 
-  p.variants?.forEach((v) => {
-    if (v.colorName && !colorMap.has(v.colorName)) {
-      colorMap.set(v.colorName, {
-        name: v.colorName,
-        hex: v.colorHex || "#6B6832",
-        primaryHex: v.primaryHex || v.colorHex || "#6B6832",
-        secondaryHex: v.secondaryHex || null,
-        isCombined: Boolean(v.isCombined || v.secondaryHex),
+  p.variants?.forEach((v: any) => {
+    const name = (v.colorName || v.color?.name || "").trim();
+    if (name && !colorMap.has(name.toLowerCase())) {
+      colorMap.set(name.toLowerCase(), {
+        id: v.colorId || v.color?.id,
+        name,
+        hex: v.colorHex || v.hex || "#6B6832",
+        primaryHex: v.primaryHex || v.colorHex || v.hex || "#6B6832",
+        secondaryHex: v.secondaryHex || v.color?.secondaryHex || null,
+        isCombined: Boolean(v.isCombined || v.secondaryHex || v.color?.isCombined),
       });
     }
   });
 
-  p.imageDetails?.forEach((img) => {
-    if (img.colorName && !colorMap.has(img.colorName)) {
-      colorMap.set(img.colorName, {
-        name: img.colorName,
+  imageDetails.forEach((img) => {
+    const name = (img.colorName || img.color?.name || "").trim();
+    if (name && !colorMap.has(name.toLowerCase())) {
+      colorMap.set(name.toLowerCase(), {
+        id: img.colorId || img.color?.id,
+        name,
         hex: img.primaryHex || img.colorHex || "#6B6832",
         primaryHex: img.primaryHex || img.colorHex || "#6B6832",
-        secondaryHex: img.secondaryHex || null,
-        isCombined: Boolean(img.isCombined || img.secondaryHex),
+        secondaryHex: img.secondaryHex || img.color?.secondaryHex || null,
+        isCombined: Boolean(img.isCombined || img.secondaryHex || img.color?.isCombined),
       });
     }
   });

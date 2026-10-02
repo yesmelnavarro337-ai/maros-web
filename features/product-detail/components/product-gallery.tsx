@@ -20,6 +20,8 @@ export interface ProductGalleryProps {
   productName: string;
   selectedColorName?: string;
   selectedColorHex?: string;
+  selectedColorId?: string;
+  selectedColor?: { id?: string; name?: string; hex?: string; primaryHex?: string } | null;
   onImageColorSelect?: (colorName: string) => void;
 }
 
@@ -28,12 +30,14 @@ export function ProductGallery({
   productName,
   selectedColorName,
   selectedColorHex,
+  selectedColorId,
+  selectedColor,
   onImageColorSelect,
 }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const normalizedImages = useMemo<ProductDetailImage[]>(() => {
+  const rawImages = useMemo<ProductDetailImage[]>(() => {
     return images.map((img, idx) => {
       if (typeof img === "string") {
         return { url: img, order: idx };
@@ -42,25 +46,64 @@ export function ProductGallery({
     });
   }, [images]);
 
+  // Tolerant filtering logic for displayImages
+  const displayImages = useMemo<ProductDetailImage[]>(() => {
+    const activeColorName = (selectedColorName || selectedColor?.name || "").trim().toLowerCase();
+    const activeColorId = selectedColorId || selectedColor?.id;
+    const activeColorHex = (selectedColorHex || selectedColor?.hex || selectedColor?.primaryHex || "").trim().toLowerCase();
+
+    if (!activeColorName && !activeColorId && !activeColorHex) {
+      return rawImages;
+    }
+
+    const filtered = rawImages.filter((img) => {
+      // 1. Coincidencia por ID (si existe)
+      const imgColorId = (img as any).colorId || (img as any).color_id || (img as any).color?.id;
+      if (imgColorId && activeColorId && String(imgColorId) === String(activeColorId)) {
+        return true;
+      }
+
+      // 2. Coincidencia por Nombre de color o variante
+      const imgColorName = (img.colorName || (img as any).color?.name || (img as any).color_name || "").trim().toLowerCase();
+      if (imgColorName && activeColorName) {
+        if (imgColorName === activeColorName || activeColorName.includes(imgColorName) || imgColorName.includes(activeColorName)) {
+          return true;
+        }
+      }
+
+      // 3. Fallback por Hexadecimal (si la imagen no tiene nombre definido)
+      const imgHex = (img.primaryHex || img.colorHex || (img as any).color?.hex || "").trim().toLowerCase();
+      if (!imgColorName && imgHex && activeColorHex) {
+        if (imgHex === activeColorHex) return true;
+      }
+
+      return false;
+    });
+
+    // Si se encontraron imágenes específicas para ese color, retornarlas; de lo contrario retorno fallback
+    return filtered.length > 0 ? filtered : rawImages;
+  }, [rawImages, selectedColorName, selectedColorId, selectedColorHex, selectedColor]);
+
   // Reset active image index to 0 whenever filtered images or selected color changes
   useEffect(() => {
     setActiveIndex(0);
-  }, [images, selectedColorName, selectedColorHex]);
+  }, [displayImages.length, selectedColorName, selectedColorHex, selectedColorId]);
 
-  const safeActiveIndex = activeIndex < normalizedImages.length ? activeIndex : 0;
-  const activeImage = normalizedImages[safeActiveIndex];
-  const lightboxImage = lightboxIndex !== null ? normalizedImages[lightboxIndex] : undefined;
+  const safeActiveIndex = activeIndex < displayImages.length ? activeIndex : 0;
+  const activeImage = displayImages[safeActiveIndex];
+  const lightboxImage = lightboxIndex !== null ? displayImages[lightboxIndex] : undefined;
 
   function stepLightbox(dir: 1 | -1) {
-    if (lightboxIndex === null || normalizedImages.length < 2) return;
-    setLightboxIndex((lightboxIndex + dir + normalizedImages.length) % normalizedImages.length);
+    if (lightboxIndex === null || displayImages.length < 2) return;
+    setLightboxIndex((lightboxIndex + dir + displayImages.length) % displayImages.length);
   }
 
   const handleThumbnailClick = (index: number) => {
     setActiveIndex(index);
-    const clickedItem = normalizedImages[index];
-    if (clickedItem?.colorName && onImageColorSelect) {
-      onImageColorSelect(clickedItem.colorName);
+    const clickedItem = displayImages[index];
+    const colorName = clickedItem?.colorName || (clickedItem as any)?.color?.name || (clickedItem as any)?.color_name;
+    if (colorName && onImageColorSelect) {
+      onImageColorSelect(colorName);
     }
   };
 
@@ -68,7 +111,7 @@ export function ProductGallery({
     <div className="flex gap-3">
       {/* Tira vertical de miniaturas */}
       <div className="hidden sm:flex flex-col gap-2 shrink-0">
-        {normalizedImages.map((img, i) => (
+        {displayImages.map((img, i) => (
           <button
             key={`${img.url}-${i}`}
             onClick={() => handleThumbnailClick(i)}
@@ -156,7 +199,7 @@ export function ProductGallery({
             <X className="h-5 w-5" />
           </button>
 
-          {normalizedImages.length > 1 && (
+          {displayImages.length > 1 && (
             <>
               <button
                 className="absolute left-1/4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
@@ -173,7 +216,7 @@ export function ProductGallery({
                 <ChevronRight className="h-5 w-5" />
               </button>
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-white/80">
-                {(lightboxIndex ?? 0) + 1} / {normalizedImages.length}
+                {(lightboxIndex ?? 0) + 1} / {displayImages.length}
               </div>
             </>
           )}
