@@ -31,6 +31,8 @@ export interface ProductVariantAvailability {
   size: string;
   colorName: string;
   colorHex: string;
+  styleName?: string | null;
+  materialName?: string | null;
   primaryHex?: string;
   secondaryHex?: string | null;
   isCombined?: boolean;
@@ -62,6 +64,8 @@ export interface ProductDetail {
   reviewCount?: number;
   sizes: string[];
   colors: ProductColorOption[];
+  styles?: string[];
+  materials?: string[];
   variants: ProductVariantAvailability[];
   categoryIds: string[];
   categories: ProductDetailCategory[];

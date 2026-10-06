@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { ProductCard } from "@/components/shared/product-card";
+import { CollectionProductsGrid } from "@/features/collections/components/collection-products-grid";
 import { getCollectionById, getProductsByCollection } from "@/features/collections/services/collections.service";
 import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
@@ -69,11 +69,7 @@ export default async function CollectionDetailPage({ params }: { params: Promise
           Aún no hay productos en esta colección.
         </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <CollectionProductsGrid products={products} />
       )}
     </div>
   );

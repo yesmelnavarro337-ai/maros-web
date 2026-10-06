@@ -107,7 +107,7 @@ export function ColorSelector({
         </span>
       </p>
 
-      <div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Colores disponibles">
+      <div className="flex gap-2 flex-wrap" role="radiogroup" aria-label="Colores disponibles">
         {colorGroups.map((group) => {
           const isSelected = Boolean(
             (selectedColorName && group.name.toLowerCase() === selectedColorName.toLowerCase()) ||

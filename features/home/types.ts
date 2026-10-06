@@ -6,8 +6,14 @@ export interface HeroSlide {
   subtitle: string;
   image?: string;
   overlayNote?: string;
-  primaryCta: { label: string; href: string };
-  secondaryCta: { label: string; href: string };
+  /**
+   * Cuando es false el slide se renderiza como imagen limpia a pantalla
+   * completa, sin badge, título, subtítulo, nota manuscrita ni botones.
+   * Por defecto es true (los slides de temporada y personalización llevan texto).
+   */
+  showOverlayText?: boolean;
+  primaryCta?: { label: string; href: string };
+  secondaryCta?: { label: string; href: string };
 }
 
 export interface HeroContent {

@@ -10,7 +10,8 @@ export interface CatalogProductItem {
   available: boolean;
   categoryIds: string[];
   categories: { id: string; name: string; slug: string }[];
-  categoryName: string;
+categoryName: string;
+  styleName?: string;
   sizes: string[];
   colors: { name: string; hex: string }[];
 }

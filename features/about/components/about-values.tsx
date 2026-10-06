@@ -1,4 +1,5 @@
 import { Heart, ShieldCheck, Lightbulb, Leaf } from "lucide-react";
+import { Reveal } from "@/components/shared/reveal";
 
 const values = [
   {
@@ -45,21 +46,22 @@ export function AboutValues() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {values.map((v) => {
+          {values.map((v, i) => {
             const Icon = v.icon;
             return (
-              <div
+              <Reveal
                 key={v.title}
-                className="rounded-xl border border-border bg-card p-6 text-center"
+                delay={i * 90}
+                className="group rounded-xl border border-border bg-card p-6 text-center transform-gpu transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:border-primary/40 active:-translate-y-2 active:shadow-lg active:border-primary/40"
               >
-                <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Icon className="h-5 w-5 text-primary" />
+                <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-primary group-active:bg-primary">
+                  <Icon className="h-5 w-5 text-primary transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:text-primary-foreground group-active:scale-110 group-active:rotate-6 group-active:text-primary-foreground" />
                 </div>
                 <h3 className="font-heading text-base text-foreground">{v.title}</h3>
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                   {v.description}
                 </p>
-              </div>
+              </Reveal>
             );
           })}
         </div>

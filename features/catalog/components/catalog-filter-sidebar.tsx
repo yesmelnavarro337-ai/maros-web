@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { sortSizes } from "@/lib/sizes";
 import { PriceRangeFilter } from "./price-range-filter";
 import type { CatalogSearchParams } from "../types";
 
@@ -66,7 +67,7 @@ export function CatalogFilterSidebar({ categories, sizes, colors, priceMin, pric
       <div>
         <p className="text-sm font-medium text-foreground mb-2.5">Talla</p>
         <div className="flex flex-wrap gap-2">
-          {sizes.map((s) => (
+          {sortSizes(sizes).map((s) => (
             <Link
               key={s}
               href={buildHref(current, { talla: current.talla === s ? undefined : s })}

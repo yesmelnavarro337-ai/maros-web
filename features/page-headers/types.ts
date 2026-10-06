@@ -1,4 +1,4 @@
-export type PageKey = "collections" | "blog" | "gallery";
+export type PageKey = "collections" | "blog" | "gallery" | "about" | "historia";
 
 export interface PageHeader {
   pageKey: PageKey;

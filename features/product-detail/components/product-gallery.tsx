@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { ProductDetailImage } from "../types";
+import { filterImagesByColor } from "../utils/image-filter";
 
 export type GalleryImageInput = string | ProductDetailImage;
 
@@ -46,48 +47,21 @@ export function ProductGallery({
     });
   }, [images]);
 
-  // Tolerant filtering logic for displayImages
+  // Filtrado normalizado por color (compartido con el QuickView)
   const displayImages = useMemo<ProductDetailImage[]>(() => {
-    const activeColorName = (selectedColorName || selectedColor?.name || "").trim().toLowerCase();
-    const activeColorId = selectedColorId || selectedColor?.id;
-    const activeColorHex = (selectedColorHex || selectedColor?.hex || selectedColor?.primaryHex || "").trim().toLowerCase();
-
-    if (!activeColorName && !activeColorId && !activeColorHex) {
-      return rawImages;
-    }
-
-    const filtered = rawImages.filter((img) => {
-      // 1. Coincidencia por ID (si existe)
-      const imgColorId = (img as any).colorId || (img as any).color_id || (img as any).color?.id;
-      if (imgColorId && activeColorId && String(imgColorId) === String(activeColorId)) {
-        return true;
-      }
-
-      // 2. Coincidencia por Nombre de color o variante
-      const imgColorName = (img.colorName || (img as any).color?.name || (img as any).color_name || "").trim().toLowerCase();
-      if (imgColorName && activeColorName) {
-        if (imgColorName === activeColorName || activeColorName.includes(imgColorName) || imgColorName.includes(activeColorName)) {
-          return true;
-        }
-      }
-
-      // 3. Fallback por Hexadecimal (si la imagen no tiene nombre definido)
-      const imgHex = (img.primaryHex || img.colorHex || (img as any).color?.hex || "").trim().toLowerCase();
-      if (!imgColorName && imgHex && activeColorHex) {
-        if (imgHex === activeColorHex) return true;
-      }
-
-      return false;
+    return filterImagesByColor(rawImages, {
+      colorName: selectedColorName || selectedColor?.name,
+      colorHex: selectedColorHex || selectedColor?.hex || selectedColor?.primaryHex,
+      colorId: selectedColorId || selectedColor?.id,
     });
-
-    // Si se encontraron imágenes específicas para ese color, retornarlas; de lo contrario retorno fallback
-    return filtered.length > 0 ? filtered : rawImages;
   }, [rawImages, selectedColorName, selectedColorId, selectedColorHex, selectedColor]);
 
-  // Reset active image index to 0 whenever filtered images or selected color changes
+  // Al cambiar de color (incluido un combinado) se vuelve a la primera imagen
+  // del set filtrado y se cierra el lightbox para no mostrar la foto anterior.
   useEffect(() => {
     setActiveIndex(0);
-  }, [displayImages.length, selectedColorName, selectedColorHex, selectedColorId]);
+    setLightboxIndex(null);
+  }, [displayImages, selectedColorName]);
 
   const safeActiveIndex = activeIndex < displayImages.length ? activeIndex : 0;
   const activeImage = displayImages[safeActiveIndex];
@@ -108,9 +82,10 @@ export function ProductGallery({
   };
 
   return (
-    <div className="flex gap-3">
-      {/* Tira vertical de miniaturas */}
-      <div className="hidden sm:flex flex-col gap-2 shrink-0">
+    <div className="flex gap-3 self-start">
+      {/* Tira vertical de miniaturas. Se limita en alto para que el bloque
+          sticky nunca sea más alto que la imagen principal. */}
+      <div className="hidden sm:flex flex-col gap-2 shrink-0 max-h-[min(650px,calc(100vh-9rem))] overflow-y-auto scrollbar-thin pr-0.5">
         {displayImages.map((img, i) => (
           <button
             key={`${img.url}-${i}`}
@@ -136,8 +111,11 @@ export function ProductGallery({
         ))}
       </div>
 
-      {/* Imagen Principal */}
-      <div className="relative flex-1 aspect-[4/5] rounded-2xl bg-secondary overflow-hidden">
+      {/* Imagen Principal: alto acotado y proporción fija (3/4). El contenedor
+          nunca se estira porque el grid usa items-start; object-cover recorta
+          sin deformar la foto. En móvil se limita a 400px para evitar
+          desbordamientos de la vista. */}
+      <div className="relative flex-1 w-full min-w-0 aspect-[3/4] max-h-[400px] lg:max-h-[min(650px,calc(100vh-9rem))] rounded-2xl bg-secondary overflow-hidden">
         {activeImage?.url ? (
           <Image
             src={cloudinaryUrl(activeImage.url)}

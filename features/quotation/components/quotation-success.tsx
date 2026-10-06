@@ -10,7 +10,11 @@ export function QuotationSuccess({ whatsappLink }: { whatsappLink: string }) {
       </div>
       <h1 className="font-heading text-2xl text-foreground">¡Cotización enviada!</h1>
       <p className="text-muted-foreground mt-2">
-        Tu solicitud fue registrada correctamente. Te contactaremos muy pronto por WhatsApp.
+        Tu solicitud fue registrada correctamente.
+      </p>
+      <p className="mt-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm font-medium text-foreground">
+        Importante: para confirmar tu cotización y recibir atención inmediata,
+        continúa la conversación en WhatsApp con el botón de abajo.
       </p>
       <div className="flex flex-col gap-3 mt-6">
         <Button asChild size="lg">

@@ -13,6 +13,8 @@ interface ApiProductVariant {
   size: string;
   colorName: string;
   colorHex: string;
+  styleName?: string | null;
+  materialName?: string | null;
   primaryHex?: string;
   secondaryHex?: string | null;
   isCombined?: boolean;
@@ -65,6 +67,8 @@ interface ApiProductDetail {
   seoSocialImageUrl?: string | null;
   seoAltText?: string | null;
   collectionIds?: string[] | null;
+  styles?: string[] | null;
+  materials?: string[] | null;
 }
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "XXL", "3XL", "XXXL", "4XL", "XXXXL", "5XL"];
@@ -176,6 +180,16 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
 
   const uniqueColors = Array.from(colorMap.values());
 
+  const styleSet = new Set<string>();
+  const materialSet = new Set<string>();
+  p.styles?.forEach((st) => {
+    if (st?.trim()) styleSet.add(st.trim());
+  });
+  p.variants?.forEach((v) => {
+    if (v.styleName?.trim()) styleSet.add(v.styleName.trim());
+    if (v.materialName?.trim()) materialSet.add(v.materialName.trim());
+  });
+
   return {
     id: p.id,
     slug: p.slug,
@@ -187,8 +201,12 @@ function adaptDetail(p: ApiProductDetail): ProductDetail {
     imageDetails,
     sizes: sortSizes(p.sizes),
     colors: uniqueColors,
+    styles: Array.from(styleSet),
+    materials: Array.from(materialSet),
     variants: p.variants.map((v) => ({
       ...v,
+      styleName: v.styleName ?? null,
+      materialName: v.materialName ?? null,
       primaryHex: v.primaryHex || v.colorHex,
       secondaryHex: v.secondaryHex,
       isCombined: v.isCombined,
@@ -228,6 +246,8 @@ interface ApiProductListItem {
   images?: string[] | null;
   available: boolean;
   sizes: string[];
+  categoryName?: string | null;
+  styleName?: string | null;
 }
 
 export interface RelatedProduct {
@@ -239,6 +259,8 @@ export interface RelatedProduct {
   images?: string[];
   available: boolean;
   sizes: string[];
+  categoryName?: string;
+  styleName?: string;
 }
 
 function adaptListItem(p: ApiProductListItem): RelatedProduct {
@@ -251,6 +273,8 @@ function adaptListItem(p: ApiProductListItem): RelatedProduct {
     images: p.images ?? [],
     available: p.available,
     sizes: p.sizes,
+    categoryName: p.categoryName ?? undefined,
+    styleName: p.styleName ?? undefined,
   };
 }
 

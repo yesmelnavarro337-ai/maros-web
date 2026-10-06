@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ProductCard } from "@/components/shared/product-card";
+import { CatalogProductGrid } from "@/features/catalog/components/catalog-product-grid";
 import { CatalogFilterSidebar } from "@/features/catalog/components/catalog-filter-sidebar";
 import { CatalogToolbar } from "@/features/catalog/components/catalog-toolbar";
 import {
@@ -19,7 +19,11 @@ interface CatalogoPageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }
 
-export async function generateMetadata({ searchParams }: CatalogoPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
   const rawParams = await searchParams;
   const page = Math.max(1, Number.parseInt(rawParams.page ?? "1", 10) || 1);
 
@@ -131,11 +135,10 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
             </p>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 mt-6">
-                {pageProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} categorySlug={params.categoria} />
-                ))}
-              </div>
+              <CatalogProductGrid
+                products={pageProducts}
+                categorySlug={params.categoria}
+              />
 
               {pageCount > 1 && (
                 <nav className="flex items-center justify-center gap-4 mt-10" aria-label="Paginación">

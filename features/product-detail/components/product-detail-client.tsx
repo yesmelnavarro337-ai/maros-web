@@ -96,66 +96,30 @@ export function ProductDetailClient({ product, categorySlug }: ProductDetailClie
     return (product.images || []).map((url, idx) => ({ url, order: idx }));
   }, [product.imageDetails, product.images]);
 
-  // Filtrar las fotos de la galería según el color activo con lógica tolerante y robusta
-  const displayImages = useMemo<ProductDetailImage[]>(() => {
-    if (!allImageDetails || allImageDetails.length === 0) return [];
-    if (!selectedColorObj) return allImageDetails;
-
-    const normalize = (str?: string | null) =>
-      (str || "").trim().toLowerCase().replace(/\s+/g, " ");
-
-    const selectedName = normalize(selectedColorObj.name);
-    const selectedHex = normalize(selectedColorObj.hex || selectedColorObj.primaryHex);
-    const selectedId = (selectedColorObj as any)?.id;
-
-    const filtered = allImageDetails
-      .filter((img) => {
-        // 1. Coincidencia por ID si existe
-        const imgColorId = (img as any).colorId || (img as any).color_id;
-        if (imgColorId && selectedId && String(imgColorId) === String(selectedId)) {
-          return true;
-        }
-
-        // 2. Coincidencia por Nombre de color normalizado (tolerante a espacios/mayúsculas)
-        const imgColorName = normalize(
-          img.colorName || (img as any).color?.name || (img as any).color_name
-        );
-        if (imgColorName && selectedName) {
-          if (imgColorName === selectedName) return true;
-          if (imgColorName.includes(selectedName) || selectedName.includes(imgColorName)) {
-            return true;
-          }
-        }
-
-        // 3. Coincidencia por Hexadecimal sólo si la imagen no tiene nombre definido
-        const imgHex = normalize(img.colorHex || img.primaryHex);
-        if (!imgColorName && imgHex && selectedHex) {
-          if (imgHex === selectedHex) return true;
-        }
-
-        return false;
-      })
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-    // Si se encontraron imágenes específicas para ese color, retornarlas; de lo contrario retorno fallback de todas las fotos
-    return filtered.length > 0 ? filtered : allImageDetails;
-  }, [allImageDetails, selectedColorObj]);
+  // El filtrado por color se aplica dentro de ProductGallery y del QuickView
+  // mediante el helper compartido filterImagesByColor; aquí sólo se entrega la
+  // lista completa con sus metadatos de color.
 
   const handleColorChange = (colorName: string) => {
     setSelectedColorName(colorName);
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-      <ProductGallery
-        images={allImageDetails}
-        productName={product.name}
-        selectedColor={selectedColorObj}
-        selectedColorName={selectedColorObj?.name ?? selectedColorName}
-        selectedColorId={selectedColorObj?.id}
-        selectedColorHex={selectedColorObj?.hex}
-        onImageColorSelect={handleColorChange}
-      />
+    // items-start evita que la columna de la imagen se estire para igualar la
+    // altura del panel derecho. El contenedor sticky mantiene la imagen visible
+    // al hacer scroll cuando el bloque de texto y opciones es muy largo.
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+      <div className="self-start lg:sticky lg:top-28">
+        <ProductGallery
+          images={allImageDetails}
+          productName={product.name}
+          selectedColor={selectedColorObj}
+          selectedColorName={selectedColorObj?.name ?? selectedColorName}
+          selectedColorId={selectedColorObj?.id}
+          selectedColorHex={selectedColorObj?.hex}
+          onImageColorSelect={handleColorChange}
+        />
+      </div>
       <ProductInfoPanel
         product={product}
         availableColors={availableColors}

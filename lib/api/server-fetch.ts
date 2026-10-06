@@ -10,21 +10,20 @@ interface ServerFetchOptions {
 }
 
 /**
- * Dedup nativo de Next.js/React: el mismo path dentro del mismo render
- * comparte una única petición (p.ej. settings en layout + generateMetadata,
- * categories en catálogo + home). La caché de datos de Next (revalidate)
- * se encarga de la deduplicación entre renders.
+ * Petición al servidor con soporte para deshabilitar caché (no-store)
+ * para asegurar que las actualizaciones de maros-admin se reflejen
+ * de forma inmediata en maros-web.
  */
 const cachedServerFetch = cache(async (key: string) => {
   const parts = key.split("|");
   const path = parts[0];
-  let revalidate = 60;
+  let revalidate = 0;
   let tags: string[] = [];
-  let cacheMode: RequestCache | undefined;
+  let cacheMode: RequestCache | undefined = "no-store";
 
   for (let i = 1; i < parts.length; i++) {
     if (parts[i].startsWith("cache:")) {
-      cacheMode = parts[i].slice(6) as RequestCache;
+      cacheMode = (parts[i].slice(6) as RequestCache) || "no-store";
     } else if (parts[i].startsWith("revalidate:")) {
       revalidate = Number(parts[i].slice(11));
     } else if (parts[i].startsWith("tags:")) {
@@ -33,14 +32,15 @@ const cachedServerFetch = cache(async (key: string) => {
     }
   }
 
-  const fetchInit: RequestInit = cacheMode === "no-store" || revalidate === 0
-    ? { cache: "no-store" }
-    : {
-        next: {
-          revalidate,
-          ...(tags.length > 0 ? { tags } : {}),
-        },
-      };
+  const fetchInit: RequestInit =
+    cacheMode === "no-store" || revalidate === 0
+      ? { cache: "no-store" }
+      : {
+          next: {
+            revalidate,
+            ...(tags.length > 0 ? { tags } : {}),
+          },
+        };
 
   const response = await fetch(`${API_URL}/api/public/${path}`, fetchInit);
 
@@ -49,8 +49,14 @@ const cachedServerFetch = cache(async (key: string) => {
 });
 
 export function serverApiFetch<T>(path: string, options: ServerFetchOptions = {}): Promise<T> {
-  const revalidate = options.revalidateSeconds ?? (options.cache === "no-store" ? 0 : 60);
-  const cacheStr = options.cache ? `cache:${options.cache}` : "";
+  const isProductOrCategoryPath = path.startsWith("products") || path.startsWith("categories");
+  const defaultCache = isProductOrCategoryPath ? "no-store" : options.cache;
+  const defaultRevalidate = isProductOrCategoryPath ? 0 : (options.revalidateSeconds ?? (defaultCache === "no-store" ? 0 : 60));
+
+  const cacheMode = options.cache || defaultCache || "no-store";
+  const revalidate = options.revalidateSeconds ?? defaultRevalidate;
+
+  const cacheStr = cacheMode ? `cache:${cacheMode}` : "cache:no-store";
   const tagsStr = options.tags ? options.tags.join(",") : "";
   return cachedServerFetch(`${path}|revalidate:${revalidate}|${cacheStr}|tags:${tagsStr}`) as Promise<T>;
 }

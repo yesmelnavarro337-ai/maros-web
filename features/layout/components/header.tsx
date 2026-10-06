@@ -18,6 +18,7 @@ import { useMounted } from "@/lib/hooks/use-mounted";
 import { mainNavLinks } from "../config/navigation";
 import { useCart } from "@/features/cart/cart-context";
 import { useWishlist } from "@/features/wishlist/wishlist-context";
+import { SearchModal } from "@/features/search/components/search-modal";
 import { buildWhatsAppHref } from "@/features/settings/services/settings.service";
 import type { PublicSettings } from "@/features/settings/types";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
@@ -25,6 +26,7 @@ import { cloudinaryUrl } from "@/lib/images/cloudinary";
 export function Header({ settings }: { settings: PublicSettings }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const mounted = useMounted();
   const { count: cartCount } = useCart();
@@ -97,11 +99,9 @@ export function Header({ settings }: { settings: PublicSettings }) {
             size="icon"
             className="inline-flex text-foreground"
             aria-label="Buscar"
-            asChild
+            onClick={() => setSearchOpen(true)}
           >
-            <Link href="/catalogo">
-              <Search className="h-5 w-5" />
-            </Link>
+            <Search className="h-5 w-5" />
           </Button>
           <Button
             variant="ghost"
@@ -201,6 +201,8 @@ export function Header({ settings }: { settings: PublicSettings }) {
           </Sheet>
         </div>
       </div>
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

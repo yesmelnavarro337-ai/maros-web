@@ -36,6 +36,12 @@ export interface HomeSectionContent {
   ctaLink?: string | null;
   mainImageUrl?: string | null;
   mainImageAlt?: string | null;
+  /**
+   * Foto de la tarjeta promocional de 4 pasos. Para la sección `personalize`,
+   * `mainImageUrl` alimenta el banner del carrusel del Home y este campo alimenta
+   * la tarjeta: son dos imágenes independientes.
+   */
+  cardImageUrl?: string | null;
   secondaryImages: HomeSectionImage[];
   tags: HomeSectionTag[];
 }

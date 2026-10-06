@@ -26,6 +26,7 @@ interface ApiCatalogProduct {
   available: boolean;
   sizes: string[];
   colors: ApiProductColor[];
+  styleName?: string | null;
 }
 
 export interface ApiCategory {
@@ -56,6 +57,7 @@ function adaptProduct(p: ApiCatalogProduct): CatalogProductItem {
     categoryIds,
     categories,
     categoryName: p.categoryName || categories.map((c) => c.name).join(", "),
+    styleName: p.styleName ?? undefined,
     sizes: p.sizes,
     colors: p.colors,
   };

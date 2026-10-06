@@ -7,21 +7,22 @@ import { FeaturedProducts } from "@/features/home/components/featured-products";
 import { BrandValuesSection } from "@/features/home/components/brand-values-section";
 import { TestimonialsSection } from "@/features/home/components/testimonials-section";
 import { CtaBanner } from "@/features/home/components/cta-banner";
-import { PromoBannerStrip } from "@/features/banners/components/promo-banner-strip";
 import { GalleryPreviewSection } from "@/features/gallery/components/gallery-preview-section";
 import { HeroSection } from "@/features/home/components/hero-section";
+
 import { getCategories } from "@/features/catalog/services/catalog.service";
 import { getHeroContent, getFeaturedProducts } from "@/features/home/services/home.service";
 import { getCollections } from "@/features/collections/services/collections.service";
 import { getHomeSectionContent } from "@/features/home/services/home-content.service";
 import { JsonLd, itemListJsonLd } from "@/lib/seo/json-ld";
+import { PromoBannerStrip } from "@/features/banners/components/promo-banner-strip";
 import type { CategoryQuickLink } from "@/features/home/types";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const primaryBenefits = [
-  { icon: Star, title: "+4 Años", subtitle: "de experiencia" },
+  { icon: Star, title: "+6 Años", subtitle: "de experiencia" },
   { icon: Heart, title: "Hecho en", subtitle: "Colombia" },
   { icon: PhoneCall, title: "Atención", subtitle: "100% personalizada" },
   { icon: Truck, title: "Envíos", subtitle: "a todo el país" },
@@ -62,6 +63,7 @@ export default async function HomePage() {
     getHomeSectionContent(),
   ]);
 
+
   return (
     <div className="flex flex-col">
       <HeroSection hero={hero} />
@@ -98,20 +100,6 @@ export default async function HomePage() {
       <GalleryPreviewSection />
       <TestimonialsSection />
       <CtaBanner />
-
-      {featuredProducts.length > 0 && (
-        <JsonLd
-          data={itemListJsonLd(
-            "Productos Destacados de Maro's Pijamas",
-            featuredProducts.map((p, idx) => ({
-              name: p.name,
-              url: `/productos/${p.slug}`,
-              image: p.image,
-              position: idx + 1,
-            }))
-          )}
-        />
-      )}
     </div>
   );
 }

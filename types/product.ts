@@ -9,4 +9,8 @@ export interface ProductPreview {
   reviewCount?: number;
   available?: boolean;
   sizes?: string[];
+  /** Categoría del producto; permite derivar el género cuando el estilo no lo declara. */
+  categoryName?: string;
+  /** Estilo fijo predominante; define la tarifa exacta en las tarjetas. */
+  styleName?: string;
 }

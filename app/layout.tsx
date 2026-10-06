@@ -5,6 +5,7 @@ import { Header } from "@/features/layout/components/header";
 import { AnnouncementBar } from "@/features/layout/components/announcement-bar";
 import { Footer } from "@/features/layout/components/footer";
 import { WhatsAppFloatButton } from "@/features/layout/components/whatsapp-float-button";
+import { SnowEffect } from "@/components/shared/snow-effect";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/features/cart/cart-context";
 import { WishlistProvider } from "@/features/wishlist/wishlist-context";
@@ -60,8 +61,8 @@ export default async function RootLayout({
 
   if (settings.maintenanceMode) {
     return (
-      <html lang="es">
-        <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+      <html lang="es" className="bg-background">
+        <body className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen overflow-x-hidden`}>
           <MaintenanceView settings={settings} />
         </body>
       </html>
@@ -69,15 +70,21 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="es">
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground`}>
+    <html lang="es" className="bg-background">
+      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground min-h-screen overflow-x-hidden`}>
         <CartProvider>
           <WishlistProvider>
-            <AnnouncementBar />
-            <Header settings={settings} />
-            <main>{children}</main>
-            <Footer settings={settings} />
-            <WhatsAppFloatButton settings={settings} />
+            {/* min-h-screen + flex-col adhiere el footer al fondo del viewport y
+                evita el bloque blanco que aparecía debajo al hacer scroll en móvil. */}
+            <div className="min-h-screen flex flex-col overflow-x-hidden">
+              <AnnouncementBar />
+              <Header settings={settings} />
+              <main className="flex-1">{children}</main>
+              <Footer settings={settings} />
+              <WhatsAppFloatButton settings={settings} />
+            </div>
+            {/* Nieve navideña sutil: capa fija z-30, no intercepta clics ni scroll */}
+            <SnowEffect />
           </WishlistProvider>
         </CartProvider>
         <JsonLd

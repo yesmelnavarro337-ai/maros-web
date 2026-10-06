@@ -22,6 +22,7 @@ import {
 } from "@/features/customization-wizard/services/customization-catalog.service";
 import { getProductSummaryClient } from "@/features/product-detail/services/product-detail.client";
 import { saveCustomizationDraft } from "@/lib/customization-draft";
+import { sortSizes } from "@/lib/sizes";
 import type { ProductClientSummary } from "@/features/product-detail/services/product-detail.client";
 import type { CustomizationChoice, CustomizationModel, CustomizationSelections, WizardStepKey } from "@/features/customization-wizard/types";
 
@@ -32,7 +33,10 @@ export default function PersonalizaPage() {
   const searchParams = useSearchParams();
   const { addItem } = useCart();
 
-  const productSlug = searchParams.get("producto") ?? "";
+  // El producto puede llegar por `product` (slug) o `productId`. `producto` se
+  // mantiene por compatibilidad con los enlaces históricos.
+  const productSlug = searchParams.get("product") ?? searchParams.get("producto") ?? "";
+  const productId = searchParams.get("productId") ?? "";
   const urlSize = searchParams.get("talla") ?? "";
   const quantity = Number(searchParams.get("cantidad") ?? "1");
 
@@ -55,23 +59,20 @@ export default function PersonalizaPage() {
     getModels()
       .then((list) => {
         setModels(list);
-        if (productSlug) {
-          const initial = list.find((m) => m.slug === productSlug);
-          if (initial) {
-            setLoadingModelSlug(initial.slug);
-            return getProductSummaryClient(initial.slug).then((detail) => {
-              setProduct(detail?.allowCustomization ? detail : null);
-              if (detail?.sizes?.length) {
-                setSize((current) => (current && detail.sizes.includes(current)) ? current : detail.sizes[0]);
-              }
-            });
-          }
-          // El slug viene por URL aunque la lista de modelos no esté cargada.
-          setLoadingModelSlug(productSlug);
-          return getProductSummaryClient(productSlug).then((detail) => {
+
+        // Si llegó un productId, se resuelve a su slug para reutilizar la
+        // misma carga que el resto del flujo.
+        const targetSlug =
+          productSlug || (productId ? (list.find((m) => m.id === productId)?.slug ?? "") : "");
+
+        if (targetSlug) {
+          setLoadingModelSlug(targetSlug);
+          return getProductSummaryClient(targetSlug).then((detail) => {
             setProduct(detail?.allowCustomization ? detail : null);
             if (detail?.sizes?.length) {
-              setSize((current) => (current && detail.sizes.includes(current)) ? current : detail.sizes[0]);
+              setSize((current) =>
+                current && detail.sizes.includes(current) ? current : sortSizes(detail.sizes)[0]
+              );
             }
           });
         }
@@ -84,7 +85,7 @@ export default function PersonalizaPage() {
     getColors().then(setColors);
     getPrints().then(setPrints);
     getEmbroideries().then(setEmbroideries);
-  }, [productSlug]);
+  }, [productSlug, productId]);
 
   const selectedFabric = fabrics.find((f) => f.id === selections.telaId);
   const selectedColor = colors.find((c) => c.id === selections.colorId);
@@ -137,7 +138,9 @@ export default function PersonalizaPage() {
     setProduct(detail);
     setSelections({});
     setEmbroideryText("");
-    setSize((current) => (current && detail.sizes.includes(current)) ? current : (detail.sizes[0] ?? ""));
+    setSize((current) =>
+      current && detail.sizes.includes(current) ? current : (sortSizes(detail.sizes)[0] ?? "")
+    );
   }
 
   function handleFinish() {
@@ -195,7 +198,7 @@ export default function PersonalizaPage() {
     router.push("/carrito");
   }
 
-  if (!productSlug && modelsLoading) {
+  if ((!productSlug && !productId) && modelsLoading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <Skeleton className="h-96 w-full rounded-2xl" />
@@ -286,18 +289,19 @@ export default function PersonalizaPage() {
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">6. Elige la talla</h2>
               <div className="flex flex-wrap gap-2.5">
-                {product?.sizes?.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSize(s)}
-                    className={cn(
-                      "h-11 min-w-14 px-4 rounded-full border-2 text-sm font-medium transition-colors",
-                      size === s ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary/40"
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {product?.sizes &&
+                  sortSizes(product.sizes).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSize(s)}
+                      className={cn(
+                        "h-11 min-w-14 px-4 rounded-full border-2 text-sm font-medium transition-colors",
+                        size === s ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary/40"
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
               </div>
               <p className="text-xs text-muted-foreground mt-3">
                 ¿Dudas con tu talla? Consulta la guía en el catálogo o pregunta por WhatsApp.

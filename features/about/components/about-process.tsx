@@ -1,4 +1,5 @@
 import { Shirt, Palette, Scissors, Sparkles, PackageCheck } from "lucide-react";
+import { Reveal } from "@/components/shared/reveal";
 
 const steps = [
   {
@@ -50,15 +51,19 @@ export function AboutProcess() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        {steps.map((s) => {
+        {steps.map((s, i) => {
           const Icon = s.icon;
           return (
-            <div key={s.step} className="flex flex-col items-center text-center gap-3">
-              <div className="relative">
-                <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center">
-                  <Icon className="h-6 w-6 text-primary" />
+            <Reveal
+              key={s.step}
+              delay={i * 80}
+              className="group flex flex-col items-center text-center gap-3 rounded-xl p-3 transform-gpu transition-all duration-300 hover:-translate-y-1.5 hover:shadow-md hover:bg-card active:-translate-y-1.5 active:shadow-md active:bg-card"
+            >
+              <div className="relative transition-transform duration-300 group-hover:scale-110 group-active:scale-110">
+                <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center transition-colors duration-300 group-hover:bg-primary/10 group-active:bg-primary/10">
+                  <Icon className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 group-active:scale-110 group-active:-rotate-6" />
                 </div>
-                <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-accent group-hover:text-accent-foreground group-active:scale-110 group-active:bg-accent group-active:text-accent-foreground">
                   {s.step}
                 </span>
               </div>
@@ -68,7 +73,7 @@ export function AboutProcess() {
                   {s.description}
                 </p>
               </div>
-            </div>
+            </Reveal>
           );
         })}
       </div>

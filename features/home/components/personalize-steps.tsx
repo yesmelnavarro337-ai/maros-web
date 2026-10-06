@@ -59,7 +59,7 @@ export function PersonalizeSteps({ content }: PersonalizeStepsProps) {
         {/* COLUMNA IZQUIERDA: Fotografía Lifestyle de la experiencia de diseño */}
         <div className="lg:col-span-5 relative min-h-[260px] sm:min-h-[340px] lg:min-h-[420px] w-full overflow-hidden bg-stone-200">
           <Image
-            src={orFallback(content?.mainImageUrl, DEFAULT_IMAGE)}
+            src={orFallback(content?.cardImageUrl, DEFAULT_IMAGE)}
             alt={orFallback(content?.mainImageAlt, "Diseña tu pijama personalizada")}
             fill
             sizes="(max-width: 1024px) 100vw, 40vw"
