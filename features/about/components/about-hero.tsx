@@ -1,20 +1,17 @@
-import Image from "next/image";
 import { Heart, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getPageHeader } from "@/features/page-headers/services/page-headers.service";
-import { cloudinaryUrl } from "@/lib/images/cloudinary";
+import { HeaderSliderBackground } from "@/components/shared/header-slider-background";
+import { Reveal } from "@/components/shared/reveal";
 
 const DEFAULT_TITLE_LINES = { before: "Más de 6 años creando pijamas ", highlight: "únicas" };
 const DEFAULT_SUBTITLE =
   "Maro's Pijamas nació con un sueño simple: crear prendas únicas, cómodas y hechas con amor para los momentos más especiales de tu vida.";
 
 export async function AboutHero() {
-  // Encabezado configurable desde maros-admin (Encabezados de página > Nosotros).
-  // Si no hay contenido guardado, se mantiene el diseño editorial por defecto.
   const header = await getPageHeader("about").catch(() => undefined);
 
-  const hasBackgroundImage = Boolean(header?.backgroundImage?.trim());
   const title = header?.title?.trim() || null;
   const subtitle = header?.subtitle?.trim() || DEFAULT_SUBTITLE;
   const primaryCta =
@@ -26,66 +23,46 @@ export async function AboutHero() {
       ? { label: header.secondaryButtonText.trim(), href: header.secondaryButtonLink.trim() }
       : { label: "Contáctanos", href: "/contacto" };
 
+  const aboutImages = [
+    ...(header?.backgroundImage?.trim() ? [header.backgroundImage.trim()] : []),
+    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1200&auto=format&fit=crop",
+  ].slice(0, 3);
+
+  const overlayOpacity = Math.min(Math.max(header?.overlayOpacity ?? 45, 20), 85);
+
   return (
-    <section className="relative overflow-hidden">
-      {/* Imagen de fondo configurable desde el admin, con overlay regulable */}
-      {hasBackgroundImage && (
-        <div className="absolute inset-0">
-          <Image
-            src={cloudinaryUrl(header!.backgroundImage!)}
-            alt={title ?? "Nuestra historia"}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-          <div
-            className="absolute inset-0 bg-black"
-            style={{ opacity: (header!.overlayOpacity ?? 40) / 100 }}
-          />
-        </div>
-      )}
-
-      {!hasBackgroundImage && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.45]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 85% 20%, color-mix(in oklch, var(--accent) 14%, transparent), transparent 45%), radial-gradient(circle at 10% 90%, color-mix(in oklch, var(--primary) 10%, transparent), transparent 40%)",
-          }}
-        />
-      )}
-
-      <div
-        className="relative max-w-7xl mx-auto px-4 pt-14 pb-12 sm:pt-20 sm:pb-16"
-        style={hasBackgroundImage ? { color: header!.textColor } : undefined}
+    <section className="relative w-full overflow-hidden bg-brand-dark-olive">
+      <HeaderSliderBackground
+        images={aboutImages}
+        overlayOpacity={overlayOpacity}
+        className="min-h-[340px] sm:min-h-[400px] md:min-h-[460px] flex items-center"
       >
-        <div className="max-w-3xl mx-auto text-center">
-          <p
-            className={`text-xs font-medium uppercase tracking-[0.25em] mb-4 ${hasBackgroundImage ? "opacity-80" : "text-primary"
-              }`}
-          >
-            Nuestra historia
-          </p>
+        <div
+          className="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-24 text-white w-full"
+          style={header?.textColor ? { color: header.textColor } : undefined}
+        >
+          <Reveal amount={0.1} className="max-w-3xl mx-auto text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] mb-4 text-[#EFE8D8]/90">
+              Nuestra historia
+            </p>
 
           {title ? (
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
               {title}
             </h1>
           ) : (
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-foreground leading-[1.05] tracking-tight">
+            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-white leading-[1.05] tracking-tight">
               {DEFAULT_TITLE_LINES.before}
               <span className="inline-flex items-center gap-1">
                 {DEFAULT_TITLE_LINES.highlight}
-                <Heart className="h-7 w-7 sm:h-9 sm:w-9 text-primary fill-primary/20" />
+                <Heart className="h-7 w-7 sm:h-9 sm:w-9 text-[#B6AE3A] fill-[#B6AE3A]/30" />
               </span>
             </h1>
           )}
 
-          <p
-            className={`mt-5 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto ${hasBackgroundImage ? "opacity-90" : "text-muted-foreground"
-              }`}
-          >
+          <p className="mt-5 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto text-white/90">
             {subtitle}
           </p>
 
@@ -96,23 +73,18 @@ export async function AboutHero() {
                 <ArrowRight className="ml-1" />
               </Link>
             </Button>
-            {/* Sobre la imagen del hero el botón secundario va transparente con
-                borde claro; sin imagen conserva el outline editorial. */}
             <Button
               size="lg"
-              variant={hasBackgroundImage ? "ghost" : "outline"}
-              className={
-                hasBackgroundImage
-                  ? "rounded-full px-7 bg-transparent border border-white/80 text-white hover:bg-white/10 hover:border-white transition-all duration-300 backdrop-blur-sm"
-                  : "rounded-full px-7"
-              }
+              variant="outline"
+              className="rounded-full px-7 bg-white/10 hover:bg-white/20 border-white/60 text-white transition-all duration-300 backdrop-blur-sm"
               asChild
             >
               <Link href={secondaryCta.href}>{secondaryCta.label}</Link>
             </Button>
           </div>
-        </div>
+        </Reveal>
       </div>
-    </section>
-  );
+    </HeaderSliderBackground>
+  </section>
+);
 }

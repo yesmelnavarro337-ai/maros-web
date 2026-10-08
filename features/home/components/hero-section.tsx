@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HeroContent, HeroSlide } from "../types";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
+import { Reveal } from "@/components/shared/reveal";
+import { cn } from "@/lib/utils";
 
 const MOBILE_CONTROLS_TIMEOUT_MS = 3500;
 
@@ -35,7 +37,62 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
   // Los slides de temporada (1) y personalización (2) llevan overlay de texto;
   // a partir del tercer slide (imágenes adicionales) solo se ve la fotografía.
   const showOverlayText = current.showOverlayText !== false;
-  const hasMultipleSlides = slides.length > 1;
+  const slideCount = slides.length;
+  const hasMultipleSlides = slideCount > 1;
+
+  // Estado de pausa en hover o touch en móviles
+  const [isPaused, setIsPaused] = useState(false);
+  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Autoplay cada 3.8 segundos (3800ms), inmune a re-renders innecesarios
+  useEffect(() => {
+    if (slideCount <= 1 || isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % slideCount);
+    }, 3800);
+    return () => clearInterval(timer);
+  }, [slideCount, isPaused]);
+
+  // Manejo de visibilidad de pestaña
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setIsPaused(true);
+      } else {
+        setIsPaused(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+    };
+  }, []);
+
+  const pauseAutoplay = (durationMs = 5000) => {
+    setIsPaused(true);
+    if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+    touchTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, durationMs);
+  };
+
+  const resumeAutoplay = () => {
+    if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+    setIsPaused(false);
+  };
+
+  const handleTouchStart = () => {
+    revealControls();
+    pauseAutoplay(4000);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+    touchTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 2000);
+  };
 
   // Visibilidad de las flechas en móvil: se revelan con un tap sobre la imagen
   // y se ocultan solas tras unos segundos sin interacción. El nonce reinicia el
@@ -59,43 +116,67 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita re-disparar el tap de la imagen
     revealControls(); // Reinicia el autocierre
-    setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? slideCount - 1 : prev - 1));
+    pauseAutoplay(6000);
   };
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
     revealControls();
-    setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === slideCount - 1 ? 0 : prev + 1));
+    pauseAutoplay(6000);
   };
 
   return (
     <section className="relative w-full overflow-hidden bg-brand-dark border-b border-brand-border/40">
       {/* Contenedor principal del Hero con imagen de fondo completa (Full Bleed).
           Altura fluida por viewport para que la fotografía respire en móvil.
-          `group` habilita el hover de escritorio y el tap revela las flechas en móvil. */}
+          Pausa automática al hacer hover o interactuar táctilmente. */}
       <div
-        className="group relative h-[60vh] min-h-[420px] sm:h-[70vh] md:h-[80vh] w-full flex items-center"
+        className="group relative h-[60vh] min-h-[420px] sm:h-[70vh] md:h-[80vh] w-full flex items-center overflow-hidden"
         onClick={revealControls}
+        onMouseEnter={() => pauseAutoplay(5000)}
+        onMouseLeave={resumeAutoplay}
+        onPointerLeave={resumeAutoplay}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
 
-        {/* FOTOGRAFÍA DE FONDO COMPLETA */}
-        <div className="absolute inset-0 w-full h-full z-0">
-          {current.image ? (
-            <Image
-              src={cloudinaryUrl(current.image)}
-              alt={current.title}
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover object-center transform-gpu transition-all duration-700 ease-out"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-brand-warm-beige via-brand-ivory to-brand-border" />
-          )}
+        {/* FOTOGRAFÍAS DE FONDO CON EFECTO KEN BURNS SUTIL (Carousel 5s) */}
+        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+          {slides.map((slide, idx) => {
+            const isActive = idx === currentIndex;
+            return (
+              <div
+                key={slide.id || idx}
+                aria-hidden={!isActive}
+                className={cn(
+                  "absolute inset-0 w-full h-full transform-gpu transition-all duration-700 ease-out",
+                  isActive
+                    ? "opacity-100 scale-100 z-[1] pointer-events-auto"
+                    : "opacity-0 scale-[1.03] z-0 pointer-events-none"
+                )}
+              >
+                {slide.image ? (
+                  <Image
+                    src={cloudinaryUrl(slide.image)}
+                    alt={slide.title || "Slide " + (idx + 1)}
+                    fill
+                    priority={idx === 0}
+                    sizes="100vw"
+                    className="object-cover object-center transform-gpu"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-brand-warm-beige via-brand-ivory to-brand-border" />
+                )}
+              </div>
+            );
+          })}
 
           {/* DEGRADADO DE SOMBRA DESDE LA IZQUIERDA: solo cuando hay texto que leer */}
           {showOverlayText && (
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 sm:via-black/40 to-transparent z-[1]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 sm:via-black/40 to-transparent z-[2]" />
           )}
         </div>
 
@@ -139,9 +220,9 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
               </span>
             </div>
 
-            {/* CONTENIDO ALINEADO A LA IZQUIERDA DIRECTO SOBRE EL DEGRADADO */}
+            {/* CONTENIDO ALINEADO A LA IZQUIERDA DIRECTO SOBRE EL DEGRADADO CON SCROLL REVEAL */}
             <div className="relative z-10 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-16 lg:py-20 flex items-center">
-              <div className="w-full max-w-xl text-left">
+              <Reveal amount={0.1} className="w-full max-w-xl text-left">
 
                 {/* Tag / Etiqueta de Colección */}
                 <div className="mb-1 sm:mb-4">
@@ -197,7 +278,7 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
                   </div>
                 )}
 
-              </div>
+              </Reveal>
             </div>
           </>
         )}
@@ -213,6 +294,7 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
                   e.stopPropagation();
                   revealControls();
                   setCurrentIndex(idx);
+                  pauseAutoplay(6000);
                 }}
                 aria-label={`Ir al slide ${idx + 1}`}
                 className={`h-2 rounded-full shadow-sm transition-all duration-300 ${

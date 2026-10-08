@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/shared/reveal";
 import type { LucideIcon } from "lucide-react";
 
 export interface BenefitItem {
@@ -20,15 +21,17 @@ export function BenefitsStrip({
           {items.map((item, i) => {
             const Icon = item.icon;
             return (
-              <div key={i} className="flex flex-col items-center text-center gap-2">
-                <div className="h-11 w-11 rounded-full bg-card/80 flex items-center justify-center shadow-2xs border border-brand-border/40 mb-1">
-                  <Icon className="h-5 w-5 text-brand-gold" strokeWidth={1.5} aria-hidden="true" />
+              <Reveal key={i} delay={i * 70}>
+                <div className="group flex flex-col items-center text-center gap-2 transform-gpu transition-all duration-300 hover:-translate-y-1 active:scale-95 cursor-default select-none">
+                  <div className="h-11 w-11 rounded-full bg-card/80 flex items-center justify-center shadow-2xs border border-brand-border/40 mb-1 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:bg-primary/10 group-active:scale-110 group-active:rotate-6 group-active:bg-primary/10">
+                    <Icon className="h-5 w-5 text-brand-gold transition-transform duration-300 group-hover:scale-110 group-active:scale-110" strokeWidth={1.5} aria-hidden="true" />
+                  </div>
+                  <p className="text-sm sm:text-base font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">{item.title}</p>
+                  {item.subtitle && (
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed">{item.subtitle}</p>
+                  )}
                 </div>
-                <p className="text-xs sm:text-sm font-semibold text-foreground leading-snug">{item.title}</p>
-                {item.subtitle && (
-                  <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug">{item.subtitle}</p>
-                )}
-              </div>
+              </Reveal>
             );
           })}
         </div>
@@ -44,24 +47,25 @@ export function BenefitsStrip({
         {items.map((item, i) => {
           const Icon = item.icon;
           return (
-            <div
-              key={i}
-              className="flex items-center justify-center gap-3 group"
-            >
-              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-card flex items-center justify-center shrink-0 border border-brand-warm-beige shadow-2xs transition-transform duration-300 group-hover:scale-105 group-active:scale-105">
-                <Icon className="h-5 w-5 text-brand-gold" strokeWidth={1.4} aria-hidden="true" />
-              </div>
-              <div className="flex flex-col leading-tight text-left">
-                <p className="text-xs sm:text-sm font-semibold text-foreground tracking-tight">
-                  {item.title}
-                </p>
-                {item.subtitle && (
-                  <p className="text-[11px] sm:text-xs text-muted-foreground font-normal mt-0.5">
-                    {item.subtitle}
+            <Reveal key={i} delay={i * 70}>
+              <div
+                className="flex items-center justify-center gap-3 group transform-gpu transition-all duration-300 hover:-translate-y-1 active:scale-95 cursor-default select-none py-1"
+              >
+                <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-card flex items-center justify-center shrink-0 border border-brand-warm-beige shadow-2xs transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:bg-primary/10 group-active:scale-110 group-active:rotate-6 group-active:bg-primary/10">
+                  <Icon className="h-5 w-5 text-brand-gold transition-transform duration-300 group-hover:scale-110 group-active:scale-110" strokeWidth={1.4} aria-hidden="true" />
+                </div>
+                <div className="flex flex-col leading-tight text-left">
+                  <p className="text-sm sm:text-base font-semibold text-foreground tracking-tight group-hover:text-primary transition-colors">
+                    {item.title}
                   </p>
-                )}
+                  {item.subtitle && (
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground font-normal mt-0.5 leading-relaxed">
+                      {item.subtitle}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            </Reveal>
           );
         })}
       </div>

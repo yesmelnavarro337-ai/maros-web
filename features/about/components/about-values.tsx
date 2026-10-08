@@ -57,8 +57,8 @@ export function AboutValues() {
                 <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-primary group-active:bg-primary">
                   <Icon className="h-5 w-5 text-primary transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:text-primary-foreground group-active:scale-110 group-active:rotate-6 group-active:text-primary-foreground" />
                 </div>
-                <h3 className="font-heading text-base text-foreground">{v.title}</h3>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                <h3 className="font-heading text-base md:text-lg text-foreground">{v.title}</h3>
+                <p className="text-sm md:text-base text-muted-foreground mt-2 leading-relaxed">
                   {v.description}
                 </p>
               </Reveal>

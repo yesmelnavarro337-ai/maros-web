@@ -6,6 +6,7 @@ import { AnnouncementBar } from "@/features/layout/components/announcement-bar";
 import { Footer } from "@/features/layout/components/footer";
 import { WhatsAppFloatButton } from "@/features/layout/components/whatsapp-float-button";
 import { SnowEffect } from "@/components/shared/snow-effect";
+import { AmbientAudioPlayer } from "@/components/shared/ambient-audio-player";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/features/cart/cart-context";
 import { WishlistProvider } from "@/features/wishlist/wishlist-context";
@@ -85,6 +86,8 @@ export default async function RootLayout({
             </div>
             {/* Nieve navideña sutil: capa fija z-30, no intercepta clics ni scroll */}
             <SnowEffect />
+            {/* Reproductor de audio ambiental persistente */}
+            <AmbientAudioPlayer />
           </WishlistProvider>
         </CartProvider>
         <JsonLd

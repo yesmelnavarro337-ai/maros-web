@@ -214,15 +214,18 @@ function QuickViewGallery({
 
       {/* Main image: proporción fija 3/4 y alto acotado (500px o el espacio real
           disponible en el modal). No se estira con el panel derecho. */}
-      <div className="relative flex-1 w-full min-w-0 aspect-[3/4] max-h-[500px] md:max-h-[min(500px,calc(90vh-3rem))] rounded-xl bg-secondary overflow-hidden">
+      <div
+        className="relative flex-1 w-full min-w-0 aspect-[3/4] max-h-[500px] md:max-h-[min(500px,calc(90vh-3rem))] rounded-xl bg-secondary overflow-hidden select-none"
+        style={{ touchAction: "pan-y" }}
+      >
         {activeImage?.url ? (
           <Image
             src={cloudinaryUrl(activeImage.url)}
             alt={productName}
             fill
-            priority
+            priority={safeIndex < 2}
             sizes="(max-width: 1024px) 100vw, 400px"
-            className="object-cover transition-transform duration-500"
+            className="object-cover transform-gpu transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -234,20 +237,22 @@ function QuickViewGallery({
         {displayImages.length > 1 && (
           <>
             <button
-              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-card/80 backdrop-blur-sm p-1.5 text-foreground shadow-xs hover:bg-card transition-colors"
+              type="button"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-10"
               aria-label="Foto anterior"
               onClick={() => step(-1)}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-card/80 backdrop-blur-sm p-1.5 text-foreground shadow-xs hover:bg-card transition-colors"
+              type="button"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-10"
               aria-label="Foto siguiente"
               onClick={() => step(1)}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-full px-2.5 py-0.5 text-[10px] text-white/90">
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-full px-2.5 py-0.5 text-[10px] text-white/90 z-10">
               {safeIndex + 1} / {displayImages.length}
             </div>
           </>

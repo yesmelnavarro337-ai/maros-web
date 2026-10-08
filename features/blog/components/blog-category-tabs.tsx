@@ -12,8 +12,10 @@ export function BlogCategoryTabs({ categories, active }: BlogCategoryTabsProps) 
       <Link
         href="/blog"
         className={cn(
-          "rounded-full px-3.5 py-1.5 text-sm transition-colors",
-          !active ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
+          "rounded-full px-4 py-1.5 text-sm font-medium transform-gpu transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xs",
+          !active
+            ? "bg-primary text-primary-foreground shadow-xs"
+            : "bg-secondary text-secondary-foreground hover:bg-secondary/70 hover:shadow-xs"
         )}
       >
         Todos
@@ -23,8 +25,10 @@ export function BlogCategoryTabs({ categories, active }: BlogCategoryTabsProps) 
           key={cat}
           href={`/blog?categoria=${encodeURIComponent(cat)}`}
           className={cn(
-            "rounded-full px-3.5 py-1.5 text-sm transition-colors",
-            active === cat ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/70"
+            "rounded-full px-4 py-1.5 text-sm font-medium transform-gpu transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xs",
+            active === cat
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "bg-secondary text-secondary-foreground hover:bg-secondary/70 hover:shadow-xs"
           )}
         >
           {cat}

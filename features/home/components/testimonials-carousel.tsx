@@ -13,6 +13,8 @@ const AVATAR_FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop",
 ];
 
+import { Reveal } from "@/components/shared/reveal";
+
 export function TestimonialsCarousel({ testimonials }: { testimonials: TestimonialPreview[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -33,32 +35,33 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
         {testimonials.slice(0, 3).map((t, idx) => {
           const avatarUrl = AVATAR_FALLBACK_IMAGES[idx % AVATAR_FALLBACK_IMAGES.length];
           return (
-            <div
-              key={t.id}
-              className="bg-[#FDFBF7] rounded-3xl p-7 border border-brand-border/60 shadow-2xs hover:shadow-md hover:border-[#6B6832]/30 transition-all duration-300 flex flex-col justify-between relative group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <StarRatingDisplay rating={t.rating} size="sm" />
-                <Quote className="h-5 w-5 text-[#A38A3E]/40 group-hover:text-[#A38A3E] transition-colors" />
-              </div>
+            <Reveal key={t.id} delay={idx * 90}>
+              <div
+                className="bg-[#FDFBF7] rounded-3xl p-7 border border-brand-border/60 shadow-2xs hover:shadow-xl hover:border-[#6B6832]/50 hover:-translate-y-2 transform-gpu transition-all duration-300 flex flex-col justify-between relative group h-full select-none"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <StarRatingDisplay rating={t.rating} size="sm" />
+                  <Quote className="h-5 w-5 text-[#A38A3E]/40 group-hover:text-[#A38A3E] group-hover:rotate-12 transition-all duration-300" />
+                </div>
 
-              <p className="font-serif text-sm text-[#34351F] italic leading-relaxed mb-6">
-                &ldquo;{t.quote}&rdquo;
-              </p>
+                <p className="font-serif text-sm text-[#34351F] italic leading-relaxed mb-6">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
 
-              <div className="flex items-center gap-3 pt-4 border-t border-brand-border/40 mt-auto">
-                <Avatar className="h-11 w-11 ring-2 ring-[#A38A3E]/30">
-                  <AvatarImage src={avatarUrl} alt={t.clientName} className="object-cover" />
-                  <AvatarFallback className="bg-[#6B6832] text-white text-xs font-semibold">
-                    {t.clientName[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-semibold text-[#34351F] leading-tight">{t.clientName}</p>
-                  <p className="text-xs text-stone-500 mt-0.5">Cliente verificada</p>
+                <div className="flex items-center gap-3 pt-4 border-t border-brand-border/40 mt-auto">
+                  <Avatar className="h-11 w-11 ring-2 ring-[#A38A3E]/30 transition-transform duration-300 group-hover:scale-105">
+                    <AvatarImage src={avatarUrl} alt={t.clientName} className="object-cover" />
+                    <AvatarFallback className="bg-[#6B6832] text-white text-xs font-semibold">
+                      {t.clientName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold text-[#34351F] leading-tight group-hover:text-primary transition-colors">{t.clientName}</p>
+                    <p className="text-xs text-stone-500 mt-0.5">Cliente verificada</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Reveal>
           );
         })}
       </div>

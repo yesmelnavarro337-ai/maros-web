@@ -1,0 +1,19 @@
+CARPETA DE AUDIOS AMBIENTALES - MARO'S PIJAMAS
+=====================================================
+
+Archivos requeridos:
+1. navidad-instrumental.mp3
+   - Ruta pública: /audio/navidad-instrumental.mp3
+   - Ubicación en disco: frontend/maros-web/public/audio/navidad-instrumental.mp3
+   - Se reproduce en: Página principal (/), Catálogo (/catalogo), Personaliza (/personaliza), etc.
+
+2. nosotros-instrumental.mp3
+   - Ruta pública: /audio/nosotros-instrumental.mp3
+   - Ubicación en disco: frontend/maros-web/public/audio/nosotros-instrumental.mp3
+   - Se reproduce en: Sección Nosotros (/nosotros).
+
+Formato recomendado:
+- Formato: MP3 (o AAC/M4A)
+- Bitrate recomendado: 128 kbps o 192 kbps estéreo (para menor peso y carga instantánea sin lag)
+- Canales: Estéreo
+- Bucle: Con final limpio o fade-out/fade-in suave para que el loop infinito suene perfecto.

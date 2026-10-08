@@ -111,7 +111,7 @@ export function ContactForm() {
           <Button
             type="submit"
             size="lg"
-            className="bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90"
+            className="bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90 rounded-full py-3 shadow-md hover:shadow-lg active:scale-95 transition-all duration-200 mt-2 font-medium"
             disabled={submitting}
           >
             {submitting ? "Enviando..." : "Enviar mensaje"}

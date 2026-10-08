@@ -317,6 +317,39 @@
   will-change: transform;
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    rgba(239, 232, 216, 0.45) 0%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(239, 232, 216, 0.45) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite ease-in-out;
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 10s linear infinite;
+}
+
 /* Soporte para accesibilidad y reducción de movimiento */
 @media (prefers-reduced-motion: reduce) {
   *,

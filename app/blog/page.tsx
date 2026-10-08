@@ -1,6 +1,7 @@
 import { PageHeroSection } from "@/components/shared/page-hero-section";
 import { BlogCategoryTabs } from "@/features/blog/components/blog-category-tabs";
 import { BlogPostCard } from "@/features/blog/components/blog-post-card";
+import { Reveal } from "@/components/shared/reveal";
 import { getBlogCategories, getBlogPosts } from "@/features/blog/services/blog.service";
 import { getPageHeader } from "@/features/page-headers/services/page-headers.service";
 
@@ -40,7 +41,11 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-            {posts.map((post) => <BlogPostCard key={post.slug} post={post} />)}
+            {posts.map((post, i) => (
+              <Reveal key={post.slug} delay={Math.min(i * 100, 500)}>
+                <BlogPostCard post={post} />
+              </Reveal>
+            ))}
           </div>
         )}
       </div>

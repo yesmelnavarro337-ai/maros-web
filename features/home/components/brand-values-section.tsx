@@ -37,6 +37,8 @@ const ICON_BY_KEY: Record<string, LucideIcon> = {
 
 const FALLBACK_ICON = Tag;
 
+import { Reveal } from "@/components/shared/reveal";
+
 interface BrandValuesSectionProps {
   content?: HomeSectionContent;
 }
@@ -57,61 +59,61 @@ export function BrandValuesSection({ content }: BrandValuesSectionProps) {
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
-      <div className="rounded-3xl lg:rounded-[2.5rem] overflow-hidden bg-[#F6F2E9] shadow-sm grid grid-cols-1 lg:grid-cols-12">
+      <Reveal>
+        <div className="rounded-3xl lg:rounded-[2.5rem] overflow-hidden bg-[#F6F2E9] shadow-sm grid grid-cols-1 lg:grid-cols-12 group/container">
 
-        {/* FOTOGRAFÍA EDITORIAL (Izquierda - 5 cols) */}
-        <div className="lg:col-span-5 relative min-h-[260px] sm:min-h-[320px] lg:min-h-[400px] w-full overflow-hidden bg-[#EDE7DA]">
-          <Image
-            src={orFallback(content?.mainImageUrl, DEFAULT_IMAGE)}
-            alt={orFallback(
-              content?.mainImageAlt,
-              "Confección y telas de alta calidad Maro's Pijamas"
-            )}
-            fill
-            sizes="(max-width: 1024px) 100vw, 42vw"
-            className="object-cover object-center transition-transform duration-700 ease-out hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent lg:hidden" />
-        </div>
-
-        {/* CONTENIDO EDITORIAL DE MARCA (Derecha - 7 cols) */}
-        <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-center">
-          <span className="text-[11px] font-semibold tracking-[0.25em] text-[#8B7D4E] uppercase mb-2 sm:mb-3">
-            {eyebrow}
-          </span>
-
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] text-[#34351F] font-normal leading-[1.1] tracking-tight mb-3 sm:mb-4">
-            {title}
-          </h2>
-
-          <p className="font-sans text-xs sm:text-sm lg:text-base text-[#5C5744] leading-relaxed mb-6 sm:mb-8 max-w-lg">
-            {body}
-          </p>
-
-          {/* Pills de Valores de Marca */}
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-            {tags.map((tag, index) => {
-              const Icon =
-                (tag.icon && ICON_BY_KEY[tag.icon]) || FALLBACK_ICON;
-              // El índice como sufijo desambigua etiquetas repetidas; combinar
-              // solo con el texto seguiría duplicando keys.
-              const tagKey = `brand-value-tag-${tag.label}-${index}`;
-              return (
-                <div
-                  key={tagKey}
-                  className="group inline-flex items-center gap-2 bg-white/70 border border-[#EBE6DC] text-[#3E3933] text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full shadow-2xs hover:bg-white hover:border-[#6B6832]/40 transition-all"
-                >
-                  <span className="h-6 w-6 sm:h-7 sm:w-7 shrink-0 rounded-full bg-brand-warm-beige/60 flex items-center justify-center text-[#A38A3E] group-hover:bg-[#6B6832] group-hover:text-white transition-colors">
-                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={1.5} aria-hidden="true" />
-                  </span>
-                  <span>{tag.label}</span>
-                </div>
-              );
-            })}
+          {/* FOTOGRAFÍA EDITORIAL (Izquierda - 5 cols) */}
+          <div className="lg:col-span-5 relative min-h-[260px] sm:min-h-[320px] lg:min-h-[400px] w-full overflow-hidden bg-[#EDE7DA]">
+            <Image
+              src={orFallback(content?.mainImageUrl, DEFAULT_IMAGE)}
+              alt={orFallback(
+                content?.mainImageAlt,
+                "Confección y telas de alta calidad Maro's Pijamas"
+              )}
+              fill
+              sizes="(max-width: 1024px) 100vw, 42vw"
+              className="object-cover object-center transition-transform duration-700 ease-out group-hover/container:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent lg:hidden" />
           </div>
-        </div>
 
-      </div>
+          {/* CONTENIDO EDITORIAL DE MARCA (Derecha - 7 cols) */}
+          <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-center">
+            <span className="text-[11px] font-semibold tracking-[0.25em] text-[#8B7D4E] uppercase mb-2 sm:mb-3">
+              {eyebrow}
+            </span>
+
+            <h2 className="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] text-[#34351F] font-normal leading-[1.1] tracking-tight mb-3 sm:mb-4">
+              {title}
+            </h2>
+
+            <p className="font-sans text-xs sm:text-sm lg:text-base text-[#5C5744] leading-relaxed mb-6 sm:mb-8 max-w-lg">
+              {body}
+            </p>
+
+            {/* Pills de Valores de Marca con animaciones dinámicas */}
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+              {tags.map((tag, index) => {
+                const Icon =
+                  (tag.icon && ICON_BY_KEY[tag.icon]) || FALLBACK_ICON;
+                const tagKey = `brand-value-tag-${tag.label}-${index}`;
+                return (
+                  <div
+                    key={tagKey}
+                    className="group inline-flex items-center gap-2 bg-white/70 border border-[#EBE6DC] text-[#3E3933] text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full shadow-2xs hover:bg-white hover:border-[#6B6832]/50 hover:shadow-md hover:-translate-y-0.5 active:scale-95 transform-gpu transition-all duration-300 cursor-default select-none"
+                  >
+                    <span className="h-6 w-6 sm:h-7 sm:w-7 shrink-0 rounded-full bg-brand-warm-beige/60 flex items-center justify-center text-[#A38A3E] group-hover:bg-[#6B6832] group-hover:text-white group-active:bg-[#6B6832] group-active:text-white transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-active:scale-110 group-active:rotate-6 shadow-2xs">
+                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={1.5} aria-hidden="true" />
+                    </span>
+                    <span className="group-hover:text-primary transition-colors">{tag.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      </Reveal>
     </section>
   );
 }

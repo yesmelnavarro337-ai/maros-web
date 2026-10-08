@@ -13,6 +13,7 @@ import { mainNavLinks, footerHelpLinks } from "../config/navigation";
 import { buildWhatsAppHref } from "@/features/settings/services/settings.service";
 import type { PublicSettings } from "@/features/settings/types";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
+import { VisitorCounter } from "./visitor-counter";
 
 function formatPhone(digits: string): string {
   if (digits.length === 12 && digits.startsWith("57")) {
@@ -299,14 +300,19 @@ export function Footer({ settings }: { settings: PublicSettings }) {
 
         </div>
 
+        {/* SECCIÓN DEL CONTADOR DE VISITANTES ESTILO CÁPSULA PILL */}
+        <div className="pt-8 pb-2 flex justify-center items-center w-full">
+          <VisitorCounter />
+        </div>
+
       </div>
 
       {/* BARRA INFERIOR DE COPYRIGHT */}
       <div className="border-t border-brand-gold-foreground/15">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-brand-gold-foreground/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-brand-gold-foreground/80 text-center">
           <span>© {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.</span>
-          <span className="flex items-center gap-1 font-medium">
-            Hecho con ♥ para ti
+          <span className="flex items-center justify-center gap-1 font-medium">
+            Hecho con ❤️ para ti
           </span>
         </div>
       </div>

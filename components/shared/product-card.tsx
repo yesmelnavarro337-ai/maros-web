@@ -34,8 +34,11 @@ export function ProductCard({
   });
 
   return (
-    <Link href={href} className="group">
-      <div className="relative aspect-square rounded-xl bg-secondary overflow-hidden">
+    <Link
+      href={href}
+      className="group block transform-gpu transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-1.5 active:scale-[0.98] select-none"
+    >
+      <div className="relative aspect-square rounded-xl bg-secondary overflow-hidden shadow-xs group-hover:shadow-lg group-active:shadow-md transition-shadow duration-300">
         {product.image ? (
           <>
             <Image
@@ -43,7 +46,7 @@ export function ProductCard({
               alt={product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="object-cover group-hover:scale-108 group-active:scale-105 transition-transform duration-500 ease-out"
             />
             {secondImage && (
               <Image
@@ -51,7 +54,7 @@ export function ProductCard({
                 alt={`${product.name} vista alternativa`}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="object-cover opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-400 ease-out"
               />
             )}
           </>
@@ -63,18 +66,18 @@ export function ProductCard({
 
         {/* Badges superiores: Agotado ó 5% OFF */}
         {soldOut ? (
-          <span className="absolute top-2 left-2 rounded-full bg-foreground/90 text-background text-[10px] font-medium uppercase tracking-wide px-2.5 py-1 z-10">
+          <span className="absolute top-2 left-2 rounded-full bg-foreground/90 text-background text-[10px] font-medium uppercase tracking-wide px-2.5 py-1 z-10 shadow-xs">
             Agotado
           </span>
         ) : priceDetails.hasDiscount ? (
-          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#34351F] text-white text-[9px] font-semibold tracking-wide px-2 py-1 shadow-xs max-w-[calc(100%-3rem)]">
-            <Sparkles className="h-3 w-3 shrink-0 text-[#B6AE3A]" />
+          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#34351F] text-white text-[9px] font-semibold tracking-wide px-2 py-1 shadow-xs max-w-[calc(100%-3rem)] animate-[pulse_3s_ease-in-out_infinite]">
+            <Sparkles className="h-3 w-3 shrink-0 text-[#B6AE3A] animate-spin-slow" />
             5% OFF
           </span>
         ) : null}
 
         <WishlistButton
-          className="absolute top-2 right-2 z-10"
+          className="absolute top-2 right-2 z-10 transition-transform duration-200 active:scale-125"
           item={{
             id: product.id,
             type: "product",
@@ -87,7 +90,7 @@ export function ProductCard({
 
         <button
           type="button"
-          className="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-md hover:bg-primary/90 transition-all duration-300 opacity-100 pointer-events-auto sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto flex items-center gap-1.5 z-10"
+          className="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-md hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 opacity-100 pointer-events-auto sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto flex items-center gap-1.5 z-10"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -99,7 +102,7 @@ export function ProductCard({
         </button>
       </div>
 
-      <p className="font-heading text-base text-foreground mt-2.5 truncate">{product.name}</p>
+      <p className="font-heading text-base text-foreground mt-2.5 truncate group-hover:text-primary transition-colors duration-200">{product.name}</p>
 
       {/* Bloque de Precio con Descuento del 5% */}
       <div className="flex items-baseline gap-1.5 mt-0.5">

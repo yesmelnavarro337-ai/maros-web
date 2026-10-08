@@ -29,26 +29,36 @@ export function OptionGrid({ options, selectedId, onSelect, variant = "image" }:
             key={option.id}
             onClick={() => onSelect(option.id)}
             className={cn(
-              "rounded-xl border-2 p-3 flex flex-col items-center gap-2 transition-colors text-left",
-              isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+              "group rounded-xl border-2 p-3 flex flex-col items-center gap-2 transform-gpu transition-all duration-200 text-left hover:-translate-y-1 hover:shadow-md active:scale-95 select-none",
+              isSelected
+                ? "border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20 scale-[1.02]"
+                : "border-border hover:border-primary/40 bg-card"
             )}
           >
             {variant === "swatch" ? (
               <span
-                className="h-12 w-12 rounded-full border border-border"
+                className="h-12 w-12 rounded-full border border-border shadow-xs transition-transform duration-300 group-hover:scale-110 group-active:scale-105"
                 style={{ backgroundColor: option.hex }}
               />
             ) : (
-              <span className="relative h-12 w-12 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
+              <span className="relative h-12 w-12 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shadow-2xs">
                 {option.image ? (
-                  <Image src={cloudinaryUrl(option.image)} alt={option.name} fill sizes="48px" className="object-cover" />
+                  <Image
+                    src={cloudinaryUrl(option.image)}
+                    alt={option.name}
+                    fill
+                    sizes="48px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
                 ) : (
                   <ImageOff className="h-4 w-4 text-muted-foreground" />
                 )}
               </span>
             )}
             <div className="text-center">
-              <p className="text-xs font-medium text-foreground">{option.name}</p>
+              <p className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                {option.name}
+              </p>
               <p className="text-[10px] text-muted-foreground">
                 {option.priceModifier > 0 ? `+$${option.priceModifier.toLocaleString("es-CO")}` : "Sin costo"}
               </p>

@@ -29,6 +29,8 @@ function resolveCategoryImage(label: string, customImage?: string): string {
   return "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop";
 }
 
+import { Reveal } from "@/components/shared/reveal";
+
 export function CategoryQuickLinks({ categories }: { categories: CategoryQuickLink[] }) {
   if (!categories || categories.length === 0) return null;
 
@@ -40,59 +42,64 @@ export function CategoryQuickLinks({ categories }: { categories: CategoryQuickLi
   return (
     <section className="w-full py-6 sm:py-10">
       {/* Encabezado Editorial de Categorías */}
-      <div className="flex items-end justify-between mb-6 sm:mb-8">
-        <div>
-          <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-[#34351F] font-medium tracking-tight">
-            Descubre nuestras <span className="italic font-normal">categorías</span>
-          </h2>
-          <p className="font-sans text-xs sm:text-sm text-stone-500 mt-1 sm:mt-1.5">
-            Encuentra el estilo perfecto para cada momento.
-          </p>
+      <Reveal>
+        <div className="flex items-end justify-between mb-6 sm:mb-8">
+          <div>
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl text-[#34351F] font-medium tracking-tight">
+              Descubre nuestras <span className="italic font-normal">categorías</span>
+            </h2>
+            <p className="font-sans text-xs sm:text-sm text-stone-500 mt-1 sm:mt-1.5">
+              Encuentra el estilo perfecto para cada momento.
+            </p>
+          </div>
+
+          <Link
+            href="/catalogo"
+            className="group inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-[#6B6832] hover:text-[#34351F] transition-colors active:scale-95"
+          >
+            <span>Ver todas</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 group-active:translate-x-1" />
+          </Link>
         </div>
+      </Reveal>
 
-        <Link
-          href="/catalogo"
-          className="group inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-[#6B6832] hover:text-[#34351F] transition-colors"
-        >
-          <span>Ver todas</span>
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-        </Link>
-      </div>
-
-      {/* Grid de Tarjetas Visuales Fotográficas.
-          Móvil: 2 columnas · Tablet: 3 columnas · Escritorio: 5 columnas.
-          La 6.ª tarjeta se oculta en escritorio (lg) para que la fila quede completa. */}
+      {/* Grid de Tarjetas Visuales Fotográficas con animaciones dinámicas */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-5 lg:gap-6">
         {visibleCategories.map((c, index) => {
           const imageUrl = resolveCategoryImage(c.label, c.image);
           const mobileOnly = index >= DESKTOP_VISIBLE_COUNT;
 
           return (
-            <Link
+            <Reveal
               key={c.id}
-              href={c.href}
-              className={`group relative aspect-[3/4] sm:aspect-[4/5] rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 shadow-xs border border-brand-border/40 transition-all duration-500 hover:shadow-md hover:border-[#6B6832]/50 block${mobileOnly ? " lg:hidden" : ""}`}
+              delay={index * 60}
+              className={mobileOnly ? "lg:hidden" : undefined}
             >
-              {/* Imagen Fotográfica con zoom suave al interactuar */}
-              <Image
-                src={imageUrl}
-                alt={`Pijamas categoría ${c.label}`}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-              />
+              <Link
+                href={c.href}
+                className="group relative aspect-[3/4] sm:aspect-[4/5] rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 shadow-xs border border-brand-border/40 transform-gpu transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-[#6B6832]/50 active:-translate-y-1 active:scale-[0.98] active:shadow-md block select-none"
+              >
+                {/* Imagen Fotográfica con zoom suave al interactuar */}
+                <Image
+                  src={imageUrl}
+                  alt={`Pijamas categoría ${c.label}`}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                  className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110 group-active:scale-105"
+                />
 
-              {/* Sutil sombreado inferior para contraste */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                {/* Sutil sombreado inferior para contraste */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-              {/* Botón / Píldora de Categoría en la parte inferior */}
-              <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl py-2 px-3 sm:px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group-hover:bg-[#34351F] group-hover:text-white">
-                <span className="font-medium text-xs sm:text-sm text-[#34351F] group-hover:text-white transition-colors truncate">
-                  {c.label}
-                </span>
-                <ArrowRight className="h-3.5 w-3.5 text-[#A38A3E] group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
-              </div>
-            </Link>
+                {/* Botón / Píldora de Categoría en la parte inferior */}
+                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl py-2 px-3 sm:px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group-hover:bg-[#34351F] group-hover:text-white group-active:bg-[#34351F] group-active:text-white group-hover:scale-[1.02] group-active:scale-[0.98]">
+                  <span className="font-medium text-xs sm:text-sm text-[#34351F] group-hover:text-white group-active:text-white transition-colors truncate">
+                    {c.label}
+                  </span>
+                  <ArrowRight className="h-3.5 w-3.5 text-[#A38A3E] group-hover:text-white group-active:text-white group-hover:translate-x-1 group-active:translate-x-1 transition-all shrink-0 ml-1" />
+                </div>
+              </Link>
+            </Reveal>
           );
         })}
       </div>

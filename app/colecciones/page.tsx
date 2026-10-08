@@ -1,4 +1,5 @@
 import { CollectionCard } from "@/components/shared/collection-card";
+import { Reveal } from "@/components/shared/reveal";
 import { PageHeroSection } from "@/components/shared/page-hero-section";
 import { getCollections } from "@/features/collections/services/collections.service";
 import { getPageHeader } from "@/features/page-headers/services/page-headers.service";
@@ -33,8 +34,10 @@ export default async function ColeccionesPage() {
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-            {collections.map((c) => (
-              <CollectionCard key={c.id} collection={c} />
+            {collections.map((c, i) => (
+              <Reveal key={c.id} delay={Math.min(i * 100, 500)}>
+                <CollectionCard collection={c} />
+              </Reveal>
             ))}
           </div>
         )}
