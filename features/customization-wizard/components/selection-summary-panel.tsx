@@ -5,6 +5,7 @@ import { cloudinaryUrl } from "@/lib/images/cloudinary";
 
 interface SelectionSummaryPanelProps {
   productName: string;
+  styleName?: string;
   productImage: string;
   basePrice: number;
   size: string;
@@ -19,6 +20,7 @@ interface SelectionSummaryPanelProps {
 
 export function SelectionSummaryPanel({
   productName,
+  styleName,
   productImage,
   basePrice,
   size,
@@ -33,9 +35,13 @@ export function SelectionSummaryPanel({
   const hasPrint = !!print && print.id !== "none";
   const hasEmbroidery = !!embroidery && embroidery.id !== "none";
   const selectedColor = color?.hex;
+  const modelLabel = styleName || productName;
 
   const rows = [
-    { label: productName, value: `$${basePrice.toLocaleString("es-CO")}` },
+    {
+      label: modelLabel ? `Estilo · ${modelLabel}` : "Estilo",
+      value: modelLabel ? `$${basePrice.toLocaleString("es-CO")}` : "Elige un modelo",
+    },
     fabric && { label: `Tela · ${fabric.name}`, value: fabric.priceModifier > 0 ? `+$${fabric.priceModifier.toLocaleString("es-CO")}` : "+$0" },
     color && { label: `Color · ${color.name}`, value: "+$0" },
     hasPrint && { label: `Estampado · ${print!.name}`, value: `+$${print!.priceModifier.toLocaleString("es-CO")}` },

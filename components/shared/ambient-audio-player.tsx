@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { Volume2, VolumeX, Sparkles } from "lucide-react";
+import { VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AUDIO_NAV_TRACK = "/audio/navidad-instrumental.mp3";
@@ -14,13 +14,35 @@ export function AmbientAudioPlayer() {
   const pathname = usePathname();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // URLs de audio gestionadas desde maros-admin (GET /api/audio → API).
+  // Null = aún no cargado o sin archivo en el servidor: se usa el fallback local.
+  const [audioUrls, setAudioUrls] = useState<{ navidad: string | null; nosotros: string | null }>({
+    navidad: null,
+    nosotros: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/audio")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) {
+          setAudioUrls({ navidad: data.navidad ?? null, nosotros: data.nosotros ?? null });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isAboutRoute = pathname?.startsWith("/nosotros") ?? false;
+
   // Determinar pista según la ruta actual de Next.js
-  const currentTrack = pathname?.startsWith("/nosotros")
-    ? AUDIO_ABOUT_TRACK
-    : AUDIO_NAV_TRACK;
-  const trackLabel = pathname?.startsWith("/nosotros")
-    ? "Música Instrumental"
-    : "Música Navideña";
+  const currentTrack =
+    (isAboutRoute ? audioUrls.nosotros : audioUrls.navidad) ??
+    (isAboutRoute ? AUDIO_ABOUT_TRACK : AUDIO_NAV_TRACK);
+  const trackLabel = isAboutRoute ? "Música Instrumental" : "Música Navideña";
 
   // Estado persistente: sólo inicia silenciado si el usuario lo guardó explícitamente como "true"
   const [isMuted, setIsMuted] = useState<boolean>(() => {
@@ -162,6 +184,24 @@ export function AmbientAudioPlayer() {
       }
     }
   }, [currentTrack, isPlaying, isMuted]);
+
+  // 2b. Control de audio ambiental en segundo plano: si la pestaña se oculta,
+  // el dispositivo cambia de app o la pantalla se bloquea, se pausa la
+  // reproducción inmediatamente y se actualiza el estado del reproductor.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) return;
+      const audio = audioRef.current;
+      if (!audio || audio.paused) return;
+      audio.pause();
+      setIsPlaying(false);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   // 3. Manejador del botón Mute / Unmute
   const toggleMute = () => {

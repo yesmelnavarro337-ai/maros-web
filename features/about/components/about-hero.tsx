@@ -4,10 +4,18 @@ import { Button } from "@/components/ui/button";
 import { getPageHeader } from "@/features/page-headers/services/page-headers.service";
 import { HeaderSliderBackground } from "@/components/shared/header-slider-background";
 import { Reveal } from "@/components/shared/reveal";
+import type { HeaderMedia } from "@/features/page-headers/types";
 
 const DEFAULT_TITLE_LINES = { before: "Más de 6 años creando pijamas ", highlight: "únicas" };
 const DEFAULT_SUBTITLE =
   "Maro's Pijamas nació con un sueño simple: crear prendas únicas, cómodas y hechas con amor para los momentos más especiales de tu vida.";
+
+/** Fotos de prueba/respaldo: solo se muestran si no hay contenido propio. */
+const STOCK_IMAGES = [
+  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=1200&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1200&auto=format&fit=crop",
+];
 
 export async function AboutHero() {
   const header = await getPageHeader("about").catch(() => undefined);
@@ -23,19 +31,34 @@ export async function AboutHero() {
       ? { label: header.secondaryButtonText.trim(), href: header.secondaryButtonLink.trim() }
       : { label: "Contáctanos", href: "/contacto" };
 
-  const aboutImages = [
-    ...(header?.backgroundImage?.trim() ? [header.backgroundImage.trim()] : []),
-    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1200&auto=format&fit=crop",
-  ].slice(0, 3);
+  const backgroundImage = header?.backgroundImage?.trim() || undefined;
+
+  // Fotos de prueba/respaldo: solo se muestran si no hay imagen de fondo ni
+  // multimedia. No se agregan como slides extra (igual que el home).
+  const stockImages = STOCK_IMAGES.map((img) => img.trim()).filter(Boolean);
+
+  const mediaList: HeaderMedia[] = (header?.media ?? [])
+    .filter((m) => Boolean(m.url?.trim()))
+    .sort((a, b) => a.order - b.order)
+    .map((m) => ({ url: m.url.trim(), mediaType: m.mediaType, order: 0 }));
+
+  // Slides reales: imagen de fondo primero (salvo reordenamiento explícito en
+  // maros-admin) y luego la multimedia en su orden configurado.
+  const realSlides: HeaderMedia[] = [];
+  if (backgroundImage && !mediaList.some((m) => m.url === backgroundImage)) {
+    realSlides.push({ url: backgroundImage, mediaType: "image", order: 0 });
+  }
+  realSlides.push(...mediaList);
+  const combined = realSlides.map((m, index) => ({ ...m, order: index }));
 
   const overlayOpacity = Math.min(Math.max(header?.overlayOpacity ?? 45, 20), 85);
 
   return (
     <section className="relative w-full overflow-hidden bg-brand-dark-olive">
       <HeaderSliderBackground
-        images={aboutImages}
+        images={stockImages}
+        fallbackImage={stockImages[0]}
+        media={combined}
         overlayOpacity={overlayOpacity}
         className="min-h-[340px] sm:min-h-[400px] md:min-h-[460px] flex items-center"
       >

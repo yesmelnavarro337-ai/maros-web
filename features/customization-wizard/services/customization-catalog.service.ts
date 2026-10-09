@@ -69,7 +69,15 @@ export async function getEmbroideries(): Promise<CustomizationChoice[]> {
   return [NO_EMBROIDERY_OPTION, ...(catalogs.Bordado ?? []).map(adapt)];
 }
 
-interface ApiProductListItem {
+export interface CustomizableModelsPage {
+  items: CustomizationModel[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  hasMore: boolean;
+}
+
+interface ApiCustomizableProduct {
   id: string;
   name: string;
   slug: string;
@@ -78,33 +86,41 @@ interface ApiProductListItem {
   sizes: string[];
 }
 
-let cachedModels: CustomizationModel[] | null = null;
-
-// Algunas respuestas llegan como arreglo directo; otras vienen envueltas en
-// `{ data: [...] }`, `{ items: [...] }` o `{ products: [...] }`. Se extrae el
-// arreglo real para que el componente consumidor reciba siempre una lista.
-function unwrapList<T>(payload: unknown): T[] {
-  const data = (payload as { data?: unknown; items?: unknown; products?: unknown })?.data
-    ?? (payload as { items?: unknown })?.items
-    ?? (payload as { products?: unknown })?.products
-    ?? payload;
-  return Array.isArray(data) ? (data as T[]) : [];
+interface ApiCustomizablePage {
+  items: ApiCustomizableProduct[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  hasMore: boolean;
 }
 
-export async function getModels(): Promise<CustomizationModel[]> {
-  if (cachedModels) return cachedModels;
+function adaptModel(p: ApiCustomizableProduct): CustomizationModel {
+  return {
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    price: p.basePrice,
+    image: p.thumbnailUrl ?? "",
+    sizes: Array.isArray(p.sizes) ? p.sizes : [],
+  };
+}
+
+export async function getCustomizableModels(page: number, pageSize = 6): Promise<CustomizableModelsPage> {
+  const fallback: CustomizableModelsPage = { items: [], page, pageSize, totalCount: 0, hasMore: false };
   try {
-    const list = unwrapList<ApiProductListItem>(await clientApiFetch("products"));
-    cachedModels = list.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      price: p.basePrice,
-      image: p.thumbnailUrl ?? "",
-      sizes: Array.isArray(p.sizes) ? p.sizes : [],
-    }));
+    const raw = await clientApiFetch<ApiCustomizablePage | { data?: ApiCustomizablePage }>(
+      `products/customizable?page=${page}&pageSize=${pageSize}`
+    );
+    const parsed = (raw as { data?: ApiCustomizablePage }).data ?? (raw as ApiCustomizablePage);
+    const items = (Array.isArray(parsed?.items) ? parsed.items : []).map(adaptModel);
+    return {
+      items,
+      page: parsed?.page ?? page,
+      pageSize: parsed?.pageSize ?? pageSize,
+      totalCount: parsed?.totalCount ?? items.length,
+      hasMore: Boolean(parsed?.hasMore),
+    };
   } catch {
-    cachedModels = [];
+    return fallback;
   }
-  return cachedModels;
 }

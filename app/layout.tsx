@@ -33,19 +33,44 @@ const playfair = Playfair_Display({
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSettings();
+  const siteName = settings.siteName || "Maro's Pijamas";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+  const title = settings.seoMetaTitle || `${siteName} — Pijamas personalizadas hechas a mano`;
+  const description = settings.seoMetaDescription || settings.description;
+
+  // Imagen social por defecto: /og-image.png (1200x630) en public/. Si el admin
+  // configuró una social image propia, esa tiene prioridad.
+  const ogImage = settings.seoSocialImageUrl
+    ? { url: settings.seoSocialImageUrl, width: 1200, height: 630, alt: title }
+    : { url: "/og-image.png", width: 1200, height: 630, alt: title };
 
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"),
+    metadataBase: new URL(siteUrl),
     title: {
-      default: settings.seoMetaTitle || `${settings.siteName} — Pijamas personalizadas hechas a mano`,
-      template: `%s | ${settings.siteName}`,
+      default: title,
+      template: `%s | ${siteName}`,
     },
-    description: settings.seoMetaDescription || settings.description,
+    description,
     openGraph: {
-      siteName: settings.siteName,
+      title,
+      description,
+      url: "/",
+      siteName,
       locale: "es_CO",
       type: "website",
-      images: settings.seoSocialImageUrl ? [{ url: settings.seoSocialImageUrl }] : undefined,
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: settings.seoSocialImageUrl ? [settings.seoSocialImageUrl] : ["/og-image.png"],
+    },
+    icons: {
+      // ?v=2 fuerza a los navegadores a re-descargar el favicon (la caché de
+      // favicons es agresiva y no se actualiza con recargas normales).
+      icon: [{ url: "/favicon.ico?v=2", sizes: "any", type: "image/x-icon" }],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
     },
     verification: {
       google: "SlT_wzDfVkvuOsy_lzg6OvJ20vDx0pjRm2cA0VQS3qQ",

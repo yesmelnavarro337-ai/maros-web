@@ -6,14 +6,15 @@ import path from "path";
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "visitors.json");
 
-// Valor base inicial de visitantes
-const INITIAL_VISITORS = 1248;
+// Piso base obligatorio de visitantes: si la persistencia no existe,
+// está corrupta o registra una cifra menor, se inicializa en 500.
+const INITIAL_VISITORS = 500;
 
 let inMemoryCount = INITIAL_VISITORS;
 let isInitialized = false;
 
-async function ensureDataFile(): Promise<number> {
-  if (isInitialized) return inMemoryCount;
+async function ensureDataFile(): Promise<void> {
+  if (isInitialized) return;
 
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
@@ -26,19 +27,20 @@ async function ensureDataFile(): Promise<number> {
       await fs.writeFile(DATA_FILE, JSON.stringify({ count: inMemoryCount }), "utf-8");
     }
   } catch {
-    // Si no existe, crear con conteo inicial
+    // Si no existe o está corrupto, crear con el piso base
+    inMemoryCount = INITIAL_VISITORS;
     try {
       await fs.mkdir(DATA_DIR, { recursive: true });
-      await fs.writeFile(DATA_FILE, JSON.stringify({ count: INITIAL_VISITORS }), "utf-8");
+      await fs.writeFile(DATA_FILE, JSON.stringify({ count: inMemoryCount }), "utf-8");
     } catch {}
-    inMemoryCount = INITIAL_VISITORS;
   }
 
   isInitialized = true;
-  return inMemoryCount;
 }
 
-async function persistCount(count: number): Promise<void> {
+async function incrementCount(): Promise<number> {
+  await ensureDataFile();
+  const count = inMemoryCount + 1;
   inMemoryCount = count;
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
@@ -46,16 +48,18 @@ async function persistCount(count: number): Promise<void> {
   } catch (err) {
     console.error("Error persistiendo visitantes:", err);
   }
+  return count;
 }
 
+// Cada petición (carga de página, recarga manual o actualización de ruta)
+// incrementa incondicionalmente el contador en +1, sin filtros por IP,
+// cookies, almacenamiento local ni huella del dispositivo.
 export async function GET() {
-  const count = await ensureDataFile();
+  const count = await incrementCount();
   return NextResponse.json({ count });
 }
 
 export async function POST() {
-  let count = await ensureDataFile();
-  count += 1;
-  await persistCount(count);
+  const count = await incrementCount();
   return NextResponse.json({ count });
 }

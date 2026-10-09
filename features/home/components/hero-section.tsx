@@ -7,6 +7,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HeroContent, HeroSlide } from "../types";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
+import { SlideVideoLayer } from "@/components/shared/slide-video-layer";
 import { Reveal } from "@/components/shared/reveal";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,10 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const current = slides[currentIndex] || slides[0];
 
+  // Los videos no avanzan por temporizador: se reproducen completos y cambian
+  // de slide solo cuando emiten `onEnded`. Esta bandera congela el autoplay.
+  const currentIsVideo = current.mediaType === "video";
+
   // Los slides de temporada (1) y personalización (2) llevan overlay de texto;
   // a partir del tercer slide (imágenes adicionales) solo se ve la fotografía.
   const showOverlayText = current.showOverlayText !== false;
@@ -42,20 +47,24 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
 
   // Estado de pausa en hover o touch en móviles
   const [isPaused, setIsPaused] = useState(false);
+  // Estado de pestaña oculta para pausar también los videos en segundo plano
+  const [isHidden, setIsHidden] = useState(false);
   const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Autoplay cada 3.8 segundos (3800ms), inmune a re-renders innecesarios
+  // Autoplay cada 3.8 segundos (3800ms), inmune a re-renders innecesarios.
+  // Los videos quedan excluidos: avanzan con su evento nativo `onEnded`.
   useEffect(() => {
-    if (slideCount <= 1 || isPaused) return;
+    if (slideCount <= 1 || isPaused || currentIsVideo) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slideCount);
     }, 3800);
     return () => clearInterval(timer);
-  }, [slideCount, isPaused]);
+  }, [slideCount, isPaused, currentIsVideo]);
 
   // Manejo de visibilidad de pestaña
   useEffect(() => {
     const handleVisibility = () => {
+      setIsHidden(document.hidden);
       if (document.hidden) {
         setIsPaused(true);
       } else {
@@ -127,6 +136,11 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
     pauseAutoplay(6000);
   };
 
+  // Un video activo avanza al siguiente slide solo cuando termina de reproducirse.
+  const handleVideoEnded = () => {
+    setCurrentIndex((prev) => (prev + 1) % slideCount);
+  };
+
   return (
     <section className="relative w-full overflow-hidden bg-brand-dark border-b border-brand-border/40">
       {/* Contenedor principal del Hero con imagen de fondo completa (Full Bleed).
@@ -159,14 +173,25 @@ export function HeroSection({ hero }: { hero: HeroContent }) {
                 )}
               >
                 {slide.image ? (
-                  <Image
-                    src={cloudinaryUrl(slide.image)}
-                    alt={slide.title || "Slide " + (idx + 1)}
-                    fill
-                    priority={idx === 0}
-                    sizes="100vw"
-                    className="object-cover object-center transform-gpu"
-                  />
+                  slide.mediaType === "video" ? (
+                    <SlideVideoLayer
+                      src={slide.image}
+                      isActive={isActive}
+                      shouldPlay={!isHidden}
+                      onEnded={handleVideoEnded}
+                      onError={handleVideoEnded}
+                      className="h-full w-full object-cover object-center"
+                    />
+                  ) : (
+                    <Image
+                      src={cloudinaryUrl(slide.image)}
+                      alt={slide.title || "Slide " + (idx + 1)}
+                      fill
+                      priority={idx === 0}
+                      sizes="100vw"
+                      className="object-cover object-center transform-gpu"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-brand-warm-beige via-brand-ivory to-brand-border" />
                 )}

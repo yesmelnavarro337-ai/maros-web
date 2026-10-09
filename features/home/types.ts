@@ -5,6 +5,11 @@ export interface HeroSlide {
   title: string;
   subtitle: string;
   image?: string;
+  /**
+   * Tipo del recurso del slide. Cuando es "video", el hero renderiza un
+   * elemento <video> en bucle en vez de una imagen estática.
+   */
+  mediaType?: "image" | "video";
   overlayNote?: string;
   /**
    * Cuando es false el slide se renderiza como imagen limpia a pantalla

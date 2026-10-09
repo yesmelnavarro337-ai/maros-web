@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HeaderSliderBackground } from "./header-slider-background";
 import { Reveal } from "./reveal";
-import type { PageHeader } from "@/features/page-headers/types";
+import type { HeaderMedia, PageHeader } from "@/features/page-headers/types";
 
 interface PageHeroSectionProps {
   header?: PageHeader;
@@ -14,7 +14,7 @@ export function PageHeroSection({ header, fallback, additionalImages = [] }: Pag
   const subtitle = header?.subtitle || fallback.subtitle;
   const textColor = header?.textColor || "#F9F6F0";
   const overlayOpacity = Math.min(Math.max(header?.overlayOpacity ?? 40, 0), 90);
-  const backgroundImage = header?.backgroundImage;
+  const backgroundImage = header?.backgroundImage?.trim() || undefined;
 
   // Colección de imágenes para el slider Ken Burns (5s)
   const defaultPageImages: Record<string, string[]> = {
@@ -37,16 +37,43 @@ export function PageHeroSection({ header, fallback, additionalImages = [] }: Pag
     "https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?q=80&w=1200&auto=format&fit=crop",
   ];
 
-  const sliderImages = backgroundImage
-    ? [backgroundImage, ...additionalImages, ...fallbackList.filter((img) => img !== backgroundImage)].slice(0, 3)
-    : [...additionalImages, ...fallbackList].slice(0, 3);
+  // Fotos de prueba/respaldo: se usan SOLO cuando no hay contenido propio
+  // (imagen de fondo ni multimedia) o si una imagen falla al cargar. Nunca se
+  // agregan como slides extra, igual que la lógica de los headers del home.
+  const fallbackImages = Array.from(
+    new Set(
+      [...additionalImages, ...fallbackList]
+        .map((img) => img.trim())
+        .filter(Boolean)
+    )
+  );
+
+  const mediaList: HeaderMedia[] = (header?.media ?? [])
+    .filter((m) => Boolean(m.url?.trim()))
+    .sort((a, b) => a.order - b.order)
+    .map((m) => ({ url: m.url.trim(), mediaType: m.mediaType, order: 0 }));
+
+  // Slides reales:
+  //  1) La imagen de fondo configurada en maros-admin va primero, salvo que el
+  //     administrador la haya reordenado explícitamente dentro de la lista
+  //     multimedia (entonces ya está en mediaList y no se prepende).
+  //  2) Los elementos multimedia en el orden configurado en maros-admin
+  //     (los videos nunca quedan de primero salvo orden explícito).
+  const realSlides: HeaderMedia[] = [];
+  if (backgroundImage && !mediaList.some((m) => m.url === backgroundImage)) {
+    realSlides.push({ url: backgroundImage, mediaType: "image", order: 0 });
+  }
+  realSlides.push(...mediaList);
+  const combined = realSlides.map((m, index) => ({ ...m, order: index }));
 
   const hasButtons = Boolean(header?.primaryButtonText || header?.secondaryButtonText);
 
   return (
     <section className="relative w-full overflow-hidden bg-brand-dark-olive">
       <HeaderSliderBackground
-        images={sliderImages}
+        images={fallbackImages}
+        fallbackImage={fallbackImages[0]}
+        media={combined}
         overlayOpacity={overlayOpacity}
         className="min-h-[280px] sm:min-h-[340px] md:min-h-[400px] lg:min-h-[440px] flex items-center"
       >

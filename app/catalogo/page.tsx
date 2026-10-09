@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CatalogProductGrid } from "@/features/catalog/components/catalog-product-grid";
 import { CatalogFilterSidebar } from "@/features/catalog/components/catalog-filter-sidebar";
@@ -8,6 +7,7 @@ import {
   getCatalogFilterOptions,
   getCatalogProducts,
   getCategories,
+  getFeaturedCatalog,
 } from "@/features/catalog/services/catalog.service";
 import type { CatalogSearchParams, SortOption } from "@/features/catalog/types";
 import { buildMetadata } from "@/lib/seo";
@@ -52,13 +52,26 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
     orden: rawParams.orden as SortOption | undefined,
   };
 
-  const [products, categories, filterOptions] = await Promise.all([
+  const [products, categories, filterOptions, featured] = await Promise.all([
     getCatalogProducts(params),
     getCategories(),
     getCatalogFilterOptions({ categoria: params.categoria, buscar: params.buscar }),
+    getFeaturedCatalog(),
   ]);
 
-  const totalProducts = products.length;
+  // Los productos seleccionados desde maros-admin se muestran primero (en su
+  // orden configurado); el resto conserva el ordenamiento del catálogo.
+  const featuredOrder = new Map(featured.map((p, index) => [p.id, index]));
+  const orderedProducts = [...products].sort((a, b) => {
+    const aIndex = featuredOrder.get(a.id);
+    const bIndex = featuredOrder.get(b.id);
+    if (aIndex !== undefined && bIndex !== undefined) return aIndex - bIndex;
+    if (aIndex !== undefined) return -1;
+    if (bIndex !== undefined) return 1;
+    return 0;
+  });
+
+  const totalProducts = orderedProducts.length;
   const pageCount = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
   const page = Math.min(requestedPage, pageCount);
 
@@ -71,7 +84,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
     redirect(`/catalogo?${q.toString()}`);
   }
 
-  const pageProducts = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageProducts = orderedProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const queryForPage = (target: number) => {
     const q = new URLSearchParams();

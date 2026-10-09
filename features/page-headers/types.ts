@@ -1,5 +1,11 @@
 export type PageKey = "collections" | "blog" | "gallery" | "about" | "historia";
 
+export interface HeaderMedia {
+  url: string;
+  mediaType: "image" | "video";
+  order: number;
+}
+
 export interface PageHeader {
   pageKey: PageKey;
   title: string;
@@ -11,4 +17,5 @@ export interface PageHeader {
   secondaryButtonLink?: string;
   textColor: string;
   overlayOpacity: number;
+  media: HeaderMedia[];
 }

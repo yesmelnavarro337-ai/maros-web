@@ -58,6 +58,33 @@ export interface QuickViewModalProps {
   /** Controls modal open/close. */
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * Modo personalización: oculta los botones de compra ("Agregar al carrito" y
+   * "Solicitar cotización") y permite interceptar el botón "Personalizar" con
+   * `onPersonalize` en lugar de navegar a /personaliza. Por defecto `false`, de
+   * modo que el catálogo y demás consumidores no cambian su comportamiento.
+   */
+  personalizeMode?: boolean;
+  /** Callback al pulsar «Personalizar» cuando `personalizeMode` está activo. */
+  onPersonalize?: (selection: PersonalizeSelection) => void;
+}
+
+/** Datos del modelo/estilo elegido que viajan al flujo de personalización. */
+export interface PersonalizeSelection {
+  id: string;
+  slug: string;
+  name: string;
+  image: string;
+  sizes: string[];
+  colors: { name: string; hex: string }[];
+  allowCustomization: boolean;
+  styleName: string;
+  materialName: string;
+  colorName: string;
+  size: string;
+  quantity: number;
+  basePrice: number;
+  finalPrice: number;
 }
 
 // ─── Color Swatch (supports solid + 50/50 gradient for combined colors) ──────
@@ -315,6 +342,8 @@ export function ProductQuickViewModal({
   isLoading,
   isOpen,
   onClose,
+  personalizeMode = false,
+  onPersonalize,
 }: QuickViewModalProps) {
   const { addItem } = useCart();
 
@@ -507,6 +536,42 @@ export function ProductQuickViewModal({
   });
 
   const finalPrice = priceDetails.finalPrice;
+
+  // En modo personalización el botón «Personalizar» no navega: entrega el estilo
+  // elegido con su precio real (base del estilo) y la página avanza al paso 2.
+  const handlePersonalize = useCallback(() => {
+    if (!product || !onPersonalize) return;
+    onPersonalize({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      image: product.images?.[0] ?? "",
+      sizes: product.sizes ?? [],
+      colors: (product.colors ?? []).map((c) => ({
+        name: c.name,
+        hex: c.primaryHex || c.hex,
+      })),
+      allowCustomization: product.allowCustomization ?? false,
+      styleName: selectedStyle || selectedVariant?.styleName || "",
+      materialName: selectedMaterial,
+      colorName: selectedColorObj?.name ?? "",
+      size: selectedSize,
+      quantity,
+      basePrice: priceDetails.basePrice,
+      finalPrice: priceDetails.finalPrice,
+    });
+  }, [
+    product,
+    onPersonalize,
+    selectedStyle,
+    selectedVariant,
+    selectedMaterial,
+    selectedColorObj,
+    selectedSize,
+    quantity,
+    priceDetails.basePrice,
+    priceDetails.finalPrice,
+  ]);
 
   // ── Action URLs ──
   // La ruta real es /personaliza (no /personalizacion). El producto viaja en
@@ -891,43 +956,73 @@ export function ProductQuickViewModal({
 
               {/* ── Action buttons ── */}
               <div className="flex flex-col gap-2.5 mt-auto pt-3 border-t border-border/60">
-                <Button
-                  size="lg"
-                  className="w-full h-11 bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90 text-sm font-semibold"
-                  disabled={!canAddToCart}
-                  onClick={handleAddToCart}
-                >
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  Agregar al carrito
-                </Button>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs"
-                  >
-                    <Link href={quoteHref}>
-                      <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                      Solicitar cotización
-                    </Link>
-                  </Button>
-
-                  {product.allowCustomization && (
+                {!personalizeMode && (
+                  <>
                     <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs text-primary border-primary/30 hover:bg-primary/5"
+                      size="lg"
+                      className="w-full h-11 bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90 text-sm font-semibold"
+                      disabled={!canAddToCart}
+                      onClick={handleAddToCart}
                     >
-                      <Link href={customizeHref}>
-                        <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                        Personalizar
-                      </Link>
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      Agregar al carrito
                     </Button>
-                  )}
-                </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs"
+                      >
+                        <Link href={quoteHref}>
+                          <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                          Solicitar cotización
+                        </Link>
+                      </Button>
+
+                      {product.allowCustomization && (
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-xs text-primary border-primary/30 hover:bg-primary/5"
+                        >
+                          <Link href={customizeHref}>
+                            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                            Personalizar
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {personalizeMode && product.allowCustomization && (
+                  <>
+                    {onPersonalize ? (
+                      <Button
+                        size="lg"
+                        className="w-full h-11 bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90 text-sm font-semibold"
+                        onClick={handlePersonalize}
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Personalizar
+                      </Button>
+                    ) : (
+                      <Button
+                        asChild
+                        size="lg"
+                        className="w-full h-11 bg-brand-gold text-brand-gold-foreground hover:bg-brand-gold/90 text-sm font-semibold"
+                      >
+                        <Link href={customizeHref}>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Personalizar
+                        </Link>
+                      </Button>
+                    )}
+                  </>
+                )}
 
                 {/* Link to full product page */}
                 <Link

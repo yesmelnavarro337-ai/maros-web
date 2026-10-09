@@ -60,6 +60,15 @@ const DEFAULT_HERO_SLIDE: HeroSlide & Required<Pick<HeroSlide, "primaryCta" | "s
 
 const PERSONALIZE_SECTION_KEY = "personalize";
 
+/**
+ * Detecta si una URL de Cloudinary (o externa) apunta a un video. Las URLs de
+ * Cloudinary siempre incluyen el resource type en la ruta (`/video/upload/`).
+ */
+export function isVideoUrl(url: string): boolean {
+  const lower = (url || "").toLowerCase();
+  return lower.includes("/video/upload/") || /\.(mp4|webm|mov|m4v)(\?|#|$)/.test(lower);
+}
+
 const DEFAULT_PERSONALIZE_SLIDE: Omit<HeroSlide, "id" | "image"> = {
   badgeLabel: "PERSONALIZACIÓN TOTAL",
   badgeSeason: "Diseño a tu medida",
@@ -93,6 +102,8 @@ export async function getHeroContent(): Promise<HeroContent> {
 
   // 1) Portada de la temporada activa, con su overlay de texto completo.
   if (season) {
+    const seasonHeroImage =
+      primaryImage?.imageUrl ?? season.bannerImageUrl ?? season.heroImageUrl ?? undefined;
     slides.push({
       id: "season-primary",
       showOverlayText: true,
@@ -100,7 +111,8 @@ export async function getHeroContent(): Promise<HeroContent> {
       badgeSeason: season.name,
       title: season.heroTitle || season.name,
       subtitle: season.heroSubtitle || "Pijamas que se sienten, se comparten y se recuerdan.",
-      image: primaryImage?.imageUrl ?? season.bannerImageUrl ?? season.heroImageUrl ?? undefined,
+      image: seasonHeroImage,
+      mediaType: seasonHeroImage ? (isVideoUrl(seasonHeroImage) ? "video" : "image") : undefined,
       overlayNote: "Juntos en pijama ♡",
       primaryCta: seasonCta,
       secondaryCta: { label: "Personalizar pijama", href: "/personaliza" },
@@ -143,6 +155,7 @@ export async function getHeroContent(): Promise<HeroContent> {
       title: season?.name || "Nueva colección",
       subtitle: "",
       image: image.imageUrl,
+      mediaType: isVideoUrl(image.imageUrl) ? "video" : "image",
     });
   });
 

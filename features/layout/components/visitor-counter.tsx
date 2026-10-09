@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-const STORAGE_KEY = "maros_visitor_count_cache";
-const SESSION_FLAG = "maros_visited_session";
+import { useEffect, useRef, useState } from "react";
 
 function SparkleAccent({ side = "left" }: { side?: "left" | "right" }) {
   const isLeft = side === "left";
@@ -26,45 +23,15 @@ function SparkleAccent({ side = "left" }: { side?: "left" | "right" }) {
       {/* Radiating accent rays */}
       {isLeft ? (
         <>
-          <path
-            d="M8 8L4 4"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M8 28L4 32"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M5 18H1"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
+          <path d="M8 8L4 4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M8 28L4 32" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M5 18H1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </>
       ) : (
         <>
-          <path
-            d="M28 8L32 4"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M28 28L32 32"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M31 18H35"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
+          <path d="M28 8L32 4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M28 28L32 32" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M31 18H35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </>
       )}
     </svg>
@@ -73,26 +40,16 @@ function SparkleAccent({ side = "left" }: { side?: "left" | "right" }) {
 
 export function VisitorCounter() {
   const [count, setCount] = useState<number | null>(null);
+  // Guard de montaje: React StrictMode (solo en desarrollo) ejecuta los efectos
+  // dos veces por montaje, lo que dispararía dos peticiones y sumaría +2 por
+  // cada recarga. El ref evita el duplicado: una recarga = una persona = +1.
+  const didFetchRef = useRef(false);
 
   useEffect(() => {
-    // 1. Cargar caché previo para render instantáneo sin volver a 0
-    let cachedCount: number | null = null;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        cachedCount = parseInt(stored, 10);
-        if (!isNaN(cachedCount) && cachedCount > 0) {
-          setCount(cachedCount);
-        }
-      }
-    } catch {}
-
-    // 2. Incrementar si es nueva sesión, o sólo leer si ya visitó en la misma sesión
-    const isNewSession = typeof window !== "undefined" && !sessionStorage.getItem(SESSION_FLAG);
-    const method = isNewSession ? "POST" : "GET";
-
+    if (didFetchRef.current) return;
+    didFetchRef.current = true;
     fetch("/api/visitors", {
-      method,
+      method: "GET",
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
@@ -102,23 +59,15 @@ export function VisitorCounter() {
       .then((data) => {
         if (typeof data.count === "number") {
           setCount(data.count);
-          try {
-            sessionStorage.setItem(SESSION_FLAG, "true");
-            localStorage.setItem(STORAGE_KEY, String(data.count));
-          } catch {}
         }
       })
       .catch((err) => {
         console.warn("No se pudo obtener contador de visitantes:", err);
-        // Fallback al valor cacheado o base realista si está vacío
-        if (cachedCount === null) {
-          setCount(1251);
-        }
       });
   }, []);
 
   // Formato estricto es-CO con separador de miles en puntos (ej: 1.251)
-  const formattedCount = new Intl.NumberFormat("es-CO").format(count ?? 1251);
+  const formattedCount = new Intl.NumberFormat("es-CO").format(count ?? 500);
 
   return (
     <div className="flex items-center justify-center gap-3 sm:gap-4 my-2 select-none">

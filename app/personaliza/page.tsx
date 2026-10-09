@@ -6,32 +6,40 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Loader2, Info } from "lucide-react";
 import { WizardStepper } from "@/features/customization-wizard/components/wizard-stepper";
 import { OptionGrid } from "@/features/customization-wizard/components/option-grid";
-import { ModelGrid } from "@/features/customization-wizard/components/model-grid";
 import { EmbroideryTextInput } from "@/features/customization-wizard/components/embroidery-text-input";
 import { SelectionSummaryPanel } from "@/features/customization-wizard/components/selection-summary-panel";
+import { ProductCard } from "@/components/shared/product-card";
+import { Reveal } from "@/components/shared/reveal";
+import { ProductQuickViewModal } from "@/features/catalog/components/product-quick-view-modal";
+import type { PersonalizeSelection } from "@/features/catalog/components/product-quick-view-modal";
+import { useQuickView } from "@/features/catalog/hooks/use-quick-view";
 import { useCart } from "@/features/cart/cart-context";
 import {
   getFabrics,
   getColors,
   getPrints,
   getEmbroideries,
-  getModels,
+  getCustomizableModels,
 } from "@/features/customization-wizard/services/customization-catalog.service";
 import { getProductSummaryClient } from "@/features/product-detail/services/product-detail.client";
 import { saveCustomizationDraft } from "@/lib/customization-draft";
 import { sortSizes } from "@/lib/sizes";
+import type { ProductPreview } from "@/types/product";
 import type { ProductClientSummary } from "@/features/product-detail/services/product-detail.client";
 import type { CustomizationChoice, CustomizationModel, CustomizationSelections, WizardStepKey } from "@/features/customization-wizard/types";
 
 const STEP_ORDER: WizardStepKey[] = ["modelo", "tela", "color", "estampado", "bordado", "talla", "resumen"];
+const MODELS_PAGE_SIZE = 6;
 
 export default function PersonalizaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addItem } = useCart();
+  const { isOpen, isLoading, previewProduct, fullProduct, openQuickView, closeQuickView } =
+    useQuickView();
 
   // El producto puede llegar por `product` (slug) o `productId`. `producto` se
   // mantiene por compatibilidad con los enlaces históricos.
@@ -42,6 +50,8 @@ export default function PersonalizaPage() {
 
   const [models, setModels] = useState<CustomizationModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(true);
+  const [hasMoreModels, setHasMoreModels] = useState(false);
+  const [loadingMoreModels, setLoadingMoreModels] = useState(false);
   const [loadingModelSlug, setLoadingModelSlug] = useState("");
   const [product, setProduct] = useState<ProductClientSummary | null | undefined>(undefined);
   const [step, setStep] = useState<WizardStepKey>("modelo");
@@ -54,16 +64,18 @@ export default function PersonalizaPage() {
   const [selections, setSelections] = useState<CustomizationSelections>({});
   const [embroideryText, setEmbroideryText] = useState("");
   const [size, setSize] = useState(urlSize);
+  const [styleName, setStyleName] = useState("");
 
   useEffect(() => {
-    getModels()
-      .then((list) => {
-        setModels(list);
+    getCustomizableModels(1, MODELS_PAGE_SIZE)
+      .then((page) => {
+        setModels(page.items);
+        setHasMoreModels(page.hasMore);
 
         // Si llegó un productId, se resuelve a su slug para reutilizar la
         // misma carga que el resto del flujo.
         const targetSlug =
-          productSlug || (productId ? (list.find((m) => m.id === productId)?.slug ?? "") : "");
+          productSlug || (productId ? (page.items.find((m) => m.id === productId)?.slug ?? "") : "");
 
         if (targetSlug) {
           setLoadingModelSlug(targetSlug);
@@ -87,6 +99,29 @@ export default function PersonalizaPage() {
     getEmbroideries().then(setEmbroideries);
   }, [productSlug, productId]);
 
+  // Al elegir un modelo en la vista previa (botón «Personalizar») la selección
+  // llega por la URL (`product`): cerramos el modal para volver al asistente.
+  useEffect(() => {
+    if (productSlug || productId) {
+      closeQuickView();
+    }
+  }, [productSlug, productId, closeQuickView]);
+
+  async function handleLoadMoreModels() {
+    setLoadingMoreModels(true);
+    try {
+      const nextPage = Math.floor(models.length / MODELS_PAGE_SIZE) + 1;
+      const page = await getCustomizableModels(nextPage, MODELS_PAGE_SIZE);
+      setModels((current) => {
+        const seen = new Set(current.map((m) => m.id));
+        return [...current, ...page.items.filter((m) => !seen.has(m.id))];
+      });
+      setHasMoreModels(page.hasMore);
+    } finally {
+      setLoadingMoreModels(false);
+    }
+  }
+
   const selectedFabric = fabrics.find((f) => f.id === selections.telaId);
   const selectedColor = colors.find((c) => c.id === selections.colorId);
   const selectedPrint = prints.find((p) => p.id === selections.estampadoId);
@@ -102,7 +137,53 @@ export default function PersonalizaPage() {
     );
   }, [product, selectedFabric, selectedPrint, selectedEmbroidery]);
 
+  // Los modelos personalizables se presentan con la misma tarjeta del catálogo
+  // (botón «Elegir» + vista previa rápida).
+  const modelPreviews: ProductPreview[] = useMemo(
+    () =>
+      models.map((m) => ({
+        id: m.id,
+        slug: m.slug,
+        name: m.name,
+        price: m.price,
+        image: m.image,
+        sizes: m.sizes,
+      })),
+    [models]
+  );
+
+  // El botón «Personalizar» de la vista previa entrega el estilo elegido con su
+  // precio real y avanza de inmediato al paso 2 (tela).
+  function handlePersonalizeFromPreview(selection: PersonalizeSelection) {
+    setProduct({
+      id: selection.id,
+      name: selection.name,
+      slug: selection.slug,
+      basePrice: selection.basePrice,
+      image: selection.image,
+      sizes: selection.sizes,
+      colors: selection.colors,
+      allowCustomization: selection.allowCustomization,
+    });
+    setStyleName(selection.styleName);
+    setSelections({});
+    setEmbroideryText("");
+    setSize(
+      selection.size ||
+        (selection.sizes.length ? (sortSizes(selection.sizes)[0] ?? "") : "")
+    );
+    closeQuickView();
+    setStep("tela");
+  }
+
   function goNext() {
+    if (step === "modelo" && !product) {
+      toast.error("Debes elegir un modelo para continuar", {
+        description:
+          "Presiona «Elegir» en la pijama que quieras, revisa la vista previa y pulsa «Personalizar» para seleccionar el modelo.",
+      });
+      return;
+    }
     const currentIndex = STEP_ORDER.indexOf(step);
     if (currentIndex < STEP_ORDER.length - 1) setStep(STEP_ORDER[currentIndex + 1]);
   }
@@ -113,34 +194,13 @@ export default function PersonalizaPage() {
   }
 
   function canAdvance(): boolean {
-    if (step === "modelo") return !!product;
+    if (step === "modelo") return true;
     if (step === "tela") return !!selections.telaId;
     if (step === "color") return !!selections.colorId;
     if (step === "estampado") return !!selections.estampadoId;
     if (step === "bordado") return !!selections.bordadoId;
     if (step === "talla") return !!size;
     return true;
-  }
-
-  async function handleSelectModel(model: CustomizationModel) {
-    if (product?.slug === model.slug) return;
-    setLoadingModelSlug(model.slug);
-    const detail = await getProductSummaryClient(model.slug);
-    setLoadingModelSlug("");
-    if (!detail) {
-      toast.error("No pudimos cargar ese modelo. Inténtalo de nuevo.");
-      return;
-    }
-    if (!detail.allowCustomization) {
-      toast.error(`"${detail.name}" no es personalizable en este momento.`);
-      return;
-    }
-    setProduct(detail);
-    setSelections({});
-    setEmbroideryText("");
-    setSize((current) =>
-      current && detail.sizes.includes(current) ? current : (sortSizes(detail.sizes)[0] ?? "")
-    );
   }
 
   function handleFinish() {
@@ -225,15 +285,52 @@ export default function PersonalizaPage() {
           {step === "modelo" && (
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">1. Elige el modelo</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Selecciona la pijama base que quieres personalizar.
-              </p>
-              <ModelGrid
-                models={models}
-                selectedSlug={product?.slug}
-                loadingSlug={loadingModelSlug}
-                onSelect={handleSelectModel}
-              />
+              <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground">
+                  Presiona <span className="font-semibold text-foreground">«Elegir»</span> en la pijama que quieras
+                  para abrir su <span className="font-semibold text-foreground">vista previa</span>. Ahí debes
+                  confirmar con <span className="font-semibold text-foreground">«Personalizar»</span> para
+                  seleccionar el modelo y poder continuar al paso 2.
+                </p>
+              </div>
+
+              {loadingModelSlug && (
+                <p className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Cargando modelo…
+                </p>
+              )}
+
+              {product && (
+                <div className="mb-4 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                  Modelo elegido: <span className="font-semibold">{product.name}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 mt-6">
+                {modelPreviews.map((model, index) => (
+                  <Reveal key={model.id} delay={Math.min((index % 6) * 75, 400)} className="h-full">
+                    <ProductCard product={model} onQuickView={openQuickView} />
+                  </Reveal>
+                ))}
+              </div>
+
+              {hasMoreModels && (
+                <div className="mt-6 flex flex-col items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleLoadMoreModels}
+                    disabled={loadingMoreModels}
+                    className="bg-card"
+                  >
+                    {loadingMoreModels && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Ver más modelos
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    {models.length} modelos cargados — seguimos mostrando el catálogo poco a poco.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -313,7 +410,7 @@ export default function PersonalizaPage() {
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">7. Resumen de tu diseño</h2>
               <div className="flex flex-col gap-2 text-sm">
-                <p><span className="text-muted-foreground">Producto:</span> {product?.name}</p>
+                <p><span className="text-muted-foreground">Estilo / Modelo:</span> {product?.name}</p>
                 <p>
                   <span className="text-muted-foreground">Talla:</span> {size} ·{" "}
                   <span className="text-muted-foreground">Cantidad:</span> {quantity}
@@ -356,6 +453,7 @@ export default function PersonalizaPage() {
 
         <SelectionSummaryPanel
           productName={product?.name ?? ""}
+          styleName={styleName}
           productImage={product?.image ?? ""}
           basePrice={product?.basePrice ?? 0}
           size={size}
@@ -368,6 +466,16 @@ export default function PersonalizaPage() {
           total={total}
         />
       </div>
+
+      <ProductQuickViewModal
+        isOpen={isOpen}
+        previewProduct={previewProduct}
+        fullProduct={fullProduct}
+        isLoading={isLoading}
+        onClose={closeQuickView}
+        personalizeMode
+        onPersonalize={handlePersonalizeFromPreview}
+      />
     </div>
   );
 }

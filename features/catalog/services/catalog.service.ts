@@ -67,6 +67,13 @@ export async function getCategories(): Promise<ApiCategory[]> {
   return serverApiFetch<ApiCategory[]>("categories", { tags: ["categories"] });
 }
 
+export async function getFeaturedCatalog(): Promise<CatalogProductItem[]> {
+  const products = await serverApiFetch<ApiCatalogProduct[]>("products/featured-catalog", {
+    tags: ["featured-catalog"],
+  });
+  return products.map(adaptProduct);
+}
+
 function applySort(products: CatalogProductItem[], sort?: SortOption): CatalogProductItem[] {
   const list = [...products];
   if (sort === "precio-asc") return list.sort((a, b) => a.price - b.price);
