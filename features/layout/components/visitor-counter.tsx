@@ -40,30 +40,68 @@ function SparkleAccent({ side = "left" }: { side?: "left" | "right" }) {
 
 export function VisitorCounter() {
   const [count, setCount] = useState<number | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   // Guard de montaje: React StrictMode (solo en desarrollo) ejecuta los efectos
   // dos veces por montaje, lo que dispararía dos peticiones y sumaría +2 por
   // cada recarga. El ref evita el duplicado: una recarga = una persona = +1.
   const didFetchRef = useRef(false);
+  // Espejo del último valor conocido para decidir si el sondeo trae novedades
+  // sin depender del closure de `count` (evita recrear el intervalo).
+  const countRef = useRef<number | null>(null);
+  const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (didFetchRef.current) return;
-    didFetchRef.current = true;
-    fetch("/api/visitors", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((res) => {
+    // Carga inicial: suma +1 (esta visita cuenta).
+    const fetchInitial = async () => {
+      try {
+        const res = await fetch("/api/visitors", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Status " + res.status);
-        return res.json();
-      })
-      .then((data) => {
-        if (typeof data.count === "number") {
-          setCount(data.count);
+        const data = await res.json();
+        if (typeof data.visitors === "number") {
+          countRef.current = data.visitors;
+          setCount(data.visitors);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.warn("No se pudo obtener contador de visitantes:", err);
-      });
+      }
+    };
+
+    // Sondeo en segundo plano: SOLO lee (peek) para reflejar visitas de otros
+    // usuarios sin incrementar el contador en cada consulta.
+    const fetchPeek = async () => {
+      try {
+        const res = await fetch("/api/visitors?peek=1", { cache: "no-store" });
+        if (!res.ok) throw new Error("Status " + res.status);
+        const data = await res.json();
+        if (
+          typeof data.visitors === "number" &&
+          (countRef.current === null || data.visitors > countRef.current)
+        ) {
+          countRef.current = data.visitors;
+          setCount(data.visitors);
+          setIsUpdating(true);
+          if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
+          animationTimerRef.current = setTimeout(() => setIsUpdating(false), 600);
+        }
+      } catch (err) {
+        console.warn("Error al sincronizar contador:", err);
+      }
+    };
+
+    if (!didFetchRef.current) {
+      didFetchRef.current = true;
+      fetchInitial();
+    }
+
+    const interval = setInterval(fetchPeek, 8000);
+    return () => {
+      clearInterval(interval);
+      if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
+    };
   }, []);
 
   // Formato estricto es-CO con separador de miles en puntos (ej: 1.251)
@@ -92,7 +130,11 @@ export function VisitorCounter() {
           </svg>
 
           {/* Número de visitas destacado */}
-          <span className="font-sans text-2xl sm:text-3xl font-bold text-white tracking-tight drop-shadow-[0_1px_4px_rgba(0,0,0,0.25)]">
+          <span
+            className={`inline-block font-sans text-2xl sm:text-3xl font-bold text-white tracking-tight drop-shadow-[0_1px_4px_rgba(0,0,0,0.25)] transition-all duration-300 ${
+              isUpdating ? "scale-110 brightness-125" : "scale-100"
+            }`}
+          >
             {formattedCount}
           </span>
         </div>

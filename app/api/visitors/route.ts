@@ -1,65 +1,36 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+import { API_URL } from "@/lib/api/config";
 
-// Archivo de persistencia de contador
-const DATA_DIR = path.join(process.cwd(), ".data");
-const DATA_FILE = path.join(DATA_DIR, "visitors.json");
+export const dynamic = "force-dynamic";
 
-// Piso base obligatorio de visitantes: si la persistencia no existe,
-// está corrupta o registra una cifra menor, se inicializa en 500.
-const INITIAL_VISITORS = 500;
-
-let inMemoryCount = INITIAL_VISITORS;
-let isInitialized = false;
-
-async function ensureDataFile(): Promise<void> {
-  if (isInitialized) return;
+/**
+ * Proxy servidor→API (Maros.Api) del contador global de visitas.
+ * La cifra vive en PostgreSQL y se gestiona con incremento atómico en la BD,
+ * por lo que sobrevive reinicios del backend y despliegues multi-instancia.
+ *
+ * - GET /api/visitors          → visita nueva (+1)
+ * - GET /api/visitors?peek=1   → solo lectura (sondeo pasivo cada 8 s)
+ *
+ * Se usa un proxy en vez de llamar al backend desde el navegador para evitar
+ * CORS y no exponer la URL pública del API (mismo patrón que /api/audio).
+ */
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const peek = searchParams.get("peek") === "1" || searchParams.get("peek") === "true";
 
   try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    const content = await fs.readFile(DATA_FILE, "utf-8");
-    const parsed = JSON.parse(content);
-    if (typeof parsed.count === "number" && parsed.count >= INITIAL_VISITORS) {
-      inMemoryCount = parsed.count;
-    } else {
-      inMemoryCount = INITIAL_VISITORS;
-      await fs.writeFile(DATA_FILE, JSON.stringify({ count: inMemoryCount }), "utf-8");
+    const res = await fetch(`${API_URL}/api/visitors?peek=${peek ? "true" : "false"}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      return NextResponse.json({ visitors: null });
     }
-  } catch {
-    // Si no existe o está corrupto, crear con el piso base
-    inMemoryCount = INITIAL_VISITORS;
-    try {
-      await fs.mkdir(DATA_DIR, { recursive: true });
-      await fs.writeFile(DATA_FILE, JSON.stringify({ count: inMemoryCount }), "utf-8");
-    } catch {}
-  }
-
-  isInitialized = true;
-}
-
-async function incrementCount(): Promise<number> {
-  await ensureDataFile();
-  const count = inMemoryCount + 1;
-  inMemoryCount = count;
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(DATA_FILE, JSON.stringify({ count, updatedAt: new Date().toISOString() }), "utf-8");
+    const data = await res.json();
+    return NextResponse.json({
+      visitors: typeof data?.visitors === "number" ? data.visitors : null,
+    });
   } catch (err) {
-    console.error("Error persistiendo visitantes:", err);
+    console.error("Error consultando el contador de visitas en Maros.Api:", err);
+    return NextResponse.json({ visitors: null });
   }
-  return count;
-}
-
-// Cada petición (carga de página, recarga manual o actualización de ruta)
-// incrementa incondicionalmente el contador en +1, sin filtros por IP,
-// cookies, almacenamiento local ni huella del dispositivo.
-export async function GET() {
-  const count = await incrementCount();
-  return NextResponse.json({ count });
-}
-
-export async function POST() {
-  const count = await incrementCount();
-  return NextResponse.json({ count });
 }

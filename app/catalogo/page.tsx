@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CatalogProductGrid } from "@/features/catalog/components/catalog-product-grid";
 import { CatalogFilterSidebar } from "@/features/catalog/components/catalog-filter-sidebar";
+import { CatalogFilterDrawer } from "@/features/catalog/components/catalog-filter-drawer";
+import { ActiveFilterChips } from "@/features/catalog/components/active-filter-chips";
 import { CatalogToolbar } from "@/features/catalog/components/catalog-toolbar";
 import {
   getCatalogFilterOptions,
@@ -10,6 +12,7 @@ import {
   getFeaturedCatalog,
 } from "@/features/catalog/services/catalog.service";
 import type { CatalogSearchParams, SortOption } from "@/features/catalog/types";
+import { countActiveFilters, parseFilterList } from "@/features/catalog/filter-utils";
 import { buildMetadata } from "@/lib/seo";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
@@ -86,6 +89,14 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
 
   const pageProducts = orderedProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const activeFilterCount = countActiveFilters(params);
+  const primaryCategorySlug = parseFilterList(params.categoria)[0];
+  const filterStateKey = Object.entries(params)
+    .filter(([, value]) => value)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+
   const queryForPage = (target: number) => {
     const q = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
@@ -114,19 +125,16 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
       </p>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        <details className="lg:hidden rounded-lg border border-border bg-card px-4 py-3">
-          <summary className="text-sm font-medium text-foreground cursor-pointer">Filtros</summary>
-          <div className="mt-4">
-            <CatalogFilterSidebar
-              categories={categories}
-              sizes={filterOptions.sizes}
-              colors={filterOptions.colors}
-              priceMin={filterOptions.priceMin}
-              priceMax={filterOptions.priceMax}
-              current={params}
-            />
-          </div>
-        </details>
+        <CatalogFilterDrawer
+          key={filterStateKey}
+          categories={categories}
+          sizes={filterOptions.sizes}
+          colors={filterOptions.colors}
+          priceMin={filterOptions.priceMin}
+          priceMax={filterOptions.priceMax}
+          current={params}
+          activeCount={activeFilterCount}
+        />
 
         <div className="hidden lg:block">
           <CatalogFilterSidebar
@@ -142,6 +150,12 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
         <div className="flex-1">
           <CatalogToolbar current={params} resultCount={totalProducts} />
 
+          <ActiveFilterChips
+            current={params}
+            categories={categories}
+            colors={filterOptions.colors}
+          />
+
           {pageProducts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-16">
               No encontramos productos con esos filtros. Intenta ajustar tu búsqueda.
@@ -150,7 +164,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
             <>
               <CatalogProductGrid
                 products={pageProducts}
-                categorySlug={params.categoria}
+                categorySlug={primaryCategorySlug}
               />
 
               {pageCount > 1 && (

@@ -10,13 +10,14 @@ interface PriceRangeFilterProps {
   currentMin?: string;
   currentMax?: string;
   preserve?: CatalogSearchParams;
+  onDraftChange?: (low: number, high: number) => void;
 }
 
 function formatCOP(value: number): string {
   return `$${Math.round(value).toLocaleString("es-CO")}`;
 }
 
-export function PriceRangeFilter({ min, max, currentMin, currentMax, preserve }: PriceRangeFilterProps) {
+export function PriceRangeFilter({ min, max, currentMin, currentMax, preserve, onDraftChange }: PriceRangeFilterProps) {
   const router = useRouter();
 
   const parsedMin = Number(currentMin ? Number(currentMin) : NaN);
@@ -47,7 +48,12 @@ export function PriceRangeFilter({ min, max, currentMin, currentMax, preserve }:
     clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setDraft(null);
-      syncUrl(nextLow, nextHigh);
+      if (onDraftChange) {
+        // Modo borrador (móvil): no navega, solo notifica el cambio local.
+        onDraftChange(nextLow, nextHigh);
+      } else {
+        syncUrl(nextLow, nextHigh);
+      }
     }, 250);
   }
 

@@ -1,4 +1,5 @@
 import { serverApiFetch } from "@/lib/api/server-fetch";
+import { parseFilterList } from "../filter-utils";
 import type { CatalogProductItem, CatalogSearchParams, SortOption } from "../types";
 
 interface ApiProductColor {
@@ -85,25 +86,40 @@ function applySort(products: CatalogProductItem[], sort?: SortOption): CatalogPr
 export async function getCatalogProducts(params: CatalogSearchParams): Promise<CatalogProductItem[]> {
   const query = new URLSearchParams();
 
-  if (params.categoria) {
-    const categories = await getCategories();
-    const match = categories.find((c) => c.slug === params.categoria || c.id === params.categoria);
-    if (match) query.set("categoryId", match.id);
-  }
-
+  // Filtros multi-valor: el backend espera valores separados por coma.
+  if (params.categoria) query.set("categories", params.categoria);
+  if (params.talla) query.set("sizes", params.talla);
+  if (params.color) query.set("colors", params.color);
   if (params.buscar) query.set("search", params.buscar);
 
-  const products = await serverApiFetch<ApiCatalogProduct[]>(`products?${query.toString()}`, {
-    tags: ["products", "categories"],
-  });
+  const queryString = query.toString();
+  const products = await serverApiFetch<ApiCatalogProduct[]>(
+    `products${queryString ? `?${queryString}` : ""}`,
+    {
+      tags: ["products", "categories"],
+    }
+  );
   let adapted = products.map(adaptProduct);
 
-  if (params.talla) {
-    adapted = adapted.filter((p) => p.sizes.includes(params.talla!));
+  // Filtrado defensivo en memoria (por si el catálogo se sirve desde una API
+  // sin soporte multi-valor): mantiene coherencia con los filtros de la URL.
+  const categorySlugs = parseFilterList(params.categoria).map((slug) => slug.toLowerCase());
+  if (categorySlugs.length > 0) {
+    adapted = adapted.filter((p) =>
+      p.categories.some((c) => categorySlugs.includes((c.slug || "").toLowerCase()))
+    );
   }
-  if (params.color) {
-    adapted = adapted.filter((p) => p.colors.some((c) => c.hex === params.color));
+
+  const sizeList = parseFilterList(params.talla).map((size) => size.toLowerCase());
+  if (sizeList.length > 0) {
+    adapted = adapted.filter((p) => p.sizes.some((s) => sizeList.includes(s.toLowerCase())));
   }
+
+  const colorList = parseFilterList(params.color).map((color) => color.toLowerCase());
+  if (colorList.length > 0) {
+    adapted = adapted.filter((p) => p.colors.some((c) => colorList.includes(c.name.toLowerCase())));
+  }
+
   if (params.precioMin) {
     const min = Number(params.precioMin);
     if (!Number.isNaN(min)) adapted = adapted.filter((p) => p.price >= min);
