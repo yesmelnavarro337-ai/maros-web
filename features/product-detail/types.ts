@@ -74,6 +74,7 @@ export interface ProductDetail {
   collectionIds: string[];
   available: boolean;
   allowCustomization: boolean;
+  customizationOptionIds?: string[];
   deliveryTime: string;
   seoTitle?: string;
   seoDescription?: string;

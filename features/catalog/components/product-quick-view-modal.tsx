@@ -78,6 +78,7 @@ export interface PersonalizeSelection {
   sizes: string[];
   colors: { name: string; hex: string }[];
   allowCustomization: boolean;
+  customizationOptionIds: string[];
   styleName: string;
   materialName: string;
   colorName: string;
@@ -552,6 +553,7 @@ export function ProductQuickViewModal({
         hex: c.primaryHex || c.hex,
       })),
       allowCustomization: product.allowCustomization ?? false,
+      customizationOptionIds: product.customizationOptionIds ?? [],
       styleName: selectedStyle || selectedVariant?.styleName || "",
       materialName: selectedMaterial,
       colorName: selectedColorObj?.name ?? "",

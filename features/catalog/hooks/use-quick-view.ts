@@ -144,6 +144,7 @@ function adaptApiProduct(raw: any): ProductDetail {
     collectionIds: raw.collectionIds ?? [],
     available: raw.available,
     allowCustomization: raw.allowCustomization ?? false,
+    customizationOptionIds: Array.isArray(raw.customizationOptionIds) ? raw.customizationOptionIds : [],
     deliveryTime: raw.deliveryTime || "",
     rating: raw.rating,
     reviewCount: raw.reviewCount,

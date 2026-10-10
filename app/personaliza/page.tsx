@@ -11,6 +11,7 @@ import { WizardStepper } from "@/features/customization-wizard/components/wizard
 import { OptionGrid } from "@/features/customization-wizard/components/option-grid";
 import { EmbroideryTextInput } from "@/features/customization-wizard/components/embroidery-text-input";
 import { SelectionSummaryPanel } from "@/features/customization-wizard/components/selection-summary-panel";
+import { AiAssistantPanel } from "@/features/customization-wizard/components/ai-assistant-panel";
 import { ProductCard } from "@/components/shared/product-card";
 import { Reveal } from "@/components/shared/reveal";
 import { ProductQuickViewModal } from "@/features/catalog/components/product-quick-view-modal";
@@ -23,6 +24,8 @@ import {
   getPrints,
   getEmbroideries,
   getCustomizableModels,
+  getAssistantStatus,
+  type AssistantSuggestion,
 } from "@/features/customization-wizard/services/customization-catalog.service";
 import { getProductSummaryClient } from "@/features/product-detail/services/product-detail.client";
 import { saveCustomizationDraft } from "@/lib/customization-draft";
@@ -65,6 +68,7 @@ export default function PersonalizaPage() {
   const [embroideryText, setEmbroideryText] = useState("");
   const [size, setSize] = useState(urlSize);
   const [styleName, setStyleName] = useState("");
+  const [assistantEnabled, setAssistantEnabled] = useState(false);
 
   useEffect(() => {
     getCustomizableModels(1, MODELS_PAGE_SIZE)
@@ -97,6 +101,7 @@ export default function PersonalizaPage() {
     getColors().then(setColors);
     getPrints().then(setPrints);
     getEmbroideries().then(setEmbroideries);
+    getAssistantStatus().then(setAssistantEnabled);
   }, [productSlug, productId]);
 
   // Al elegir un modelo en la vista previa (botón «Personalizar») la selección
@@ -126,6 +131,46 @@ export default function PersonalizaPage() {
   const selectedColor = colors.find((c) => c.id === selections.colorId);
   const selectedPrint = prints.find((p) => p.id === selections.estampadoId);
   const selectedEmbroidery = embroideries.find((e) => e.id === selections.bordadoId);
+
+  // El modelo de personalización vinculado al producto limita las opciones
+  // disponibles (telas, colores, estampados, bordados). Si el producto no tiene
+  // un modelo asignado o este no tiene opciones, se muestran todas.
+  const assignedOptionIds = useMemo(
+    () => new Set(product?.customizationOptionIds ?? []),
+    [product?.customizationOptionIds]
+  );
+  const visibleFabrics = useMemo(
+    () => (assignedOptionIds.size === 0 ? fabrics : fabrics.filter((o) => assignedOptionIds.has(o.id))),
+    [fabrics, assignedOptionIds]
+  );
+  const visibleColors = useMemo(
+    () => (assignedOptionIds.size === 0 ? colors : colors.filter((o) => assignedOptionIds.has(o.id))),
+    [colors, assignedOptionIds]
+  );
+  const visiblePrints = useMemo(
+    () =>
+      assignedOptionIds.size === 0
+        ? prints
+        : prints.filter((o) => o.id === "none" || assignedOptionIds.has(o.id)),
+    [prints, assignedOptionIds]
+  );
+  const visibleEmbroideries = useMemo(
+    () =>
+      assignedOptionIds.size === 0
+        ? embroideries
+        : embroideries.filter((o) => o.id === "none" || assignedOptionIds.has(o.id)),
+    [embroideries, assignedOptionIds]
+  );
+
+  // Selección actual enviada al asistente para que respete lo ya elegido.
+  const currentSelection = useMemo(() => {
+    const selection: Record<string, string> = {};
+    if (selections.telaId) selection.Tela = selections.telaId;
+    if (selections.colorId) selection.Color = selections.colorId;
+    if (selections.estampadoId) selection.Estampado = selections.estampadoId;
+    if (selections.bordadoId) selection.Bordado = selections.bordadoId;
+    return selection;
+  }, [selections]);
 
   const total = useMemo(() => {
     if (!product) return 0;
@@ -164,6 +209,7 @@ export default function PersonalizaPage() {
       sizes: selection.sizes,
       colors: selection.colors,
       allowCustomization: selection.allowCustomization,
+      customizationOptionIds: selection.customizationOptionIds,
     });
     setStyleName(selection.styleName);
     setSelections({});
@@ -174,6 +220,19 @@ export default function PersonalizaPage() {
     );
     closeQuickView();
     setStep("tela");
+  }
+
+  // Aplica la recomendación del asistente preservando lo ya elegido cuando la IA
+  // no propone cambio en esa categoría.
+  function handleApplyAssistant(suggestion: AssistantSuggestion, embroideryTextSuggestion?: string | null) {
+    setSelections((current) => ({
+      ...current,
+      telaId: suggestion.telaId ?? current.telaId,
+      colorId: suggestion.colorId ?? current.colorId,
+      estampadoId: suggestion.estampadoId ?? current.estampadoId,
+      bordadoId: suggestion.bordadoId ?? current.bordadoId,
+    }));
+    if (embroideryTextSuggestion) setEmbroideryText(embroideryTextSuggestion);
   }
 
   function goNext() {
@@ -282,6 +341,14 @@ export default function PersonalizaPage() {
 
       <div className="flex flex-col sm:flex-row gap-8 mt-8">
         <div className="flex-1">
+          {assistantEnabled && product && ["tela", "color", "estampado", "bordado"].includes(step) && (
+            <AiAssistantPanel
+              productSlug={product.slug}
+              currentSelection={currentSelection}
+              onApply={handleApplyAssistant}
+            />
+          )}
+
           {step === "modelo" && (
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">1. Elige el modelo</h2>
@@ -338,7 +405,7 @@ export default function PersonalizaPage() {
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">2. Elige la tela</h2>
               <OptionGrid
-                options={fabrics}
+                options={visibleFabrics}
                 selectedId={selections.telaId}
                 onSelect={(id) => setSelections((s) => ({ ...s, telaId: id }))}
               />
@@ -349,7 +416,7 @@ export default function PersonalizaPage() {
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">3. Elige el color</h2>
               <OptionGrid
-                options={colors}
+                options={visibleColors}
                 selectedId={selections.colorId}
                 onSelect={(id) => setSelections((s) => ({ ...s, colorId: id }))}
                 variant="swatch"
@@ -361,7 +428,7 @@ export default function PersonalizaPage() {
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">4. Elige el estampado</h2>
               <OptionGrid
-                options={prints}
+                options={visiblePrints}
                 selectedId={selections.estampadoId}
                 onSelect={(id) => setSelections((s) => ({ ...s, estampadoId: id }))}
               />
@@ -372,7 +439,7 @@ export default function PersonalizaPage() {
             <div>
               <h2 className="font-heading text-xl text-foreground mb-4">5. Elige el bordado</h2>
               <OptionGrid
-                options={embroideries}
+                options={visibleEmbroideries}
                 selectedId={selections.bordadoId}
                 onSelect={(id) => setSelections((s) => ({ ...s, bordadoId: id }))}
               />

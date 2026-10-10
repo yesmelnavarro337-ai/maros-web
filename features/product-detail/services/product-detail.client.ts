@@ -9,6 +9,7 @@ export interface ProductClientSummary {
   sizes: string[];
   colors: { name: string; hex: string }[];
   allowCustomization: boolean;
+  customizationOptionIds: string[];
 }
 
 interface ApiProductDetail {
@@ -20,6 +21,7 @@ interface ApiProductDetail {
   sizes: string[];
   colors: { name: string; hex: string }[];
   allowCustomization: boolean;
+  customizationOptionIds?: string[] | null;
 }
 
 export async function getProductSummaryClient(slug: string): Promise<ProductClientSummary | undefined> {
@@ -34,6 +36,7 @@ export async function getProductSummaryClient(slug: string): Promise<ProductClie
       sizes: p.sizes,
       colors: p.colors,
       allowCustomization: p.allowCustomization,
+      customizationOptionIds: Array.isArray(p.customizationOptionIds) ? p.customizationOptionIds : [],
     };
   } catch {
     return undefined;

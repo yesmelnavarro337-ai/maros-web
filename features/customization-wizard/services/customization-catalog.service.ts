@@ -124,3 +124,62 @@ export async function getCustomizableModels(page: number, pageSize = 6): Promise
     return fallback;
   }
 }
+
+// ─── Asistente de estilo (Gemini) ───────────────────────────────────────────
+// Recomendaciones de texto validadas contra el catálogo real. No hay generación
+// de imágenes: el preview del producto sigue siendo el del catálogo.
+
+export interface AssistantSuggestion {
+  telaId: string | null;
+  colorId: string | null;
+  estampadoId: string | null;
+  bordadoId: string | null;
+}
+
+export interface AssistantResult {
+  reply: string;
+  suggestion: AssistantSuggestion;
+  embroideryText?: string | null;
+}
+
+/** True solo si el backend tiene Gemini configurado y habilitado. */
+export async function getAssistantStatus(): Promise<boolean> {
+  try {
+    const raw = await clientApiFetch<{ enabled?: boolean } | { data?: { enabled?: boolean } }>(
+      "customization/assistant"
+    );
+    const parsed = (raw as { data?: { enabled?: boolean } }).data ?? (raw as { enabled?: boolean });
+    return Boolean(parsed?.enabled);
+  } catch {
+    return false;
+  }
+}
+
+/** Devuelve null si el asistente no está disponible o falla. */
+export async function suggestCustomization(input: {
+  message: string;
+  productSlug?: string;
+  currentSelection?: Record<string, string>;
+}): Promise<AssistantResult | null> {
+  try {
+    const raw = await clientApiFetch<AssistantResult | { data?: AssistantResult }>(
+      "customization/assistant",
+      { method: "POST", body: input }
+    );
+    const parsed = (raw as { data?: AssistantResult }).data ?? (raw as AssistantResult);
+    if (!parsed || typeof parsed.reply !== "string") return null;
+
+    return {
+      reply: parsed.reply,
+      suggestion: {
+        telaId: parsed.suggestion?.telaId ?? null,
+        colorId: parsed.suggestion?.colorId ?? null,
+        estampadoId: parsed.suggestion?.estampadoId ?? null,
+        bordadoId: parsed.suggestion?.bordadoId ?? null,
+      },
+      embroideryText: parsed.embroideryText ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
