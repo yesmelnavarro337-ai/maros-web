@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,7 +11,7 @@ import { WizardStepper } from "@/features/customization-wizard/components/wizard
 import { OptionGrid } from "@/features/customization-wizard/components/option-grid";
 import { EmbroideryTextInput } from "@/features/customization-wizard/components/embroidery-text-input";
 import { SelectionSummaryPanel } from "@/features/customization-wizard/components/selection-summary-panel";
-import { AiAssistantPanel } from "@/features/customization-wizard/components/ai-assistant-panel";
+// import { AiAssistantPanel } from "@/features/customization-wizard/components/ai-assistant-panel"; // DESACTIVADO (asistente IA)
 import { ProductCard } from "@/components/shared/product-card";
 import { Reveal } from "@/components/shared/reveal";
 import { ProductQuickViewModal } from "@/features/catalog/components/product-quick-view-modal";
@@ -24,8 +24,8 @@ import {
   getPrints,
   getEmbroideries,
   getCustomizableModels,
-  getAssistantStatus,
-  type AssistantSuggestion,
+  // getAssistantStatus, // DESACTIVADO (asistente IA)
+  // type AssistantSuggestion, // DESACTIVADO (asistente IA)
 } from "@/features/customization-wizard/services/customization-catalog.service";
 import { getProductSummaryClient } from "@/features/product-detail/services/product-detail.client";
 import { saveCustomizationDraft } from "@/lib/customization-draft";
@@ -36,6 +36,8 @@ import type { CustomizationChoice, CustomizationModel, CustomizationSelections, 
 
 const STEP_ORDER: WizardStepKey[] = ["modelo", "tela", "color", "estampado", "bordado", "talla", "resumen"];
 const MODELS_PAGE_SIZE = 6;
+/** Recargo COP del bordado de diseño estándar (mismo valor que en la vista previa). */
+const EMBROIDERY_DESIGN_SURCHARGE = 7000;
 
 export default function PersonalizaPage() {
   const router = useRouter();
@@ -50,6 +52,13 @@ export default function PersonalizaPage() {
   const productId = searchParams.get("productId") ?? "";
   const urlSize = searchParams.get("talla") ?? "";
   const quantity = Number(searchParams.get("cantidad") ?? "1");
+  // Estado arrastrado desde la vista previa: `bordado=1` marca que el checklist
+  // de bordado venía activo; `paso=tela` aterriza directo en el paso 2; el
+  // `estilo` y `bordadotexto` completan el contexto para precargar el resumen.
+  const urlBordado = searchParams.get("bordado");
+  const urlPaso = searchParams.get("paso") ?? "";
+  const urlEstilo = searchParams.get("estilo") ?? "";
+  const urlBordadoTexto = searchParams.get("bordadotexto") ?? "";
 
   const [models, setModels] = useState<CustomizationModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(true);
@@ -65,10 +74,38 @@ export default function PersonalizaPage() {
   const [embroideries, setEmbroideries] = useState<CustomizationChoice[]>([]);
 
   const [selections, setSelections] = useState<CustomizationSelections>({});
-  const [embroideryText, setEmbroideryText] = useState("");
+  const [embroideryText, setEmbroideryText] = useState(urlBordadoTexto);
   const [size, setSize] = useState(urlSize);
-  const [styleName, setStyleName] = useState("");
-  const [assistantEnabled, setAssistantEnabled] = useState(false);
+  const [styleName, setStyleName] = useState(urlEstilo);
+  // const [assistantEnabled, setAssistantEnabled] = useState(false); // DESACTIVADO (asistente IA)
+
+  // Asegura que la navegación desde la vista previa (checklist de bordado activo,
+  // salto a paso 2) solo se aplique una vez, cuando el producto esté cargado.
+  const pasoApplied = useRef(false);
+  const bordadoApplied = useRef(false);
+  const productRef = useRef<ProductClientSummary | null>(null);
+  const embroideriesRef = useRef<CustomizationChoice[]>([]);
+
+  // Si el checklist «Incluir bordado» venía activo en la vista previa, precarga
+  // la opción de bordado de diseño (+$7.000) en cuanto producto y catálogo de
+  // bordados estén disponibles. Se ejecuta desde los .then (async) para no
+  // provocar renders en cascada dentro de un effect.
+  const applyInitialBordado = useCallback(() => {
+    if (bordadoApplied.current || urlBordado !== "1") return;
+    const current = productRef.current;
+    const list = embroideriesRef.current;
+    if (!current || !list || list.length === 0) return;
+
+    bordadoApplied.current = true;
+    const assigned = new Set(current.customizationOptionIds ?? []);
+    const visible = assigned.size === 0 ? list : list.filter((o) => o.id === "none" || assigned.has(o.id));
+    const design =
+      visible.find((e) => e.priceModifier === EMBROIDERY_DESIGN_SURCHARGE) ??
+      visible.find((e) => e.id !== "none");
+    if (design) {
+      setSelections((s) => (s.bordadoId ? s : { ...s, bordadoId: design.id }));
+    }
+  }, [urlBordado]);
 
   useEffect(() => {
     getCustomizableModels(1, MODELS_PAGE_SIZE)
@@ -84,12 +121,23 @@ export default function PersonalizaPage() {
         if (targetSlug) {
           setLoadingModelSlug(targetSlug);
           return getProductSummaryClient(targetSlug).then((detail) => {
-            setProduct(detail?.allowCustomization ? detail : null);
+            const normalized = detail?.allowCustomization ? detail : null;
+            productRef.current = normalized;
+            setProduct(normalized);
             if (detail?.sizes?.length) {
               setSize((current) =>
                 current && detail.sizes.includes(current) ? current : sortSizes(detail.sizes)[0]
               );
             }
+
+            // Enlace venido de la vista previa con `paso=tela`: saltamos directo
+            // al paso 2 sin pasar por la rejilla de modelos.
+            if (normalized && urlPaso === "tela" && !pasoApplied.current) {
+              pasoApplied.current = true;
+              setStep("tela");
+            }
+
+            applyInitialBordado();
           });
         }
         return undefined;
@@ -100,9 +148,13 @@ export default function PersonalizaPage() {
     getFabrics().then(setFabrics);
     getColors().then(setColors);
     getPrints().then(setPrints);
-    getEmbroideries().then(setEmbroideries);
-    getAssistantStatus().then(setAssistantEnabled);
-  }, [productSlug, productId]);
+    getEmbroideries().then((list) => {
+      embroideriesRef.current = list;
+      setEmbroideries(list);
+      applyInitialBordado();
+    });
+    // getAssistantStatus().then(setAssistantEnabled); // DESACTIVADO (asistente IA)
+  }, [productSlug, productId, urlPaso, applyInitialBordado]);
 
   // Al elegir un modelo en la vista previa (botón «Personalizar») la selección
   // llega por la URL (`product`): cerramos el modal para volver al asistente.
@@ -162,7 +214,8 @@ export default function PersonalizaPage() {
     [embroideries, assignedOptionIds]
   );
 
-  // Selección actual enviada al asistente para que respete lo ya elegido.
+  // ── Selección actual enviada al asistente IA (DESACTIVADO) ──────────────
+  /*
   const currentSelection = useMemo(() => {
     const selection: Record<string, string> = {};
     if (selections.telaId) selection.Tela = selections.telaId;
@@ -171,6 +224,7 @@ export default function PersonalizaPage() {
     if (selections.bordadoId) selection.Bordado = selections.bordadoId;
     return selection;
   }, [selections]);
+  */
 
   const total = useMemo(() => {
     if (!product) return 0;
@@ -213,17 +267,28 @@ export default function PersonalizaPage() {
     });
     setStyleName(selection.styleName);
     setSelections({});
-    setEmbroideryText("");
+    setEmbroideryText(selection.embroideryText ?? "");
     setSize(
       selection.size ||
         (selection.sizes.length ? (sortSizes(selection.sizes)[0] ?? "") : "")
     );
     closeQuickView();
     setStep("tela");
+
+    // Si el checklist «Incluir bordado» estaba activo en la vista previa, se
+    // precarga el bordado de diseño (o el primero disponible) para que el paso 5
+    // arranque con esa opción elegida.
+    if (selection.hasEmbroidery) {
+      bordadoApplied.current = true;
+      const design =
+        visibleEmbroideries.find((e) => e.priceModifier === EMBROIDERY_DESIGN_SURCHARGE) ??
+        visibleEmbroideries.find((e) => e.id !== "none");
+      if (design) setSelections({ bordadoId: design.id });
+    }
   }
 
-  // Aplica la recomendación del asistente preservando lo ya elegido cuando la IA
-  // no propone cambio en esa categoría.
+  // ── Aplica la recomendación del asistente preservando lo ya elegido (DESACTIVADO) ──
+  /*
   function handleApplyAssistant(suggestion: AssistantSuggestion, embroideryTextSuggestion?: string | null) {
     setSelections((current) => ({
       ...current,
@@ -234,6 +299,7 @@ export default function PersonalizaPage() {
     }));
     if (embroideryTextSuggestion) setEmbroideryText(embroideryTextSuggestion);
   }
+  */
 
   function goNext() {
     if (step === "modelo" && !product) {
@@ -341,6 +407,7 @@ export default function PersonalizaPage() {
 
       <div className="flex flex-col sm:flex-row gap-8 mt-8">
         <div className="flex-1">
+          {/* DESACTIVADO (asistente IA)
           {assistantEnabled && product && ["tela", "color", "estampado", "bordado"].includes(step) && (
             <AiAssistantPanel
               productSlug={product.slug}
@@ -348,6 +415,7 @@ export default function PersonalizaPage() {
               onApply={handleApplyAssistant}
             />
           )}
+          */}
 
           {step === "modelo" && (
             <div>

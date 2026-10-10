@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -86,6 +86,10 @@ export interface PersonalizeSelection {
   quantity: number;
   basePrice: number;
   finalPrice: number;
+  /** True si el usuario marcó «Incluir bordado de diseño» en la vista previa. */
+  hasEmbroidery: boolean;
+  /** Texto/idea de bordado opcional que viaje al asistente. */
+  embroideryText?: string;
 }
 
 // ─── Color Swatch (supports solid + 50/50 gradient for combined colors) ──────
@@ -187,10 +191,17 @@ function QuickViewGallery({
   }, [images, selectedColorName, selectedColorHex]);
 
   // Al cambiar de color (incluido un combinado) se muestra la primera imagen
-  // del set filtrado.
-  useEffect(() => {
+  // del set filtrado. Se ajusta en el render comparando con la clave anterior
+  // (patrón recomendado por React) en lugar de usar un effect.
+  const filterKey = useMemo(
+    () => displayImages.map((i) => i.url).join("|") + "|" + (selectedColorName ?? ""),
+    [displayImages, selectedColorName]
+  );
+  const [previousFilterKey, setPreviousFilterKey] = useState(filterKey);
+  if (previousFilterKey !== filterKey) {
+    setPreviousFilterKey(filterKey);
     setActiveIndex(0);
-  }, [displayImages, selectedColorName]);
+  }
 
   const safeIndex =
     activeIndex < displayImages.length ? activeIndex : 0;
@@ -383,17 +394,6 @@ export function ProductQuickViewModal({
 
   const [selectedColorName, setSelectedColorName] = useState("");
 
-  // Reset selections when product changes
-  useEffect(() => {
-    if (availableColors.length > 0) {
-      setSelectedColorName(availableColors[0].name);
-    } else {
-      setSelectedColorName("");
-    }
-    setSelectedSize("");
-    setQuantity(1);
-  }, [product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const selectedColorObj = useMemo(
     () =>
       availableColors.find(
@@ -411,18 +411,24 @@ export function ProductQuickViewModal({
   const [quantity, setQuantity] = useState(1);
   const [hasEmbroidery, setHasEmbroidery] = useState(false);
 
-  useEffect(() => {
-    if (product?.sizes?.length && !selectedSize) {
-      // Orden canónico: la talla inicial es la más pequeña del catálogo.
-      setSelectedSize(sortSizes(product.sizes)[0]);
-    }
-    if (product?.styles?.length && !selectedStyle) {
-      setSelectedStyle(product.styles[0]);
-    }
-    if (product?.materials?.length && !selectedMaterial) {
-      setSelectedMaterial(product.materials[0]);
-    }
-  }, [product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  /**
+   * Cada vez que cambia el producto (apertura del modal o cambio de preview con
+   * el modal abierto) las selecciones vuelven a sus valores iniciales: primer
+   * color, primera talla, primer estilo, primer material y cantidad 1. Se hace
+   * durante el render comparando con el id anterior (patrón recomendado por
+   * React para ajustar estado cuando cambia un prop) y no con un effect, para
+   * evitar renders en cascada.
+   */
+  const [previousProductId, setPreviousProductId] = useState<string | number | undefined>(product?.id);
+  if (previousProductId !== product?.id) {
+    setPreviousProductId(product?.id);
+    setSelectedColorName(availableColors[0]?.name ?? "");
+    setSelectedSize(sortSizes(product?.sizes ?? [])[0] ?? "");
+    setSelectedStyle(product?.styles?.[0] ?? "");
+    setSelectedMaterial(product?.materials?.[0] ?? "");
+    setQuantity(1);
+    setHasEmbroidery(false);
+  }
 
   /**
    * El estilo seleccionado determina la línea del producto y, con ella, el
@@ -438,10 +444,13 @@ export function ProductQuickViewModal({
   }, [product, selectedStyle]);
 
   // Al cambiar de estilo se selecciona la primera talla del nuevo rango para no
-  // dejar una talla que ya no existe en el catálogo vigente.
-  useEffect(() => {
+  // dejar una talla que ya no existe en el catálogo vigente. Mismo patrón de
+  // ajuste en render (comparando el rango anterior) que en el panel de detalle.
+  const [previousVisibleSizes, setPreviousVisibleSizes] = useState(visibleSizes);
+  if (previousVisibleSizes !== visibleSizes) {
+    setPreviousVisibleSizes(visibleSizes);
     setSelectedSize((prev) => resolveSelectedSize(prev, visibleSizes));
-  }, [visibleSizes]);
+  }
 
   // ── Image details ──
   const allImageDetails = useMemo<ProductDetailImage[]>(() => {
@@ -512,7 +521,7 @@ export function ProductQuickViewModal({
     allImageDetails.forEach((img) => {
       const name = (
         img.colorName ||
-        (img as any).color?.name ||
+        img.color?.name ||
         ""
       )
         .trim()
@@ -561,6 +570,7 @@ export function ProductQuickViewModal({
       quantity,
       basePrice: priceDetails.basePrice,
       finalPrice: priceDetails.finalPrice,
+      hasEmbroidery,
     });
   }, [
     product,
@@ -573,6 +583,7 @@ export function ProductQuickViewModal({
     quantity,
     priceDetails.basePrice,
     priceDetails.finalPrice,
+    hasEmbroidery,
   ]);
 
   // ── Action URLs ──
@@ -585,12 +596,19 @@ export function ProductQuickViewModal({
     estilo: selectedStyle,
     material: selectedMaterial,
     cantidad: String(quantity),
+    // Arrastra el estado del checklist de bordado y aterriza directo en el paso 2
+    // (tela) para no obligar a re-elegir el modelo.
+    bordado: hasEmbroidery ? "1" : "0",
+    paso: "tela",
   });
   const customizeHref = product ? `/personaliza?${personalizeParams.toString()}` : "#";
   // /cotizar sigue leyendo el parámetro `producto`: se mantiene por compatibilidad.
   const quoteParams = new URLSearchParams(personalizeParams);
   quoteParams.set("producto", product?.slug ?? "");
   quoteParams.delete("product");
+  // `bordado`/`paso` son solo para el flujo de personalización; no aplican a /cotizar.
+  quoteParams.delete("bordado");
+  quoteParams.delete("paso");
   const quoteHref = product ? `/cotizar?${quoteParams.toString()}` : "#";
   const productHref = product
     ? `/productos/${product.slug}`

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,6 @@ import {
   resolveSelectedSize,
 } from "../utils/size-helpers";
 import {
-  isLargeSize,
-  computeSizeSurcharge,
-  computeCategorySurcharge,
-  findActiveCategory,
   calculateProductPriceDetails,
 } from "../utils/price-helpers";
 
@@ -90,11 +86,16 @@ const [size, setSize] = useState(() => sortSizes(product.sizes)[0] ?? "");
     [product.sizes, style, product.categoryName]
   );
 
-  // Al cambiar de estilo se selecciona la primera talla del nuevo rango para no
-  // dejar una talla que ya no existe en el catálogo vigente.
-  useEffect(() => {
+  // Al cambiar el rango de tallas (por estilo o por producto), se reajusta la
+  // talla guardada para no dejar una que ya no exista en el catálogo vigente.
+  // Se hace durante el render comparando con el rango anterior (patrón
+  // recomendado por React para ajustar estado en función de un prop) y no con
+  // un effect, para evitar renders en cascada.
+  const [previousVisibleSizes, setPreviousVisibleSizes] = useState(visibleSizes);
+  if (previousVisibleSizes !== visibleSizes) {
+    setPreviousVisibleSizes(visibleSizes);
     setSize((prev) => resolveSelectedSize(prev, visibleSizes));
-  }, [visibleSizes]);
+  }
 
   const selectedVariant = useMemo(() => {
     return (
@@ -173,12 +174,18 @@ const [size, setSize] = useState(() => sortSizes(product.sizes)[0] ?? "");
     estilo: style,
     material,
     cantidad: String(quantity),
+    // Arrastra el checklist de bordado y aterriza directo en el paso 2 (tela).
+    bordado: hasEmbroidery ? "1" : "0",
+    paso: "tela",
   });
   const customizeHref = `/personaliza?${personalizeParams.toString()}`;
   // /cotizar sigue leyendo el parámetro `producto`: se mantiene por compatibilidad.
   const quoteParams = new URLSearchParams(personalizeParams);
   quoteParams.set("producto", product.slug);
   quoteParams.delete("product");
+  // `bordado`/`paso` son solo para el flujo de personalización; no aplican a /cotizar.
+  quoteParams.delete("bordado");
+  quoteParams.delete("paso");
   const quoteHref = `/cotizar?${quoteParams.toString()}`;
 
   return (
