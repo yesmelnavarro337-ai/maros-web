@@ -71,16 +71,17 @@ interface ApiProductDetail {
   materials?: string[] | null;
 }
 
-const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "XXL", "3XL", "XXXL", "4XL", "XXXXL", "5XL"];
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "XXXL", "4XL", "XXXXL", "5XL"];
 
 function getSizeRank(size: string): number {
-  const normalized = size.trim().toUpperCase();
+  const normalized = size.trim().toUpperCase() === "XXL" ? "2XL" : size.trim().toUpperCase();
   const rank = SIZE_ORDER.indexOf(normalized);
   return rank === -1 ? SIZE_ORDER.length : rank;
 }
 
 function sortSizes(sizes: string[]): string[] {
-  return [...sizes].sort((a, b) => {
+  const norm = (s: string) => (s.trim().toUpperCase() === "XXL" ? "2XL" : s);
+  return [...new Set(sizes.map(norm))].sort((a, b) => {
     const rank = getSizeRank(a) - getSizeRank(b);
     return rank !== 0 ? rank : a.localeCompare(b, "es");
   });

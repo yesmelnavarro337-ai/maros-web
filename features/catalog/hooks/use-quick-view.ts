@@ -10,11 +10,15 @@ import type {
 } from "@/features/product-detail/types";
 
 // ─── Size ordering (mirrors backend service logic) ───────────────────────────
-const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "XXL", "3XL", "XXXL", "4XL", "XXXXL", "5XL"];
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "XXXL", "4XL", "XXXXL", "5XL"];
 function sortSizes(sizes: string[]): string[] {
-  return [...sizes].sort((a, b) => {
-    const ai = SIZE_ORDER.indexOf(a.trim().toUpperCase());
-    const bi = SIZE_ORDER.indexOf(b.trim().toUpperCase());
+  const norm = (s: string) => {
+    const k = s.trim().toUpperCase();
+    return k === "XXL" ? "2XL" : k;
+  };
+  return [...new Set(sizes.map(norm))].sort((a, b) => {
+    const ai = SIZE_ORDER.indexOf(norm(a));
+    const bi = SIZE_ORDER.indexOf(norm(b));
     return (ai === -1 ? SIZE_ORDER.length : ai) - (bi === -1 ? SIZE_ORDER.length : bi);
   });
 }

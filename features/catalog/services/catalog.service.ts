@@ -132,7 +132,7 @@ export async function getCatalogProducts(params: CatalogSearchParams): Promise<C
   return applySort(adapted, params.orden);
 }
 
-const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL"];
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 
 export async function getCatalogFilterOptions(filters: {
   categoria?: string;
@@ -140,7 +140,7 @@ export async function getCatalogFilterOptions(filters: {
 }): Promise<{ sizes: string[]; colors: { hex: string; label: string }[]; priceMin: number; priceMax: number }> {
   const products = await getCatalogProducts({ ...filters, orden: "recientes" });
 
-  const sizes = [...new Set(products.flatMap((p) => p.sizes))].sort((a, b) => {
+  const sizes = [...new Set(products.flatMap((p) => p.sizes).map((s) => s.trim().toUpperCase() === "XXL" ? "2XL" : s))].sort((a, b) => {
     const ia = SIZE_ORDER.indexOf(a);
     const ib = SIZE_ORDER.indexOf(b);
     return (ia === -1 ? SIZE_ORDER.length : ia) - (ib === -1 ? SIZE_ORDER.length : ib);

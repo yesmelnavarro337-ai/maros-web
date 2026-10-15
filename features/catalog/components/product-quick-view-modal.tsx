@@ -706,7 +706,7 @@ export function ProductQuickViewModal({
                   )}
                   {priceDetails.isPlusSize && (
                     <Badge variant="secondary" className="bg-amber-100/80 text-amber-900 border-amber-200/60 text-[10px]">
-                      Talla {selectedSize} (+ $10.000 COP)
+                      Talla {selectedSize} (+${priceDetails.sizeSurcharge.toLocaleString("es-CO")} COP)
                     </Badge>
                   )}
                   {priceDetails.isInfantilYouthSize && (

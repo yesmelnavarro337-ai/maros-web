@@ -26,8 +26,8 @@ export const SIZE_ORDER = [
   "M",
   "L",
   "XL",
-  "XXL",
   "2XL",
+  "3XL",
 ] as const;
 
 export type KnownSize = (typeof SIZE_ORDER)[number];
@@ -39,10 +39,11 @@ const SIZE_RANK: ReadonlyMap<string, number> = new Map(
 
 /**
  * Normaliza una talla para compararla con SIZE_ORDER sin depender de
- * mayúsculas, espacios ni guiones Circunflexos.
+ * mayúsculas, espacios ni guiones, unificando XXL a 2XL.
  */
 function sizeKey(size: string): string {
-  return size.trim().toUpperCase().replace(/\s+/g, "");
+  const norm = size.trim().toUpperCase().replace(/\s+/g, "");
+  return norm === "XXL" ? "2XL" : norm;
 }
 
 /** Rango de las tallas que no están en el catálogo, para que queden al final. */

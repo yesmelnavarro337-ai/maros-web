@@ -22,6 +22,21 @@ export function isLargeSize(size?: string | null): boolean {
   return PLUS_SIZES.has(s) || (s.length >= 2 && s.includes("XL"));
 }
 
+/** Recargos automáticos por talla de adulto */
+export const SURCHARGE_XL = 10000;
+export const SURCHARGE_2XL = 25000;
+export const SURCHARGE_3XL = 30000;
+
+export function getSizeSurcharge(size?: string | null): number {
+  if (!size) return 0;
+  const s = size.trim().toUpperCase().replace(/\s+/g, "");
+  if (s === "3XL" || s === "XXXL" || s === "4XL" || s === "XXXXL" || s === "5XL") return SURCHARGE_3XL;
+  if (s === "2XL" || s === "XXL") return SURCHARGE_2XL;
+  if (s === "XL") return SURCHARGE_XL;
+  if (isLargeSize(size)) return SURCHARGE_XL;
+  return 0;
+}
+
 /**
  * Extrae el género declarado en el texto. Los estilos mixtos
  * ("Hombre / Mujer") se consideran sin género porque su tarifa es única.
@@ -287,43 +302,33 @@ export function calculateProductPriceDetails({
   size?: string | null;
   hasEmbroidery?: boolean;
 }): CalculatedPriceDetails {
-  // Si la variante trae precio, éste ya es el precio final de esa variante
-  // (el Admin ya le aplicó el recargo de rango), así que no se vuelve a sumar.
-  const usesVariantPrice = variantPrice != null && variantPrice > 0;
+  // 1. Determinar precio base acorde al estilo/modelo seleccionado (fuente de verdad oficial)
+  const styleOfficialBase = getFixedBasePrice(categoryName, styleName, productBasePrice);
+  const basePrice = styleOfficialBase > 0
+    ? styleOfficialBase
+    : (variantPrice != null && variantPrice > 0 ? variantPrice : (productBasePrice ?? 115000));
 
-  // Talla mayor a L
+  // 2. Recargo por rango de talla:
+  // - XL: +$10.000 COP
+  // - 2XL: +$25.000 COP
+  // - 3XL: +$30.000 COP
+  // - Estándar (XS, S, M, L): $0 COP
   const isPlusSize = isLargeSize(size);
-  const sizeSurcharge = isPlusSize ? 10000 : 0;
+  const sizeSurcharge = getSizeSurcharge(size);
 
   // Rango Juvenil infantil (tallas 10 a 16): +$10.000 sobre el precio base.
   const infantilYouth = isInfantilPriced(categoryName, styleName) && isInfantilYouthSize(size);
-
-  // Cuando el precio viene de la variante, ese precio ya incluye el recargo de
-  // rango. Se revierte para recuperar la base y así aplicar el 5% sobre la base
-  // (misma convención que las tallas > L). Sin esto, el mismo producto/talla
-  // mostraría precios distintos según se haya guardado o no el precio de la variante.
-  const variantSurcharge = isPlusSize
-    ? 10000
-    : infantilYouth
-      ? INFANTIL_YOUTH_SURCHARGE
-      : 0;
-
-  // 1. Determinar precio base fijo del estilo/producto
-  const basePrice = usesVariantPrice
-    ? variantPrice - variantSurcharge
-    : getFixedBasePrice(categoryName, styleName, productBasePrice);
-
   const infantilSurcharge = infantilYouth ? INFANTIL_YOUTH_SURCHARGE : 0;
 
   // 3. Recargo por bordado (+7.000 COP)
   const embroiderySurcharge = hasEmbroidery ? 7000 : 0;
 
-  // 4. Aplicar descuento del 5% si la fecha está entre 04 Oct y 09 Nov (aplicado sobre precio base)
+  // 4. Aplicar descuento del 5% si la promoción está activa (aplicado sobre el precio base del modelo)
   const hasDiscount = isPromoActive();
   const discountAmount = hasDiscount ? Math.round(basePrice * PROMO_DISCOUNT_PERCENT) : 0;
   const baseAfterDiscount = basePrice - discountAmount;
 
-  // PrecioFinal = (PrecioEstiloBase - 5% Desc) + (Talla > L ? $10.000 : 0) + (Juvenil ? $10.000 : 0) + (TieneBordado ? $7.000 : 0)
+  // Precio final y subtotal calculados acorde al modelo seleccionado + recargo de talla
   const finalPrice = baseAfterDiscount + sizeSurcharge + infantilSurcharge + embroiderySurcharge;
   const subtotalPrice =
     basePrice + sizeSurcharge + infantilSurcharge + embroiderySurcharge;

@@ -240,7 +240,7 @@ const [size, setSize] = useState(() => sortSizes(product.sizes)[0] ?? "");
           )}
           {priceDetails.isPlusSize && (
             <Badge variant="secondary" className="bg-amber-100/80 text-amber-900 border-amber-200/60">
-              Talla {size.toUpperCase()} (Exceso +$10.000 COP)
+              Talla {size.toUpperCase()} (+${priceDetails.sizeSurcharge.toLocaleString("es-CO")} COP)
             </Badge>
           )}
           {priceDetails.isInfantilYouthSize && (
