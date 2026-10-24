@@ -361,3 +361,164 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   ESTILOS TIPOGRÁFICOS PARA CONTENIDO ENRIQUECIDO (HTML / WYSIWYG / CMS)
+   ========================================================================== */
+
+.rich-text {
+  color: var(--foreground);
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.rich-text p {
+  margin-bottom: 0.85rem;
+}
+
+.rich-text p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text strong,
+.rich-text b {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.rich-text em,
+.rich-text i {
+  font-style: italic;
+}
+
+.rich-text h1,
+.rich-text h2,
+.rich-text h3,
+.rich-text h4,
+.rich-text h5,
+.rich-text h6 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.rich-text h1 {
+  font-size: 1.75rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-text h2 {
+  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.rich-text h3 {
+  font-size: 1.25rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text h4,
+.rich-text h5,
+.rich-text h6 {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.rich-text ul {
+  list-style-type: disc;
+  padding-left: 1.35rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.rich-text ol {
+  list-style-type: decimal;
+  padding-left: 1.35rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.rich-text li {
+  margin-bottom: 0.35rem;
+  line-height: 1.6;
+}
+
+.rich-text li::marker {
+  color: var(--primary);
+}
+
+.rich-text a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.rich-text a:hover {
+  color: var(--color-brand-olive-gold);
+}
+
+.rich-text blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1rem;
+  margin: 1.25rem 0;
+  font-style: italic;
+  color: var(--muted-foreground);
+  background: rgba(239, 232, 216, 0.2);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.75rem 1rem;
+}
+
+.rich-text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1.25rem auto;
+  display: block;
+}
+
+.rich-text hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.75rem 0;
+}
+
+/* Modificador editorial específico para artículos completos de Blog */
+.rich-text-blog {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: rgba(52, 53, 31, 0.92);
+}
+
+.rich-text-blog p {
+  margin-bottom: 1.25rem;
+}
+
+.rich-text-blog h2 {
+  font-size: 1.875rem;
+  margin-top: 2.25rem;
+  margin-bottom: 0.85rem;
+}
+
+.rich-text-blog h3 {
+  font-size: 1.45rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-text-blog ul,
+.rich-text-blog ol {
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.rich-text-blog li {
+  margin-bottom: 0.5rem;
+}

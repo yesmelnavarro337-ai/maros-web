@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Check } from "lucide-react";
+import { RichText } from "@/components/shared/rich-text";
 
 const FABRIC_FEATURES = [
   "Telas suaves y frescas, ideales para dormir cómodamente toda la noche",
@@ -33,7 +34,7 @@ export function ProductInfoTabs({ description }: { description: string }) {
             Descripción
           </AccordionTrigger>
           <AccordionContent className="text-sm text-muted-foreground leading-relaxed">
-            {description}
+            <RichText html={description} className="text-sm text-muted-foreground" />
           </AccordionContent>
         </AccordionItem>
 

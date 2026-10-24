@@ -11,12 +11,18 @@ interface ApiBlogPost {
   publishDate: string;
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function buildExcerpt(content: string, maxLength = 140): string {
-  if (content.length <= maxLength) return content;
-  return content.slice(0, maxLength).trimEnd() + "...";
+  const clean = stripHtml(content);
+  if (clean.length <= maxLength) return clean;
+  return clean.slice(0, maxLength).trimEnd() + "...";
 }
 
 function adaptDetail(p: ApiBlogPost): BlogPostDetail {
+  const plainText = stripHtml(p.content);
   return {
     slug: p.slug,
     title: p.title,
@@ -25,7 +31,7 @@ function adaptDetail(p: ApiBlogPost): BlogPostDetail {
     excerpt: buildExcerpt(p.content),
     publishDate: p.publishDate.slice(0, 10),
     content: p.content,
-    readingTimeMinutes: readingTimeMinutes(p.content),
+    readingTimeMinutes: readingTimeMinutes(plainText),
   };
 }
 

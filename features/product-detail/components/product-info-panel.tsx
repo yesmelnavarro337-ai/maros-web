@@ -12,6 +12,7 @@ import { AddToCartButton } from "@/features/cart/add-to-cart-button";
 import { SizeGuideModal } from "@/features/products/components/size-guide-modal";
 import { sortSizes } from "@/lib/sizes";
 import { ColorSelector } from "./color-selector";
+import { RichText } from "@/components/shared/rich-text";
 import type { ProductColorOption, ProductDetail } from "../types";
 import { PriceNoticeBanner } from "./price-notice-banner";
 import {
@@ -256,7 +257,9 @@ const [size, setSize] = useState(() => sortSizes(product.sizes)[0] ?? "");
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">{product.description}</p>
+      {product.description && (
+        <RichText html={product.description} className="text-sm text-muted-foreground" />
+      )}
 
       {/* SELECCIÓN DE COLOR */}
       {colorsList.length > 0 && (

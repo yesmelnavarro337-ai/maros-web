@@ -29,6 +29,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { RichText } from "@/components/shared/rich-text";
 import { useCart } from "@/features/cart/cart-context";
 import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
 import { filterImagesByColor } from "@/features/product-detail/utils/image-filter";
@@ -678,9 +679,10 @@ export function ProductQuickViewModal({
                   {product.name}
                 </h2>
                 {product.description && (
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                    {product.description}
-                  </p>
+                  <RichText
+                    html={product.description}
+                    className="text-xs sm:text-sm text-muted-foreground mt-1.5 line-clamp-2"
+                  />
                 )}
               </div>
 

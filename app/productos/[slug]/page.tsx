@@ -17,9 +17,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!product) return {};
 
+  const cleanDescription = (product.seoDescription || product.description || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
   return buildMetadata({
     title: product.seoTitle || product.name,
-    description: product.seoDescription || product.description.slice(0, 160),
+    description: cleanDescription.slice(0, 160),
     path: `/productos/${product.slug}`,
     image: product.seoSocialImageUrl || product.images[0],
   });
