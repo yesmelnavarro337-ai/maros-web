@@ -12,6 +12,11 @@ export function OrderSummaryCard({ item }: { item: QuotationItemDraft }) {
     item.customizationLabels?.bordado,
   ].filter(Boolean);
 
+  const unitPrice =
+    item.unitPrice && item.unitPrice > 0
+      ? item.unitPrice
+      : Math.round(item.totalPrice / Math.max(1, item.quantity));
+
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       <p className="text-sm font-medium text-foreground mb-3">Tu pedido</p>
@@ -30,8 +35,8 @@ export function OrderSummaryCard({ item }: { item: QuotationItemDraft }) {
             <ImageOff className="h-5 w-5 text-muted-foreground" />
           )}
         </div>
-        <div className="min-w-0">
-          <p className="text-sm text-foreground truncate">{item.productName}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground truncate">{item.productName}</p>
           <div className="flex flex-wrap gap-1 mt-1">
             {chips.map((chip, i) => (
               <span key={i} className="text-[10px] bg-secondary text-foreground rounded-full px-2 py-0.5">
@@ -47,13 +52,23 @@ export function OrderSummaryCard({ item }: { item: QuotationItemDraft }) {
         </div>
       </div>
 
-      <div className="border-t border-border mt-4 pt-3 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Cantidad: {item.quantity}</span>
-        <span className="font-heading text-lg text-foreground">
-          ${item.totalPrice.toLocaleString("es-CO")} COP
-        </span>
+      <div className="border-t border-border mt-4 pt-3 space-y-1.5 text-xs">
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>Valor unitario:</span>
+          <span className="font-semibold text-foreground">${unitPrice.toLocaleString("es-CO")} COP</span>
+        </div>
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>Cantidad:</span>
+          <span className="font-medium text-foreground">{item.quantity}</span>
+        </div>
+        <div className="flex items-center justify-between pt-1.5 border-t border-border/60">
+          <span className="font-medium text-foreground">Subtotal línea:</span>
+          <span className="font-heading text-base font-bold text-foreground">
+            ${item.totalPrice.toLocaleString("es-CO")} COP
+          </span>
+        </div>
       </div>
-      <p className="text-[10px] text-muted-foreground mt-1">
+      <p className="text-[10px] text-muted-foreground mt-2">
         Te contactaremos para confirmar detalles y valor final.
       </p>
     </div>

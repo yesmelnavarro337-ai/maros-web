@@ -54,8 +54,10 @@ const isPantalon = (text: string) => text.includes("pantalón") || text.includes
 
 /* ─────────────────────────── Línea "Pijamas de Niños" ─────────────────────────── */
 
-/** Recargo COP que se aplica a las tallas juvenile (10 a 16). */
-export const INFANTIL_YOUTH_SURCHARGE = 10000;
+/**
+ * Nota: Las tallas juveniles (10 a 16) NO tienen recargo.
+ * Todas las tallas infantiles comparten el mismo precio base del estilo.
+ */
 
 /**
  * Tokens que identifican una prenda infantil. Se comparan sobre el texto normalizado
@@ -75,13 +77,13 @@ export const INFANTIL_SMALL_SIZES = [
   "8",
 ] as const;
 
-/** Rango Juvenil: se aplica el precio base del estilo + recargo. */
+/** Rango Juvenil: se aplica el mismo precio base del estilo (sin recargo). */
 export const INFANTIL_YOUTH_SIZES = ["10", "12", "14", "16"] as const;
 
 /**
- * Precios base de la línea infantil por estilo (rango Pequeños).
- * Las tallas 10 a 16 se obtienen sumando INFANTIL_YOUTH_SURCHARGE:
- * Pantalón corta 75.000 -> 85.000 | Short corta 65.000 -> 75.000 | Pantalón larga 90.000 -> 100.000
+ * Precios base de la línea infantil por estilo.
+ * Todas las tallas (Pequeños y Juvenil) comparten el mismo precio base.
+ * Pantalón corta 75.000 | Short corta 65.000 | Pantalón larga 90.000
  *
  * Los nombres coinciden con los estilos de la entidad Style (migración
  * AddInfantilStyles). El sufijo "(Infantil)" sustituye al de género de los estilos
@@ -232,12 +234,22 @@ export function getFixedBasePrice(
   const cat = (categoryName || "").toLowerCase();
   const st = (styleName || "").toLowerCase();
 
-  // Prioridad 0: línea infantil. Los estilos infantiles no llevan sufijo de
-  // género, por lo que deben resolverse antes que las reglas de adulto
-  // (si no, "Pantalón - Camisa manga corta" caería en la tarifa de $115.000).
+  // Prioridad 0: línea infantil. Si la categoría es infantil o el estilo pertenece a infantil,
+  // se resuelve exclusivamente con las tarifas infantiles y nunca cae en tarifas de adulto.
   if (isInfantilPriced(cat, st)) {
     const infantilPrice = getInfantilBasePrice(st);
     if (infantilPrice !== null) return infantilPrice;
+
+    // Si no coincide con un estilo canónico exacto, deducir por palabras clave infantiles:
+    if (st.includes("larga")) return 90000;
+    if (st.includes("short") || cat.includes("short")) return 65000;
+    if (isPantalon(st) || isPantalon(cat)) return 75000;
+
+    // Respetar precio base del producto infantil si viene provisto y es razonable
+    if (fallbackBasePrice && fallbackBasePrice > 0) return fallbackBasePrice;
+
+    // Tarifa base por defecto para infantil
+    return 65000;
   }
 
   // Prioridad: género del estilo > género de la categoría.
@@ -276,14 +288,12 @@ export function getFixedBasePrice(
 export interface CalculatedPriceDetails {
   basePrice: number;
   sizeSurcharge: number;
-  infantilSurcharge: number;
   embroiderySurcharge: number;
   subtotalPrice: number; // Subtotal sin descuento (base + recargos)
   discountAmount: number; // 5% de descuento sobre precio base
-  finalPrice: number; // PrecioFinal = (PrecioEstiloBase - 5% Desc) + (Talla > L ? $10.000 : 0) + (Juvenil ? $10.000 : 0) + (Bordado ? $7.000 : 0)
+  finalPrice: number; // PrecioFinal = (PrecioEstiloBase - 5% Desc) + recargo talla + bordado
   hasDiscount: boolean;
   isPlusSize: boolean;
-  isInfantilYouthSize: boolean;
   hasEmbroidery: boolean;
 }
 
@@ -302,48 +312,48 @@ export function calculateProductPriceDetails({
   size?: string | null;
   hasEmbroidery?: boolean;
 }): CalculatedPriceDetails {
+  const isInfant = isInfantilPriced(categoryName, styleName);
+
   // 1. Determinar precio base acorde al estilo/modelo seleccionado (fuente de verdad oficial)
   const styleOfficialBase = getFixedBasePrice(categoryName, styleName, productBasePrice);
-  const basePrice = styleOfficialBase > 0
+  let basePrice = styleOfficialBase > 0
     ? styleOfficialBase
-    : (variantPrice != null && variantPrice > 0 ? variantPrice : (productBasePrice ?? 115000));
+    : (productBasePrice && productBasePrice > 0 ? productBasePrice : (isInfant ? 65000 : 115000));
 
-  // 2. Recargo por rango de talla:
-  // - XL: +$10.000 COP
-  // - 2XL: +$25.000 COP
-  // - 3XL: +$30.000 COP
-  // - Estándar (XS, S, M, L): $0 COP
-  const isPlusSize = isLargeSize(size);
-  const sizeSurcharge = getSizeSurcharge(size);
+  // Si no se obtuvo de la tarifa oficial y viene variantPrice, limpiamos el variantPrice
+  // de posibles recargos de talla ya sumados en la base de datos para no duplicar el recargo.
+  if (styleOfficialBase <= 0 && variantPrice != null && variantPrice > 0) {
+    const embeddedSurcharge = isInfant ? 0 : getSizeSurcharge(size);
+    basePrice = Math.max(0, variantPrice - embeddedSurcharge);
+  }
 
-  // Rango Juvenil infantil (tallas 10 a 16): +$10.000 sobre el precio base.
-  const infantilYouth = isInfantilPriced(categoryName, styleName) && isInfantilYouthSize(size);
-  const infantilSurcharge = infantilYouth ? INFANTIL_YOUTH_SURCHARGE : 0;
+  // 2. Recargos por talla:
+  // - Adultos: XL (+$10.000), 2XL (+$25.000), 3XL (+$30.000)
+  // - Infantil: SIN recargo en ninguna talla (ni pequeñas ni juveniles)
+  const isPlusSize = isInfant ? false : isLargeSize(size);
+  const sizeSurcharge = isInfant ? 0 : getSizeSurcharge(size);
 
   // 3. Recargo por bordado (+7.000 COP)
   const embroiderySurcharge = hasEmbroidery ? 7000 : 0;
 
-  // 4. Aplicar descuento del 5% si la promoción está activa (aplicado sobre el precio base del modelo)
+  // 4. Aplicar descuento del 5% si la promoción está activa (aplicado de forma limpia sobre el precio base)
   const hasDiscount = isPromoActive();
   const discountAmount = hasDiscount ? Math.round(basePrice * PROMO_DISCOUNT_PERCENT) : 0;
   const baseAfterDiscount = basePrice - discountAmount;
 
   // Precio final y subtotal calculados acorde al modelo seleccionado + recargo de talla
-  const finalPrice = baseAfterDiscount + sizeSurcharge + infantilSurcharge + embroiderySurcharge;
-  const subtotalPrice =
-    basePrice + sizeSurcharge + infantilSurcharge + embroiderySurcharge;
+  const finalPrice = baseAfterDiscount + sizeSurcharge + embroiderySurcharge;
+  const subtotalPrice = basePrice + sizeSurcharge + embroiderySurcharge;
 
   return {
     basePrice,
     sizeSurcharge,
-    infantilSurcharge,
     embroiderySurcharge,
     subtotalPrice,
     discountAmount,
     finalPrice,
     hasDiscount,
     isPlusSize,
-    isInfantilYouthSize: infantilYouth,
     hasEmbroidery,
   };
 }

@@ -8,6 +8,7 @@ import { QuotationForm } from "@/features/quotation/components/quotation-form";
 import { QuotationSuccess } from "@/features/quotation/components/quotation-success";
 import { submitQuotation } from "@/features/quotation/services/quotation.service";
 import { getProductSummaryClient } from "@/features/product-detail/services/product-detail.client";
+import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
 import {
   getFabrics,
   getColors,
@@ -48,6 +49,7 @@ export default function CotizarPage() {
           draft.selections.bordadoId && draft.selections.bordadoId !== "none" ? draft.selections.bordadoId : undefined,
         ].filter((id): id is string => !!id);
 
+        const unitPrice = Math.round(draft.totalPrice / Math.max(1, draft.quantity));
         sourceRef.current = "draft";
         setItems([
           {
@@ -65,6 +67,7 @@ export default function CotizarPage() {
               bordado: embroideries.find((e) => e.id === draft.selections.bordadoId && e.id !== "none")?.name,
             },
             embroideryText: draft.selections.embroideryText,
+            unitPrice,
             totalPrice: draft.totalPrice,
           },
         ]);
@@ -72,7 +75,7 @@ export default function CotizarPage() {
       }
 
       // Caso 2: viene directo del botón "Solicitar cotización" del detalle,
-      // sin pasar por personalización — solo talla/color/cantidad en la URL.
+      // sin pasar por personalización — lee talla/color/cantidad/estilo de la URL.
       const productSlug = searchParams.get("producto");
       if (productSlug) {
         const product = await getProductSummaryClient(productSlug);
@@ -83,8 +86,19 @@ export default function CotizarPage() {
 
         const size = searchParams.get("talla") ?? product.sizes[0] ?? "";
         const colorHex = searchParams.get("color") ?? "";
-        const quantity = Number(searchParams.get("cantidad") ?? "1");
+        const quantity = Math.max(1, Number(searchParams.get("cantidad") ?? "1"));
         const colorName = product.colors.find((c) => c.hex === colorHex)?.name;
+        const style = searchParams.get("estilo") ?? "";
+
+        const priceDetails = calculateProductPriceDetails({
+          basePrice: product.basePrice,
+          categoryName: product.categoryName,
+          styleName: style,
+          size,
+        });
+
+        const unitPrice = priceDetails.finalPrice;
+        const totalPrice = unitPrice * quantity;
 
         sourceRef.current = "url";
         setItems([
@@ -97,7 +111,8 @@ export default function CotizarPage() {
             quantity,
             baseColor: colorName,
             customizationOptionIds: [],
-            totalPrice: product.basePrice * quantity,
+            unitPrice,
+            totalPrice,
           },
         ]);
         return;
@@ -119,6 +134,7 @@ export default function CotizarPage() {
             baseColor: i.colorName || undefined,
             customizationOptionIds: i.customizationOptionIds ?? [],
             embroideryText: i.embroideryText,
+            unitPrice: i.price,
             totalPrice: i.price * i.quantity,
           }))
         );
@@ -188,17 +204,24 @@ export default function CotizarPage() {
           {items.map((item, i) => (
             <OrderSummaryCard key={i} item={item} />
           ))}
-          {items.length > 1 && (
-            <div className="rounded-xl border border-border bg-card p-5 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Total estimado</span>
-                <span className="font-heading text-lg text-foreground">${total.toLocaleString("es-CO")} COP</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                El valor final lo confirmamos en tu cotización.
-              </p>
+          <div className="rounded-xl border border-border bg-card p-5 text-sm space-y-2">
+            <div className="flex items-center justify-between text-muted-foreground text-xs">
+              <span>Total de prendas:</span>
+              <span className="font-medium text-foreground">
+                {items.reduce((acc, i) => acc + i.quantity, 0)}{" "}
+                {items.reduce((acc, i) => acc + i.quantity, 0) === 1 ? "unidad" : "unidades"}
+              </span>
             </div>
-          )}
+            <div className="flex items-center justify-between pt-1.5 border-t border-border">
+              <span className="font-semibold text-foreground">Total estimado:</span>
+              <span className="font-heading text-lg font-bold text-foreground">
+                ${total.toLocaleString("es-CO")} COP
+              </span>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              El valor final y tiempos de entrega se confirman por WhatsApp.
+            </p>
+          </div>
         </div>
       </div>
     </div>

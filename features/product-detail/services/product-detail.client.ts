@@ -5,6 +5,8 @@ export interface ProductClientSummary {
   name: string;
   slug: string;
   basePrice: number;
+  categoryName?: string;
+  styles?: string[];
   image: string;
   sizes: string[];
   colors: { name: string; hex: string }[];
@@ -17,6 +19,8 @@ interface ApiProductDetail {
   name: string;
   slug: string;
   basePrice: number;
+  categoryName?: string;
+  styles?: string[];
   images: string[];
   sizes: string[];
   colors: { name: string; hex: string }[];
@@ -32,6 +36,8 @@ export async function getProductSummaryClient(slug: string): Promise<ProductClie
       name: p.name,
       slug: p.slug,
       basePrice: p.basePrice,
+      categoryName: p.categoryName,
+      styles: p.styles,
       image: p.images?.[0] ?? "",
       sizes: p.sizes,
       colors: p.colors,

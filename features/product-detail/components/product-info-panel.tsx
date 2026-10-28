@@ -244,11 +244,7 @@ const [size, setSize] = useState(() => sortSizes(product.sizes)[0] ?? "");
               Talla {size.toUpperCase()} (+${priceDetails.sizeSurcharge.toLocaleString("es-CO")} COP)
             </Badge>
           )}
-          {priceDetails.isInfantilYouthSize && (
-            <Badge variant="secondary" className="bg-sky-100/80 text-sky-900 border-sky-200/60">
-              Talla {size.toUpperCase()} (Rango Juvenil +$10.000 COP)
-            </Badge>
-          )}
+
           {priceDetails.hasEmbroidery && (
             <Badge variant="secondary" className="bg-emerald-100 text-emerald-900 border-emerald-300">
               Bordado Incluido (+$7.000 COP)

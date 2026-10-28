@@ -14,6 +14,7 @@ export interface QuotationItemDraft {
     bordado?: string;
   };
   embroideryText?: string;
+  unitPrice?: number;
   totalPrice: number;
 }
 

@@ -711,11 +711,7 @@ export function ProductQuickViewModal({
                       Talla {selectedSize} (+${priceDetails.sizeSurcharge.toLocaleString("es-CO")} COP)
                     </Badge>
                   )}
-                  {priceDetails.isInfantilYouthSize && (
-                    <Badge variant="secondary" className="bg-sky-100/80 text-sky-900 border-sky-200/60 text-[10px]">
-                      Talla {selectedSize} (Juvenil + $10.000 COP)
-                    </Badge>
-                  )}
+
                   {priceDetails.hasEmbroidery && (
                     <Badge variant="secondary" className="bg-emerald-100 text-emerald-900 border-emerald-300 text-[10px]">
                       Bordado Incluido (+$7.000 COP)
