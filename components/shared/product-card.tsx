@@ -70,8 +70,8 @@ export function ProductCard({
             Agotado
           </span>
         ) : priceDetails.hasDiscount ? (
-          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#34351F] text-white text-[9px] font-semibold tracking-wide px-2 py-1 shadow-xs max-w-[calc(100%-3rem)] animate-[pulse_3s_ease-in-out_infinite]">
-            <Sparkles className="h-3 w-3 shrink-0 text-[#B6AE3A] animate-spin-slow" />
+          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-foreground text-background text-[9px] font-semibold tracking-wide px-2 py-1 shadow-xs max-w-[calc(100%-3rem)] animate-[pulse_3s_ease-in-out_infinite]">
+            <Sparkles className="h-3 w-3 shrink-0 text-accent animate-spin-slow" />
             5% OFF
           </span>
         ) : null}
@@ -88,18 +88,20 @@ export function ProductCard({
           }}
         />
 
-        <button
-          type="button"
-          className="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-md hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 opacity-100 pointer-events-auto sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto flex items-center gap-1.5 z-10"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onQuickView?.(product);
-          }}
-          aria-label={`Vista previa rápida de ${product.name}`}
-        >
-          Elegir
-        </button>
+        {onQuickView && (
+          <button
+            type="button"
+            className="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-md hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 opacity-100 pointer-events-auto sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto flex items-center gap-1.5 z-10"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            aria-label={`Vista previa rápida de ${product.name}`}
+          >
+            Elegir
+          </button>
+        )}
       </div>
 
       <p className="font-heading text-base text-foreground mt-2.5 truncate group-hover:text-primary transition-colors duration-200">{product.name}</p>
@@ -118,7 +120,7 @@ export function ProductCard({
 
       {soldOut ? (
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-          Sin disponible en tallas
+          No disponible en tallas
         </span>
       ) : product.sizes && product.sizes.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1.5 mt-1.5">

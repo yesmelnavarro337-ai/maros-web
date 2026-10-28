@@ -11,7 +11,7 @@ interface LegalShellProps {
 
 export function LegalShell({ kicker, title, description, toc, children }: LegalShellProps) {
   return (
-    <div className="bg-[#F9F6F0] min-h-screen">
+    <div className="bg-background min-h-screen">
       <div className="max-w-5xl mx-auto px-4 py-14 sm:py-20">
         <nav className="text-xs text-muted-foreground mb-6">
           Inicio / <span className="text-foreground">{title}</span>

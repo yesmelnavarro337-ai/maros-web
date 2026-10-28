@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -31,12 +31,17 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { RichText } from "@/components/shared/rich-text";
 import { useCart } from "@/features/cart/cart-context";
-import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
+import {
+  calculateProductPriceDetails,
+  ADULT_STYLES,
+  INFANTIL_STYLES,
+} from "@/features/product-detail/utils/price-helpers";
 import { filterImagesByColor } from "@/features/product-detail/utils/image-filter";
 import { sortSizes } from "@/lib/sizes";
 import {
   filterSizesForStyle,
   isInfantilCategory,
+  isInfantilStyleName,
   resolveSelectedSize,
 } from "@/features/product-detail/utils/size-helpers";
 
@@ -91,6 +96,16 @@ export interface PersonalizeSelection {
   hasEmbroidery: boolean;
   /** Texto/idea de bordado opcional que viaje al asistente. */
   embroideryText?: string;
+}
+
+function isStyleMatch(vStyle?: string | null, targetStyle?: string | null): boolean {
+  if (!vStyle || !targetStyle) return true;
+  const vNorm = vStyle.trim().toLowerCase();
+  const tNorm = targetStyle.trim().toLowerCase();
+  if (vNorm === tNorm) return true;
+  const cleanV = vNorm.replace(/\s*\([^)]*\)/g, "").trim();
+  const cleanT = tNorm.replace(/\s*\([^)]*\)/g, "").trim();
+  return cleanV === cleanT;
 }
 
 // ─── Color Swatch (supports solid + 50/50 gradient for combined colors) ──────
@@ -405,48 +420,145 @@ export function ProductQuickViewModal({
     [availableColors, selectedColorName]
   );
 
+  // ── Selector de Categoría (Adultos vs Infantil) ──
+  const isProductCategoryInfantil = isInfantilCategory(product?.categoryName);
+  const initialCandidate = product?.styles?.[0] ?? "";
+  const initialLine: "adulto" | "infantil" =
+    isProductCategoryInfantil || (initialCandidate ? isInfantilStyleName(initialCandidate) : false)
+      ? "infantil"
+      : "adulto";
+
+  const [selectedLine, setSelectedLine] = useState<"adulto" | "infantil">(initialLine);
+
+  const availableStylesForLine = useMemo(() => {
+    const rawStyles = product?.styles && product.styles.length > 0 ? product.styles : [];
+    const filtered = rawStyles.filter((st) =>
+      selectedLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st)
+    );
+
+    if (filtered.length > 0) return filtered;
+
+    return selectedLine === "infantil"
+      ? INFANTIL_STYLES.map((s) => s.name)
+      : ADULT_STYLES.map((s) => s.name);
+  }, [product?.styles, selectedLine]);
+
   // ── Size, Style, Material, Quantity, Embroidery states ──
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedStyle, setSelectedStyle] = useState("");
+  const initialStyle = useMemo(() => {
+    const rawStyles = product?.styles && product.styles.length > 0 ? product.styles : [];
+    const filtered = rawStyles.filter((st) =>
+      initialLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st)
+    );
+    const finalStyles =
+      filtered.length > 0
+        ? filtered
+        : initialLine === "infantil"
+        ? INFANTIL_STYLES.map((s) => s.name)
+        : ADULT_STYLES.map((s) => s.name);
+    return finalStyles[0] ?? "";
+  }, [product?.styles, initialLine]);
+
+  const [selectedStyle, setSelectedStyle] = useState<string>(initialStyle);
+
+  const initialSizes = useMemo(() => {
+    return filterSizesForStyle(product?.sizes ?? [], initialStyle, initialLine === "infantil");
+  }, [product?.sizes, initialStyle, initialLine]);
+
+  const [selectedSize, setSelectedSize] = useState<string>(() => initialSizes[0] ?? "");
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [hasEmbroidery, setHasEmbroidery] = useState(false);
 
+  // Auto-selección defensiva de estilo en el modal
+  useEffect(() => {
+    const isCurrentValid =
+      Boolean(selectedStyle) &&
+      availableStylesForLine.some((st) => st.toLowerCase() === selectedStyle.toLowerCase());
+
+    if (!isCurrentValid && availableStylesForLine.length > 0) {
+      const defaultStyle = availableStylesForLine[0];
+      setSelectedStyle(defaultStyle);
+      const nextSizes = filterSizesForStyle(
+        product?.sizes ?? [],
+        defaultStyle,
+        selectedLine === "infantil"
+      );
+      setSelectedSize((prev) => resolveSelectedSize(prev, nextSizes));
+    }
+  }, [availableStylesForLine, selectedStyle, product?.sizes, selectedLine]);
+
   /**
    * Cada vez que cambia el producto (apertura del modal o cambio de preview con
-   * el modal abierto) las selecciones vuelven a sus valores iniciales: primer
-   * color, primera talla, primer estilo, primer material y cantidad 1. Se hace
-   * durante el render comparando con el id anterior (patrón recomendado por
-   * React para ajustar estado cuando cambia un prop) y no con un effect, para
-   * evitar renders en cascada.
+   * el modal abierto) las selecciones vuelven a sus valores iniciales acordes a la línea.
    */
   const [previousProductId, setPreviousProductId] = useState<string | number | undefined>(product?.id);
   if (previousProductId !== product?.id) {
     setPreviousProductId(product?.id);
+    const prodInfantil = isInfantilCategory(product?.categoryName);
+    const prodFirstStyle = product?.styles?.[0] ?? "";
+    const nextLine: "adulto" | "infantil" =
+      prodInfantil || (prodFirstStyle ? isInfantilStyleName(prodFirstStyle) : false)
+        ? "infantil"
+        : "adulto";
+    setSelectedLine(nextLine);
+
+    const nextStyles = (product?.styles && product.styles.length > 0 ? product.styles : [])
+      .filter((st) => nextLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st));
+    const finalStyles = nextStyles.length > 0
+      ? nextStyles
+      : (nextLine === "infantil" ? INFANTIL_STYLES.map((s) => s.name) : ADULT_STYLES.map((s) => s.name));
+    const nextStyle = finalStyles[0] ?? "";
+
     setSelectedColorName(availableColors[0]?.name ?? "");
-    setSelectedSize(sortSizes(product?.sizes ?? [])[0] ?? "");
-    setSelectedStyle(product?.styles?.[0] ?? "");
+    setSelectedStyle(nextStyle);
+    const initialLineSizes = filterSizesForStyle(product?.sizes ?? [], nextStyle, nextLine === "infantil");
+    setSelectedSize(sortSizes(initialLineSizes)[0] ?? "");
     setSelectedMaterial(product?.materials?.[0] ?? "");
     setQuantity(1);
     setHasEmbroidery(false);
   }
 
+  const handleLineChange = (newLine: "adulto" | "infantil") => {
+    if (newLine === selectedLine) return;
+    setSelectedLine(newLine);
+
+    const rawStyles = product?.styles && product.styles.length > 0 ? product.styles : [];
+    const filtered = rawStyles.filter((st) =>
+      newLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st)
+    );
+    const nextStyles =
+      filtered.length > 0
+        ? filtered
+        : newLine === "infantil"
+        ? INFANTIL_STYLES.map((s) => s.name)
+        : ADULT_STYLES.map((s) => s.name);
+
+    const nextStyle = nextStyles[0] ?? "";
+    setSelectedStyle(nextStyle);
+
+    const nextSizes = filterSizesForStyle(
+      product?.sizes ?? [],
+      nextStyle,
+      newLine === "infantil"
+    );
+    setSelectedSize(resolveSelectedSize(selectedSize, nextSizes));
+  };
+
   /**
-   * El estilo seleccionado determina la línea del producto y, con ella, el
-   * catálogo de tallas: un estilo infantil no muestra tallas de adulto y viceversa.
+   * El estilo y la línea seleccionada determinan el catálogo de tallas:
+   * Adultos: XS a 3XL | Infantil: 0-3M a 16.
    */
   const visibleSizes = useMemo(() => {
     if (!product) return [];
     return filterSizesForStyle(
       product.sizes,
       selectedStyle,
-      isInfantilCategory(product.categoryName)
+      selectedLine === "infantil"
     );
-  }, [product, selectedStyle]);
+  }, [product, selectedStyle, selectedLine]);
 
   // Al cambiar de estilo se selecciona la primera talla del nuevo rango para no
-  // dejar una talla que ya no existe en el catálogo vigente. Mismo patrón de
-  // ajuste en render (comparando el rango anterior) que en el panel de detalle.
+  // dejar una talla que ya no existe en el catálogo vigente.
   const [previousVisibleSizes, setPreviousVisibleSizes] = useState(visibleSizes);
   if (previousVisibleSizes !== visibleSizes) {
     setPreviousVisibleSizes(visibleSizes);
@@ -468,16 +580,16 @@ export function ProductQuickViewModal({
     return (
       product.variants.find(
         (v) =>
-          (!selectedSize || v.size === selectedSize) &&
+          (!selectedSize || v.size.trim().toUpperCase() === selectedSize.trim().toUpperCase()) &&
           (selectedColorObj?.name
             ? v.colorName.toLowerCase() === selectedColorObj.name.toLowerCase()
             : true) &&
-          (!selectedStyle || !v.styleName || v.styleName.toLowerCase() === selectedStyle.toLowerCase()) &&
+          (!selectedStyle || isStyleMatch(v.styleName, selectedStyle)) &&
           (!selectedMaterial || !v.materialName || v.materialName.toLowerCase() === selectedMaterial.toLowerCase())
       ) ||
       product.variants.find(
         (v) =>
-          (!selectedSize || v.size === selectedSize) &&
+          (!selectedSize || v.size.trim().toUpperCase() === selectedSize.trim().toUpperCase()) &&
           (selectedColorObj?.name
             ? v.colorName.toLowerCase() === selectedColorObj.name.toLowerCase()
             : true)
@@ -487,16 +599,17 @@ export function ProductQuickViewModal({
 
   const disabledSizes = useMemo(() => {
     if (!product) return [];
+    if (!selectedStyle) return visibleSizes;
     return visibleSizes.filter(
       (s) =>
         !product.variants.some(
           (v) =>
-            v.size === s &&
+            v.size.trim().toUpperCase() === s.trim().toUpperCase() &&
             (!selectedColorName || v.colorName.toLowerCase() === selectedColorName.toLowerCase()) &&
-            (!selectedStyle || !v.styleName || v.styleName.toLowerCase() === selectedStyle.toLowerCase()) &&
+            (!v.styleName || isStyleMatch(v.styleName, selectedStyle)) &&
             (!selectedMaterial || !v.materialName || v.materialName.toLowerCase() === selectedMaterial.toLowerCase()) &&
             v.stock > 0
-        )
+        ) && !product.allowCustomization
     );
   }, [product, visibleSizes, selectedColorName, selectedStyle, selectedMaterial]);
 
@@ -540,7 +653,7 @@ export function ProductQuickViewModal({
   const priceDetails = calculateProductPriceDetails({
     basePrice: product?.basePrice ?? previewProduct?.price,
     variantPrice: selectedVariant?.price,
-    categoryName: product?.categoryName,
+    categoryName: selectedLine === "infantil" ? "Infantil" : product?.categoryName,
     styleName: selectedStyle || selectedVariant?.styleName,
     size: selectedSize,
     hasEmbroidery,
@@ -557,7 +670,7 @@ export function ProductQuickViewModal({
       slug: product.slug,
       name: product.name,
       image: product.images?.[0] ?? "",
-      sizes: product.sizes ?? [],
+      sizes: visibleSizes,
       colors: (product.colors ?? []).map((c) => ({
         name: c.name,
         hex: c.primaryHex || c.hex,
@@ -701,19 +814,19 @@ export function ProductQuickViewModal({
 
                 <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                   {priceDetails.hasDiscount && (
-                    <Badge variant="secondary" className="bg-[#34351F] text-white border-[#34351F] text-[10px]">
-                      <Sparkles className="h-2.5 w-2.5 mr-1 text-[#B6AE3A]" />
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground border-transparent text-[10px] shadow-xs">
+                      <Sparkles className="h-2.5 w-2.5 mr-1 text-accent" />
                       5% OFF
                     </Badge>
                   )}
                   {priceDetails.isPlusSize && (
-                    <Badge variant="secondary" className="bg-amber-100/80 text-amber-900 border-amber-200/60 text-[10px]">
+                    <Badge variant="secondary" className="bg-amber-100/90 text-amber-900 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800/60 text-[10px] shadow-xs">
                       Talla {selectedSize} (+${priceDetails.sizeSurcharge.toLocaleString("es-CO")} COP)
                     </Badge>
                   )}
 
                   {priceDetails.hasEmbroidery && (
-                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-900 border-emerald-300 text-[10px]">
+                    <Badge variant="secondary" className="bg-emerald-100/90 text-emerald-900 border-emerald-300/80 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800/60 text-[10px] shadow-xs">
                       Bordado Incluido (+$7.000 COP)
                     </Badge>
                   )}
@@ -755,25 +868,90 @@ export function ProductQuickViewModal({
                 </div>
               )}
 
-              {/* ── Estilo Selector ── */}
-              {product.styles && product.styles.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-foreground mb-1.5">
-                    Estilo
+              {/* ── Control de Categoría / Línea (Adultos vs Infantil) ── */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    Línea / Categoría
                   </p>
+                  <span className="text-[11px] text-muted-foreground font-medium">
+                    {selectedLine === "infantil" ? "Tallas 0-3M a 16" : "Tallas XS a 3XL"}
+                  </span>
+                </div>
+                <div
+                  className="grid grid-cols-2 p-1 bg-muted/70 rounded-xl border border-border shadow-2xs"
+                  role="tablist"
+                  aria-label="Selección de línea de producto"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedLine === "adulto"}
+                    onClick={() => handleLineChange("adulto")}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      selectedLine === "adulto"
+                        ? "bg-background text-foreground shadow-xs border border-border/80 scale-[1.01]"
+                        : "text-muted-foreground hover:text-foreground active:scale-95"
+                    )}
+                  >
+                    <span>Adultos</span>
+                    <span
+                      className={cn(
+                        "text-[10px] px-1.5 py-0.2 rounded-full font-semibold transition-colors",
+                        selectedLine === "adulto"
+                          ? "bg-primary/10 text-primary dark:bg-primary/25 dark:text-accent"
+                          : "text-muted-foreground/60"
+                      )}
+                    >
+                      XS – 3XL
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedLine === "infantil"}
+                    onClick={() => handleLineChange("infantil")}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      selectedLine === "infantil"
+                        ? "bg-background text-foreground shadow-xs border border-border/80 scale-[1.01]"
+                        : "text-muted-foreground hover:text-foreground active:scale-95"
+                    )}
+                  >
+                    <span>Infantil</span>
+                    <span
+                      className={cn(
+                        "text-[10px] px-1.5 py-0.2 rounded-full font-semibold transition-colors",
+                        selectedLine === "infantil"
+                          ? "bg-primary/10 text-primary dark:bg-primary/25 dark:text-accent"
+                          : "text-muted-foreground/60"
+                      )}
+                    >
+                      0-3M – 16
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Estilo Selector ── */}
+              {availableStylesForLine.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-xs font-medium text-foreground">
+                      Estilo
+                    </p>
+                    <span className="text-[11px] text-muted-foreground">
+                      {availableStylesForLine.length} {availableStylesForLine.length === 1 ? "opción" : "opciones"}
+                    </span>
+                  </div>
                   <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Estilos disponibles">
-                    {product.styles.map((st) => {
+                    {availableStylesForLine.map((st) => {
                       const isSelected = selectedStyle.toLowerCase() === st.toLowerCase();
-                      /**
-                       * La disponibilidad del estilo NO debe depender de la talla
-                       * seleccionada: si se evaluara contra la talla actual, cambiar
-                       * de línea dejaría el botón sin stock y por tanto inclicable
-                       * (deadlock). Se evalúa contra las tallas propias del estilo.
-                       */
                       const styleSizes = filterSizesForStyle(
                         product.sizes,
                         st,
-                        isInfantilCategory(product.categoryName)
+                        selectedLine === "infantil"
                       );
                       const isAvailable =
                         selectedStyle === st ||
@@ -786,18 +964,16 @@ export function ProductQuickViewModal({
                                 v.colorName.toLowerCase() === selectedColorName.toLowerCase()) &&
                               v.stock > 0
                           )
-                        );
+                        ) ||
+                        product.allowCustomization;
+
                       return (
                         <button
                           key={st}
                           type="button"
                           role="radio"
                           aria-checked={isSelected}
-                          disabled={!isAvailable}
                           onClick={() => {
-                            if (!isAvailable) return;
-                            // Estilo y talla se actualizan en el mismo clic para
-                            // que el grupo de Tallas reaccione de inmediato.
                             setSelectedStyle(st);
                             setSelectedSize(
                               resolveSelectedSize(
@@ -805,18 +981,18 @@ export function ProductQuickViewModal({
                                 filterSizesForStyle(
                                   product.sizes,
                                   st,
-                                  isInfantilCategory(product.categoryName)
+                                  selectedLine === "infantil"
                                 )
                               )
                             );
                           }}
                           className={cn(
-                            "px-4 py-2 rounded-xl text-xs font-semibold border transition-all shadow-2xs",
+                            "px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                             isSelected
-                              ? "bg-[#34351F] text-white border-[#34351F] shadow-xs font-bold"
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold scale-[1.01]"
                               : isAvailable
-                              ? "bg-white border-neutral-200 text-neutral-800 hover:border-[#34351F]/60 cursor-pointer"
-                              : "opacity-40 cursor-not-allowed line-through bg-neutral-100/60 pointer-events-none"
+                              ? "bg-card border-border text-foreground hover:border-primary/60 hover:bg-secondary/40 cursor-pointer active:scale-95"
+                              : "bg-muted/40 border-border/60 text-muted-foreground/60 opacity-60 hover:opacity-100 cursor-pointer"
                           )}
                         >
                           {st}
@@ -853,12 +1029,12 @@ export function ProductQuickViewModal({
                           disabled={!isAvailable}
                           onClick={() => isAvailable && setSelectedMaterial(mat)}
                           className={cn(
-                            "h-9 px-3.5 rounded-lg border text-xs font-semibold transition-all shadow-2xs",
+                            "h-9 px-3.5 rounded-lg border text-xs font-semibold transition-all duration-150 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                             isSelected
-                              ? "bg-[#8B7D4E] text-white border-[#8B7D4E] shadow-xs"
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold scale-[1.01]"
                               : isAvailable
-                              ? "bg-card border-border text-foreground hover:border-[#8B7D4E]/50 cursor-pointer"
-                              : "opacity-35 cursor-not-allowed line-through bg-neutral-100/60 pointer-events-none"
+                              ? "bg-card border-border text-foreground hover:border-primary/60 hover:bg-secondary/40 cursor-pointer active:scale-95"
+                              : "opacity-35 cursor-not-allowed line-through bg-muted/40 pointer-events-none"
                           )}
                         >
                           {mat}
@@ -870,27 +1046,27 @@ export function ProductQuickViewModal({
               )}
 
               {/* ── OPCIÓN DE BORDADO (+ $7.000 COP) ── */}
-              <div className="p-3 rounded-xl border border-[#34351F]/15 bg-[#FAF9F4] space-y-1.5">
+              <div className="p-3 rounded-xl border border-border/80 bg-card/70 dark:bg-card/40 backdrop-blur-xs space-y-1.5 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="qv-embroidery-toggle" className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-neutral-800">
+                  <label htmlFor="qv-embroidery-toggle" className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-foreground">
                     <input
                       id="qv-embroidery-toggle"
                       type="checkbox"
                       checked={hasEmbroidery}
                       onChange={(e) => setHasEmbroidery(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-neutral-300 text-[#34351F] focus:ring-[#34351F] cursor-pointer"
+                      className="h-3.5 w-3.5 rounded border-input text-primary focus:ring-ring cursor-pointer accent-primary"
                     />
                     <span>Incluir bordado de diseño (+ $7.000 COP)</span>
                   </label>
                   {hasEmbroidery && (
-                    <Badge className="bg-[#34351F] text-white text-[9px] font-bold">
+                    <Badge className="bg-primary text-primary-foreground text-[9px] font-bold shadow-2xs">
                       +$7.000 COP
                     </Badge>
                   )}
                 </div>
-                <p className="text-[10px] text-neutral-600 leading-relaxed">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
                   ¿Quieres un diseño o texto personalizado a tu gusto?{" "}
-                  <Link href={customizeHref} className="font-semibold text-[#8B7D4E] underline hover:text-[#34351F]">
+                  <Link href={customizeHref} className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors">
                     Personalización →
                   </Link>
                 </p>
@@ -915,12 +1091,12 @@ export function ProductQuickViewModal({
                           disabled={isDisabled}
                           onClick={() => !isDisabled && setSelectedSize(s)}
                           className={cn(
-                            "h-9 min-w-[2.75rem] px-3.5 rounded-lg border text-xs font-semibold transition-all shadow-2xs",
+                            "h-9 min-w-[2.75rem] px-3.5 rounded-lg border text-xs font-semibold transition-all duration-150 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                             isSelected && !isDisabled
-                              ? "bg-[#34351F] text-white border-[#34351F] shadow-xs"
-                              : "bg-card border-border text-foreground hover:border-[#34351F]/50",
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold scale-[1.02]"
+                              : "bg-card border-border text-foreground hover:border-primary/60 hover:bg-secondary/40 cursor-pointer active:scale-95",
                             isDisabled &&
-                              "opacity-35 cursor-not-allowed line-through bg-neutral-100/60"
+                              "opacity-40 cursor-not-allowed line-through bg-muted/40 pointer-events-none"
                           )}
                         >
                           {s}

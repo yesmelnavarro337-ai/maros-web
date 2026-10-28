@@ -116,8 +116,11 @@ export function filterSizesForStyle(
   const exclusive = productSizes.filter((size) => allowed.has(normalizeSizeKey(size)));
   if (exclusive.length > 0) return sortSizes(exclusive);
 
-  const anyKnown = productSizes.some((size) => known.has(normalizeSizeKey(size)));
-  return anyKnown ? [] : sortSizes(productSizes);
+  // Si el producto no tiene variantes explícitas con tallas de la línea activa,
+  // devolvemos el catálogo completo de la línea para permitir cotizar o personalizar
+  // (Adultos: XS a 3XL; Infantil: 0-3M a 16).
+  const isInfantil = resolveSizeLine(styleName, isInfantilCategoryFlag) === "infantil";
+  return isInfantil ? [...INFANT_SIZES] : [...ADULT_SIZES];
 }
 
 /**

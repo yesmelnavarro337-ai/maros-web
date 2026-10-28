@@ -26,18 +26,18 @@ export function SizeGuideModal() {
           Guía de tallas
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-[#F9F6F0] text-[#3B4228] border-[#3B4228]/15">
+      <DialogContent className="max-w-md bg-card text-foreground border-border">
         <DialogHeader>
-          <DialogTitle className="text-[#3B4228]">Guía de tallas</DialogTitle>
-          <DialogDescription className="text-[#3B4228]/70">
+          <DialogTitle className="text-foreground">Guía de tallas</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Medidas en centímetros
           </DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-hidden rounded-xl border border-[#3B4228]/15">
+        <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#3B4228] text-[#F9F6F0]">
+              <tr className="bg-primary text-primary-foreground">
                 <th className="text-left font-medium px-3.5 py-2.5">Medida</th>
                 {SIZE_GUIDE_SIZES.map((s) => (
                   <th key={s} className="text-center font-medium px-3.5 py-2.5">
@@ -50,13 +50,13 @@ export function SizeGuideModal() {
               {SIZE_GUIDE_ROWS.map((row) => (
                 <tr
                   key={row.measurement}
-                  className="border-t border-[#3B4228]/10 last:border-b-0"
+                  className="border-t border-border/60 last:border-b-0 hover:bg-muted/40 transition-colors"
                 >
-                  <td className="px-3.5 py-2.5 font-medium text-[#3B4228]">
+                  <td className="px-3.5 py-2.5 font-medium text-foreground">
                     {row.measurement}
                   </td>
                   {SIZE_GUIDE_SIZES.map((s) => (
-                    <td key={s} className="px-3.5 py-2.5 text-center tabular-nums text-[#3B4228]">
+                    <td key={s} className="px-3.5 py-2.5 text-center tabular-nums text-foreground/90">
                       {row[s]}
                     </td>
                   ))}
@@ -66,7 +66,7 @@ export function SizeGuideModal() {
           </table>
         </div>
 
-        <p className="text-xs text-[#3B4228]/60 leading-relaxed">{SIZE_GUIDE_NOTE}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{SIZE_GUIDE_NOTE}</p>
       </DialogContent>
     </Dialog>
   );

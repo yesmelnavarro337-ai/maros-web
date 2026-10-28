@@ -147,73 +147,107 @@ export function ProductGallery({
         </div>
       )}
 
-      {/* Imagen Principal: alto acotado, optimización GPU y touch-action para móviles */}
-      <div
-        className="relative flex-1 w-full min-w-0 aspect-[3/4] max-h-[420px] sm:max-h-[500px] lg:max-h-[min(650px,calc(100vh-9rem))] rounded-2xl bg-secondary overflow-hidden select-none group/gallery"
-        style={{ touchAction: "pan-y" }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {activeImage?.url ? (
-          <Image
-            src={cloudinaryUrl(activeImage.url)}
-            alt={productName}
-            fill
-            // Carga prioritaria en las primeras 2 imágenes para optimizar rendimiento móvil
-            priority={safeActiveIndex < 2}
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover transform-gpu will-change-transform transition-transform duration-500 ease-out"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageOff className="h-10 w-10 text-muted-foreground" />
+      {/* Columna de Imagen Principal + miniaturas móviles */}
+      <div className="flex-1 flex flex-col gap-2 min-w-0">
+        <div
+          className="relative w-full aspect-[3/4] max-h-[420px] sm:max-h-[500px] lg:max-h-[min(650px,calc(100vh-9rem))] rounded-2xl bg-secondary overflow-hidden select-none group/gallery"
+          style={{ touchAction: "pan-y" }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {activeImage?.url ? (
+            <Image
+              src={cloudinaryUrl(activeImage.url)}
+              alt={productName}
+              fill
+              // Carga prioritaria en las primeras 2 imágenes para optimizar rendimiento móvil
+              priority={safeActiveIndex < 2}
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover transform-gpu will-change-transform transition-transform duration-500 ease-out"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ImageOff className="h-10 w-10 text-muted-foreground" />
+            </div>
+          )}
+
+          {/* Flechas de navegación con tokens semánticos */}
+          {displayImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Foto anterior"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  stepMain(-1);
+                }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/50 shadow-md backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+              >
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+
+              <button
+                type="button"
+                aria-label="Foto siguiente"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  stepMain(1);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-background/85 hover:bg-background text-foreground border border-border/50 shadow-md backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+              >
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+
+              {/* Contador de posición / indicador */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 bg-background/80 text-foreground border border-border/60 backdrop-blur-sm rounded-full px-3 py-0.5 text-[11px] font-medium shadow-xs">
+                {safeActiveIndex + 1} / {displayImages.length}
+              </div>
+            </>
+          )}
+
+          {/* Botón Zoom / Lightbox */}
+          <button
+            type="button"
+            className="absolute bottom-3 right-3 z-20 rounded-full bg-card/90 p-2.5 transition-colors hover:bg-card shadow-xs text-foreground"
+            aria-label="Ampliar imagen"
+            onClick={() => setLightboxIndex(safeActiveIndex)}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Miniaturas horizontales sólo en móvil */}
+        {displayImages.length > 1 && (
+          <div className="flex sm:hidden items-center justify-center gap-1.5 overflow-x-auto py-1 px-1">
+            {displayImages.map((img, i) => (
+              <button
+                key={`mob-thumb-${img.url}-${i}`}
+                type="button"
+                onClick={() => handleThumbnailClick(i)}
+                className={cn(
+                  "relative h-12 w-12 rounded-lg bg-secondary overflow-hidden border-2 transition-all shrink-0",
+                  i === safeActiveIndex
+                    ? "border-primary ring-2 ring-primary/20 scale-105"
+                    : "border-transparent opacity-65 hover:opacity-100"
+                )}
+                aria-label={`Ver foto ${i + 1}`}
+              >
+                {img.url ? (
+                  <Image
+                    src={cloudinaryUrl(img.url)}
+                    alt=""
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <ImageOff className="h-4 w-4 text-muted-foreground m-auto" />
+                )}
+              </button>
+            ))}
           </div>
         )}
-
-        {/* Flechas de navegación unificadas estilo modal QuickView */}
-        {displayImages.length > 1 && (
-          <>
-            <button
-              type="button"
-              aria-label="Foto anterior"
-              onClick={(e) => {
-                e.stopPropagation();
-                stepMain(-1);
-              }}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
-            >
-              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-
-            <button
-              type="button"
-              aria-label="Foto siguiente"
-              onClick={(e) => {
-                e.stopPropagation();
-                stepMain(1);
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-white/80 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
-            >
-              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-
-            {/* Contador de posición / indicador */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 bg-black/55 backdrop-blur-sm rounded-full px-3 py-0.5 text-[11px] font-medium text-white/95">
-              {safeActiveIndex + 1} / {displayImages.length}
-            </div>
-          </>
-        )}
-
-        {/* Botón Zoom / Lightbox */}
-        <button
-          type="button"
-          className="absolute bottom-3 right-3 z-20 rounded-full bg-card/90 p-2.5 transition-colors hover:bg-card shadow-xs"
-          aria-label="Ampliar imagen"
-          onClick={() => setLightboxIndex(safeActiveIndex)}
-        >
-          <ZoomIn className="h-4 w-4 text-foreground" />
-        </button>
       </div>
 
       {/* Modal Lightbox */}

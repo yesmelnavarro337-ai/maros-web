@@ -30,6 +30,7 @@ import {
 import { getProductSummaryClient } from "@/features/product-detail/services/product-detail.client";
 import { saveCustomizationDraft } from "@/lib/customization-draft";
 import { sortSizes } from "@/lib/sizes";
+import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
 import type { ProductPreview } from "@/types/product";
 import type { ProductClientSummary } from "@/features/product-detail/services/product-detail.client";
 import type { CustomizationChoice, CustomizationModel, CustomizationSelections, WizardStepKey } from "@/features/customization-wizard/types";
@@ -228,13 +229,29 @@ export default function PersonalizaPage() {
 
   const total = useMemo(() => {
     if (!product) return 0;
+    const hasEmbroideryOption = Boolean(selections.bordadoId && selections.bordadoId !== "none");
+    const priceDetails = calculateProductPriceDetails({
+      basePrice: product.basePrice,
+      styleName: styleName,
+      size: size,
+      hasEmbroidery: hasEmbroideryOption,
+    });
+
+    const fabricMod = selectedFabric?.priceModifier ?? 0;
+    const printMod = selectedPrint?.priceModifier ?? 0;
+    // El recargo estándar de bordado ($7.000) ya está incluido en priceDetails.finalPrice.
+    // Si la opción tiene un modificador mayor a $7.000, sumamos la diferencia.
+    const extraEmbroidery = selectedEmbroidery?.priceModifier
+      ? Math.max(0, selectedEmbroidery.priceModifier - 7000)
+      : 0;
+
     return (
-      product.basePrice +
-      (selectedFabric?.priceModifier ?? 0) +
-      (selectedPrint?.priceModifier ?? 0) +
-      (selectedEmbroidery?.priceModifier ?? 0)
+      priceDetails.finalPrice +
+      fabricMod +
+      printMod +
+      extraEmbroidery
     );
-  }, [product, selectedFabric, selectedPrint, selectedEmbroidery]);
+  }, [product, styleName, size, selectedFabric, selectedPrint, selectedEmbroidery, selections.bordadoId]);
 
   // Los modelos personalizables se presentan con la misma tarjeta del catálogo
   // (botón «Elegir» + vista previa rápida).

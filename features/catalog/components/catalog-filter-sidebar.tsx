@@ -39,6 +39,7 @@ export function CatalogFilterSidebar({ categories, sizes, colors, priceMin, pric
         <div className="flex flex-col gap-0.5">
           <Link
             href={buildCatalogHref(current, { categoria: undefined })}
+            scroll={false}
             aria-current={parseFilterList(current.categoria).length === 0 ? "page" : undefined}
             className={cn(
               "-mx-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors",
@@ -59,6 +60,7 @@ export function CatalogFilterSidebar({ categories, sizes, colors, priceMin, pric
               <Link
                 key={c.id}
                 href={buildCatalogHref(current, { categoria: toggleFilterValue(current.categoria, value) })}
+                scroll={false}
                 aria-pressed={isActive}
                 className={cn(
                   "-mx-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors",
@@ -92,6 +94,7 @@ export function CatalogFilterSidebar({ categories, sizes, colors, priceMin, pric
               <Link
                 key={s}
                 href={buildCatalogHref(current, { talla: toggleFilterValue(current.talla, s) })}
+                scroll={false}
                 aria-pressed={isActive}
                 aria-label={`Talla ${s}${isActive ? " (seleccionada)" : ""}`}
                 className={cn(
@@ -117,6 +120,7 @@ export function CatalogFilterSidebar({ categories, sizes, colors, priceMin, pric
               <Link
                 key={c.hex}
                 href={buildCatalogHref(current, { color: toggleFilterValue(current.color, c.label) })}
+                scroll={false}
                 aria-pressed={isActive}
                 aria-label={`Color ${c.label}${isActive ? " (seleccionado)" : ""}`}
                 className={cn(

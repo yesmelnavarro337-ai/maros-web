@@ -69,7 +69,7 @@ export default async function HomePage() {
       <HeroSection hero={hero} />
 
       {/* Fase 3: Benefits Strip (4 Pilares de Confianza) */}
-      <section className="w-full bg-[#FAF8F4] border-b border-brand-border/40 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+      <section className="w-full bg-background border-b border-border/60 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <BenefitsStrip items={primaryBenefits} />
         </div>

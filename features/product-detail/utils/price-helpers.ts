@@ -90,9 +90,24 @@ export const INFANTIL_YOUTH_SIZES = ["10", "12", "14", "16"] as const;
  * de adulto, por lo que la coincidencia es exacta y no absorbe prendas de adulto.
  */
 export const INFANTIL_STYLES = [
-  { name: "Pantalón - Camisa manga corta (Infantil)", price: 75000 },
+  { name: "Short - Camiseta (Infantil)", price: 55000 },
+  { name: "Pantalón - Camiseta (Infantil)", price: 65000 },
   { name: "Short - Camisa manga corta (Infantil)", price: 65000 },
+  { name: "Pantalón - Camisa manga corta (Infantil)", price: 75000 },
   { name: "Pantalón - Camisa manga larga (Infantil)", price: 90000 },
+] as const;
+
+export const ADULT_STYLES = [
+  { name: "Short - Tiras (Mujer)", price: 65000 },
+  { name: "Short - Camisa manga corta (Mujer)", price: 85000 },
+  { name: "Short - Camisa manga corta (Hombre)", price: 95000 },
+  { name: "Batas", price: 85000 },
+  { name: "Pantalón - Camisa manga corta (Mujer)", price: 115000 },
+  { name: "Pantalón - Camisa manga corta (Hombre)", price: 120000 },
+  { name: "Pantalón - Camisa manga larga (Mujer)", price: 135000 },
+  { name: "Pantalón - Camisa manga larga (Hombre)", price: 140000 },
+  { name: "Short - Camiseta (Hombre / Mujer)", price: 70000 },
+  { name: "Pantalón - Camiseta (Hombre / Mujer)", price: 85000 },
 ] as const;
 
 /** Normaliza texto para comparaciones (minúsculas, sin tildes, espacios colapsados). */
@@ -177,7 +192,7 @@ function hasAdultGenderMarker(value?: string | null): boolean {
 export function resolveInfantilStyle(styleName?: string | null) {
   const key = normalizeText(styleName);
   if (!key) return null;
-  // Un marcador de género adulto siempre gana: los 9 modelos oficiales llevan
+  // Un marcador de género adulto siempre gana: los modelos oficiales llevan
   // "(Mujer)" / "(Hombre)" y comparten firma base con los estilos infantiles.
   if (hasAdultGenderMarker(styleName)) return null;
   if (key.includes("infantil")) {
@@ -190,19 +205,37 @@ export function resolveInfantilStyle(styleName?: string | null) {
 }
 
 /**
- * Precio base infantil de un estilo (rango Pequeños) o null si el estilo
- * no pertenece a la línea infantil. Acepta los nombres canónicos con sufijo
- * "(Infantil)" y los alias heredados sin sufijo.
+ * Precio base infantil de un estilo según la talla elegida.
+ * - Short - Camiseta: tallas <= 8 -> $55.000 COP | tallas 10-16 -> $65.000 COP
+ * - Pantalón - Camiseta: tallas <= 8 -> $65.000 COP | tallas 10-16 -> $75.000 COP
+ * - Pantalón - Camisa manga corta: $75.000 COP
+ * - Short - Camisa manga corta: $65.000 COP
+ * - Pantalón - Camisa manga larga: $90.000 COP
  */
-export function getInfantilBasePrice(styleName?: string | null): number | null {
-  return resolveInfantilStyle(styleName)?.price ?? null;
+export function getInfantilBasePrice(styleName?: string | null, size?: string | null): number | null {
+  const resolved = resolveInfantilStyle(styleName);
+  if (!resolved) return null;
+
+  const isYouth = isInfantilYouthSize(size);
+  const signature = styleSignature(styleName);
+
+  // Short - Camiseta (Infantil): <= 8 -> $55.000 | 10-16 -> $65.000
+  if (signature.includes("short") && signature.includes("camiseta")) {
+    return isYouth ? 65000 : 55000;
+  }
+
+  // Pantalón - Camiseta (Infantil): <= 8 -> $65.000 | 10-16 -> $75.000
+  if ((signature.includes("pantalon") || signature.includes("pantalón")) && signature.includes("camiseta")) {
+    return isYouth ? 75000 : 65000;
+  }
+
+  return resolved.price;
 }
 
 /**
  * True cuando el producto se priced con la tabla infantil: basta con que la
  * categoría sea infantil o con que el estilo pertenezca al catálogo infantil
- * (canónico o alias). Evita aplicar el recargo juvenil a prendas de adulto, ya
- * que los 9 modelos oficiales llevan "(Mujer)" / "(Hombre)".
+ * (canónico o alias).
  */
 export function isInfantilPriced(
   categoryName?: string | null,
@@ -212,35 +245,47 @@ export function isInfantilPriced(
 }
 
 /**
- * Tabla de precios fijos base según Estilo Fijo (tarifa oficial del Admin):
- * 1. Short - Camisa manga corta (Mujer): $85.000 COP
- * 2. Short - Camisa manga corta (Hombre): $95.000 COP
- * 3. Batas: $85.000 COP (tarifa única)
- * 4. Pantalón - Camisa manga corta (Mujer): $115.000 COP
- * 5. Pantalón - Camisa manga corta (Hombre): $120.000 COP
- * 6. Pantalón - Camisa manga larga (Mujer): $135.000 COP
- * 7. Pantalón - Camisa manga larga (Hombre): $140.000 COP
- * 8. Short - Camiseta (Hombre / Mujer): $70.000 COP
- * 9. Pantalón - Camiseta (Hombre / Mujer): $85.000 COP
+ * Tabla de precios fijos base según Estilo Fijo:
+ * Adultos:
+ * - Short - Tiras (Mujer): $65.000 COP
+ * - Short - Camisa manga corta (Mujer): $85.000 COP
+ * - Short - Camisa manga corta (Hombre): $95.000 COP
+ * - Batas: $85.000 COP
+ * - Pantalón - Camisa manga corta (Mujer): $115.000 COP
+ * - Pantalón - Camisa manga corta (Hombre): $120.000 COP
+ * - Pantalón - Camisa manga larga (Mujer): $135.000 COP
+ * - Pantalón - Camisa manga larga (Hombre): $140.000 COP
+ * - Short - Camiseta (Hombre / Mujer): $70.000 COP
+ * - Pantalón - Camiseta (Hombre / Mujer): $85.000 COP
  *
- * El género declarado en el nombre del ESTILO es el que manda: una categoría
- * "Hombre" nunca debe alterar la tarifa de un estilo marcado como "(Mujer)".
+ * Infantil:
+ * - Short - Camiseta: $55.000 COP (hasta la 8) / $65.000 COP (10, 12, 14, 16)
+ * - Pantalón - Camiseta: $65.000 COP (hasta la 8) / $75.000 COP (10, 12, 14, 16)
+ * - Short - Camisa manga corta: $65.000 COP
+ * - Pantalón - Camisa manga corta: $75.000 COP
+ * - Pantalón - Camisa manga larga: $90.000 COP
  */
 export function getFixedBasePrice(
   categoryName?: string | null,
   styleName?: string | null,
-  fallbackBasePrice?: number
+  fallbackBasePrice?: number,
+  size?: string | null
 ): number {
   const cat = (categoryName || "").toLowerCase();
   const st = (styleName || "").toLowerCase();
+  const isYouth = isInfantilYouthSize(size);
 
   // Prioridad 0: línea infantil. Si la categoría es infantil o el estilo pertenece a infantil,
   // se resuelve exclusivamente con las tarifas infantiles y nunca cae en tarifas de adulto.
   if (isInfantilPriced(cat, st)) {
-    const infantilPrice = getInfantilBasePrice(st);
+    const infantilPrice = getInfantilBasePrice(st, size);
     if (infantilPrice !== null) return infantilPrice;
 
     // Si no coincide con un estilo canónico exacto, deducir por palabras clave infantiles:
+    if (st.includes("camiseta") || cat.includes("camiseta")) {
+      if (st.includes("short") || cat.includes("short")) return isYouth ? 65000 : 55000;
+      if (isPantalon(st) || isPantalon(cat)) return isYouth ? 75000 : 65000;
+    }
     if (st.includes("larga")) return 90000;
     if (st.includes("short") || cat.includes("short")) return 65000;
     if (isPantalon(st) || isPantalon(cat)) return 75000;
@@ -249,6 +294,12 @@ export function getFixedBasePrice(
     if (fallbackBasePrice && fallbackBasePrice > 0) return fallbackBasePrice;
 
     // Tarifa base por defecto para infantil
+    return isYouth ? 65000 : 55000;
+  }
+
+  // Adultos:
+  // Short - Tiras (Mujer) -> $65.000 COP
+  if (st.includes("tiras") || cat.includes("tiras")) {
     return 65000;
   }
 
@@ -314,11 +365,11 @@ export function calculateProductPriceDetails({
 }): CalculatedPriceDetails {
   const isInfant = isInfantilPriced(categoryName, styleName);
 
-  // 1. Determinar precio base acorde al estilo/modelo seleccionado (fuente de verdad oficial)
-  const styleOfficialBase = getFixedBasePrice(categoryName, styleName, productBasePrice);
+  // 1. Determinar precio base acorde al estilo/modelo y talla seleccionada (fuente de verdad oficial)
+  const styleOfficialBase = getFixedBasePrice(categoryName, styleName, productBasePrice, size);
   let basePrice = styleOfficialBase > 0
     ? styleOfficialBase
-    : (productBasePrice && productBasePrice > 0 ? productBasePrice : (isInfant ? 65000 : 115000));
+    : (productBasePrice && productBasePrice > 0 ? productBasePrice : (isInfant ? (isInfantilYouthSize(size) ? 65000 : 55000) : 115000));
 
   // Si no se obtuvo de la tarifa oficial y viene variantPrice, limpiamos el variantPrice
   // de posibles recargos de talla ya sumados en la base de datos para no duplicar el recargo.

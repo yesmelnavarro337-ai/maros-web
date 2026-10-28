@@ -55,10 +55,10 @@ export function PriceNoticeBanner({
     <div className="flex flex-col gap-2.5 my-1">
       {/* Aviso de talla especial (> L) — siempre visible si aplica */}
       {isPlusSize && (
-        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-amber-950 text-xs sm:text-sm shadow-xs transition-all">
-          <Sparkles className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-amber-950 dark:text-amber-200 text-xs sm:text-sm shadow-xs transition-all">
+          <Sparkles className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="leading-relaxed">
-            <span className="font-semibold text-amber-900 block mb-0.5">
+            <span className="font-semibold text-amber-900 dark:text-amber-300 block mb-0.5">
               Ajuste de precio por consumo adicional (Talla {selectedSize.toUpperCase()})
             </span>
             Las tallas superiores a L (como {selectedSize.toUpperCase()}) incluyen un ajuste proporcional por el mayor consumo de tela e insumos en la confección.
@@ -68,10 +68,10 @@ export function PriceNoticeBanner({
 
       {/* Aviso de recargo por categoría — SOLO cuando hay una categoría activa en URL */}
       {showCategoryBanner && activeCategory && (
-        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50/80 border border-rose-200/80 text-rose-950 text-xs sm:text-sm shadow-xs transition-all">
-          <Info className="h-4 w-4 text-rose-700 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-800/60 text-rose-950 dark:text-rose-200 text-xs sm:text-sm shadow-xs transition-all">
+          <Info className="h-4 w-4 text-rose-700 dark:text-rose-400 shrink-0 mt-0.5" />
           <div className="leading-relaxed">
-            <span className="font-semibold text-rose-900 block mb-0.5">
+            <span className="font-semibold text-rose-900 dark:text-rose-300 block mb-0.5">
               Nota sobre categoría {activeCategory.name}
             </span>
             {categorySurcharge > 0 ? (
