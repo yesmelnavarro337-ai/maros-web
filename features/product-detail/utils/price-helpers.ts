@@ -177,10 +177,17 @@ function styleSignature(value?: string | null): string {
     .trim();
 }
 
-/** Los 9 estilos de adulto se distinguen por el sufijo de género "(Mujer)" / "(Hombre)". */
+/** Los 9 estilos de adulto se distinguen por el sufijo de género "(Mujer)" / "(Hombre)" o coinciden con la lista de estilos de adulto (p. ej. Batas). */
 function hasAdultGenderMarker(value?: string | null): boolean {
   const text = normalizeText(value);
   return text.includes("mujer") || text.includes("hombre");
+}
+
+export function isAdultStyleName(value?: string | null): boolean {
+  const text = normalizeText(value);
+  if (!text) return false;
+  if (hasAdultGenderMarker(value)) return true;
+  return ADULT_STYLES.some((s) => normalizeText(s.name) === text);
 }
 
 /**
@@ -192,16 +199,20 @@ function hasAdultGenderMarker(value?: string | null): boolean {
 export function resolveInfantilStyle(styleName?: string | null) {
   const key = normalizeText(styleName);
   if (!key) return null;
-  // Un marcador de género adulto siempre gana: los modelos oficiales llevan
-  // "(Mujer)" / "(Hombre)" y comparten firma base con los estilos infantiles.
-  if (hasAdultGenderMarker(styleName)) return null;
-  if (key.includes("infantil")) {
+  // Un estilo de adulto siempre gana: los modelos oficiales llevan
+  // "(Mujer)" / "(Hombre)" o son Batas, y nunca son infantiles.
+  if (isAdultStyleName(styleName)) return null;
+
+  // Solo resolver como infantil si tiene explícitamente el marcador infantil/niño o coincide exactamente
+  if (key.includes("infantil") || key.includes("nino") || key.includes("bebe")) {
     const exact = INFANTIL_STYLES.find((s) => normalizeText(s.name) === key);
     if (exact) return exact;
+    const signature = styleSignature(styleName);
+    return INFANTIL_STYLES.find((s) => styleSignature(s.name) === signature) ?? null;
   }
-  const signature = styleSignature(styleName);
-  if (!signature) return null;
-  return INFANTIL_STYLES.find((s) => styleSignature(s.name) === signature) ?? null;
+
+  // Coincidencia exacta con un nombre canónico infantil
+  return INFANTIL_STYLES.find((s) => normalizeText(s.name) === key) ?? null;
 }
 
 /**
@@ -239,9 +250,17 @@ export function getInfantilBasePrice(styleName?: string | null, size?: string | 
  */
 export function isInfantilPriced(
   categoryName?: string | null,
-  styleName?: string | null
+  styleName?: string | null,
+  line?: "adulto" | "infantil"
 ): boolean {
-  return isInfantilCategory(categoryName) || getInfantilBasePrice(styleName) !== null;
+  if (line === "adulto") return false;
+  if (line === "infantil") return true;
+
+  const st = normalizeText(styleName);
+  if (st.includes("infantil") || st.includes("nino") || st.includes("bebe")) return true;
+  if (isAdultStyleName(styleName)) return false;
+
+  return isInfantilCategory(categoryName);
 }
 
 /**
@@ -269,15 +288,16 @@ export function getFixedBasePrice(
   categoryName?: string | null,
   styleName?: string | null,
   fallbackBasePrice?: number,
-  size?: string | null
+  size?: string | null,
+  line?: "adulto" | "infantil"
 ): number {
   const cat = (categoryName || "").toLowerCase();
   const st = (styleName || "").toLowerCase();
   const isYouth = isInfantilYouthSize(size);
 
-  // Prioridad 0: línea infantil. Si la categoría es infantil o el estilo pertenece a infantil,
+  // Prioridad 0: línea infantil. Si la línea es infantil o la categoría/estilo pertenecen a infantil,
   // se resuelve exclusivamente con las tarifas infantiles y nunca cae en tarifas de adulto.
-  if (isInfantilPriced(cat, st)) {
+  if (isInfantilPriced(cat, st, line)) {
     const infantilPrice = getInfantilBasePrice(st, size);
     if (infantilPrice !== null) return infantilPrice;
 
@@ -298,13 +318,20 @@ export function getFixedBasePrice(
   }
 
   // Adultos:
-  // Short - Tiras (Mujer) -> $65.000 COP
+  // 1. Coincidencia directa en catálogo oficial de estilos de adulto
+  const exactAdult = ADULT_STYLES.find((s) => normalizeText(s.name) === normalizeText(styleName));
+  if (exactAdult) return exactAdult.price;
+
+  // 2. Short - Tiras (Mujer) -> $65.000 COP
   if (st.includes("tiras") || cat.includes("tiras")) {
     return 65000;
   }
 
-  // Prioridad: género del estilo > género de la categoría.
-  const gender = detectGender(st) ?? detectGender(cat);
+  // 3. Batas: tarifa única, independiente del género y de la categoría -> $85.000 COP
+  if (st.includes("bata") || cat.includes("bata")) return 85000;
+
+  // 4. Prioridad: género del estilo > género de la categoría (default: mujer)
+  const gender = detectGender(st) ?? detectGender(cat) ?? "mujer";
 
   // Reglas por Estilo (fuente de verdad de la tarifa)
   if (st.includes("camiseta")) {
@@ -355,6 +382,7 @@ export function calculateProductPriceDetails({
   styleName,
   size,
   hasEmbroidery = false,
+  line,
 }: {
   basePrice?: number;
   variantPrice?: number | null;
@@ -362,11 +390,12 @@ export function calculateProductPriceDetails({
   styleName?: string | null;
   size?: string | null;
   hasEmbroidery?: boolean;
+  line?: "adulto" | "infantil";
 }): CalculatedPriceDetails {
-  const isInfant = isInfantilPriced(categoryName, styleName);
+  const isInfant = isInfantilPriced(categoryName, styleName, line);
 
   // 1. Determinar precio base acorde al estilo/modelo y talla seleccionada (fuente de verdad oficial)
-  const styleOfficialBase = getFixedBasePrice(categoryName, styleName, productBasePrice, size);
+  const styleOfficialBase = getFixedBasePrice(categoryName, styleName, productBasePrice, size, line);
   let basePrice = styleOfficialBase > 0
     ? styleOfficialBase
     : (productBasePrice && productBasePrice > 0 ? productBasePrice : (isInfant ? (isInfantilYouthSize(size) ? 65000 : 55000) : 115000));

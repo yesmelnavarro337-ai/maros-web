@@ -15,6 +15,8 @@ import {
   ImageOff,
   Loader2,
   Eye,
+  User,
+  Baby,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -657,6 +659,7 @@ export function ProductQuickViewModal({
     styleName: selectedStyle || selectedVariant?.styleName,
     size: selectedSize,
     hasEmbroidery,
+    line: selectedLine,
   });
 
   const finalPrice = priceDetails.finalPrice;
@@ -868,18 +871,21 @@ export function ProductQuickViewModal({
                 </div>
               )}
 
-              {/* ── Control de Categoría / Línea (Adultos vs Infantil) ── */}
-              <div className="space-y-1.5">
+              {/* ── Control de Categoría / Línea (Adultos vs Infantil) - Atelier Segmented Capsule ── */}
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Línea / Categoría
-                  </p>
-                  <span className="text-[11px] text-muted-foreground font-medium">
-                    {selectedLine === "infantil" ? "Tallas 0-3M a 16" : "Tallas XS a 3XL"}
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.18em]">
+                      Línea / Categoría
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-serif italic text-muted-foreground">
+                    {selectedLine === "adulto" ? "Línea Adultos" : "Línea Infantil"}
                   </span>
                 </div>
                 <div
-                  className="grid grid-cols-2 p-1 bg-muted/70 rounded-xl border border-border shadow-2xs"
+                  className="grid grid-cols-2 p-1.5 bg-muted/50 rounded-2xl border border-border shadow-2xs gap-1.5"
                   role="tablist"
                   aria-label="Selección de línea de producto"
                 >
@@ -889,19 +895,29 @@ export function ProductQuickViewModal({
                     aria-selected={selectedLine === "adulto"}
                     onClick={() => handleLineChange("adulto")}
                     className={cn(
-                      "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "group relative flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 px-3 rounded-xl transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border",
                       selectedLine === "adulto"
-                        ? "bg-background text-foreground shadow-xs border border-border/80 scale-[1.01]"
-                        : "text-muted-foreground hover:text-foreground active:scale-95"
+                        ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold scale-[1.01]"
+                        : "border-transparent text-muted-foreground hover:text-foreground hover:bg-background/80 active:scale-95"
                     )}
                   >
-                    <span>Adultos</span>
+                    <div className="flex items-center gap-1.5">
+                      <User
+                        className={cn(
+                          "h-3.5 w-3.5 transition-colors",
+                          selectedLine === "adulto"
+                            ? "text-primary-foreground"
+                            : "text-muted-foreground/60 group-hover:text-foreground"
+                        )}
+                      />
+                      <span className="text-xs font-bold tracking-tight">Adultos</span>
+                    </div>
                     <span
                       className={cn(
-                        "text-[10px] px-1.5 py-0.2 rounded-full font-semibold transition-colors",
+                        "text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide transition-all",
                         selectedLine === "adulto"
-                          ? "bg-primary/10 text-primary dark:bg-primary/25 dark:text-accent"
-                          : "text-muted-foreground/60"
+                          ? "bg-primary-foreground/20 text-primary-foreground border border-primary-foreground/25 shadow-2xs"
+                          : "bg-muted text-muted-foreground border border-border/60"
                       )}
                     >
                       XS – 3XL
@@ -913,19 +929,29 @@ export function ProductQuickViewModal({
                     aria-selected={selectedLine === "infantil"}
                     onClick={() => handleLineChange("infantil")}
                     className={cn(
-                      "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "group relative flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 px-3 rounded-xl transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border",
                       selectedLine === "infantil"
-                        ? "bg-background text-foreground shadow-xs border border-border/80 scale-[1.01]"
-                        : "text-muted-foreground hover:text-foreground active:scale-95"
+                        ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold scale-[1.01]"
+                        : "border-transparent text-muted-foreground hover:text-foreground hover:bg-background/80 active:scale-95"
                     )}
                   >
-                    <span>Infantil</span>
+                    <div className="flex items-center gap-1.5">
+                      <Baby
+                        className={cn(
+                          "h-3.5 w-3.5 transition-colors",
+                          selectedLine === "infantil"
+                            ? "text-primary-foreground"
+                            : "text-muted-foreground/60 group-hover:text-foreground"
+                        )}
+                      />
+                      <span className="text-xs font-bold tracking-tight">Infantil</span>
+                    </div>
                     <span
                       className={cn(
-                        "text-[10px] px-1.5 py-0.2 rounded-full font-semibold transition-colors",
+                        "text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide transition-all",
                         selectedLine === "infantil"
-                          ? "bg-primary/10 text-primary dark:bg-primary/25 dark:text-accent"
-                          : "text-muted-foreground/60"
+                          ? "bg-primary-foreground/20 text-primary-foreground border border-primary-foreground/25 shadow-2xs"
+                          : "bg-muted text-muted-foreground border border-border/60"
                       )}
                     >
                       0-3M – 16
