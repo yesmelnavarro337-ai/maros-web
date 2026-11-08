@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { BadgeCheck, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StarRatingDisplay } from "@/components/shared/star-rating-display";
 import type { TestimonialPreview } from "@/features/testimonials/types";
-import { Reveal } from "@/components/shared/reveal";
 
 const AVATAR_FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop",
@@ -55,8 +54,8 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
     if (!el) return;
 
     const firstCard = el.firstElementChild as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.85;
-    const gap = 24; // gap-6
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.76;
+    const gap = 20; // gap-5 / gap-6
     const scrollAmount = cardWidth + gap;
 
     el.scrollBy({
@@ -70,8 +69,8 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
     if (!el) return;
 
     const firstCard = el.firstElementChild as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.85;
-    const gap = 24;
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.76;
+    const gap = 20;
     const targetLeft = index * (cardWidth + gap);
 
     el.scrollTo({
@@ -84,38 +83,37 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
 
   return (
     <div className="relative w-full group/testimonials">
-      {/* Flecha Lateral Izquierda (en el extremo izquierdo del contenedor) */}
+      {/* Flecha Lateral Izquierda flotante */}
       <button
         type="button"
         onClick={() => handleScroll("left")}
         disabled={!canScrollLeft}
         aria-label="Testimonio anterior"
-        className="absolute -left-3 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full border border-stone-200/90 bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-md hover:shadow-lg text-[#34351F] hover:bg-[#34351F] hover:text-white hover:border-[#34351F] transition-all duration-300 disabled:opacity-0 disabled:pointer-events-none flex items-center justify-center active:scale-95 cursor-pointer touch-manipulation hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="hidden md:flex absolute -left-3 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full border border-stone-200/90 bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-md hover:shadow-lg text-[#34351F] hover:bg-[#34351F] hover:text-white hover:border-[#34351F] transition-all duration-300 disabled:opacity-0 disabled:pointer-events-none items-center justify-center active:scale-95 cursor-pointer touch-manipulation hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
 
-      {/* Flecha Lateral Derecha (en el extremo derecho del contenedor) */}
+      {/* Flecha Lateral Derecha flotante */}
       <button
         type="button"
         onClick={() => handleScroll("right")}
         disabled={!canScrollRight}
         aria-label="Siguiente testimonio"
-        className="absolute -right-3 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full border border-stone-200/90 bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-md hover:shadow-lg text-[#34351F] hover:bg-[#34351F] hover:text-white hover:border-[#34351F] transition-all duration-300 disabled:opacity-0 disabled:pointer-events-none flex items-center justify-center active:scale-95 cursor-pointer touch-manipulation hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="hidden md:flex absolute -right-3 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full border border-stone-200/90 bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-md hover:shadow-lg text-[#34351F] hover:bg-[#34351F] hover:text-white hover:border-[#34351F] transition-all duration-300 disabled:opacity-0 disabled:pointer-events-none items-center justify-center active:scale-95 cursor-pointer touch-manipulation hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
 
       {/*
-        Carrusel deslizable:
-        - En móviles: scroll lateral continuo con inercia gestual natural (snap-x snap-proximity y overscroll-x-contain).
-          La distancia recorrida responde a la fuerza y velocidad de deslizamiento del usuario.
-        - En desktop: pista deslizable de 3 columnas que avanza de 1 en 1 con las flechas laterales.
+        Pista deslizable de testimonios:
+        - En móvil: bleed con -mx-4 px-4 y ancho w-[76vw] xs:w-[72vw] para que la card siguiente SIEMPRE sea visible.
+        - Scroll lateral con inercia gestual natural (snap-x snap-proximity) y respuesta directa a la fuerza del dedo.
       */}
       <div
         ref={scrollContainerRef}
         onScroll={updateScrollState}
-        className="flex overflow-x-auto scroll-smooth snap-x snap-proximity overscroll-x-contain scrollbar-none pb-4 pt-1 px-1 -mx-1 gap-4 sm:gap-6 touch-manipulation"
+        className="flex overflow-x-auto scroll-smooth snap-x snap-proximity overscroll-x-contain scrollbar-none pb-4 pt-1 px-4 -mx-4 sm:px-6 sm:-mx-6 lg:px-0 lg:mx-0 gap-4 sm:gap-6 touch-manipulation"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -123,43 +121,58 @@ export function TestimonialsCarousel({ testimonials }: { testimonials: Testimoni
         }}
       >
         {testimonials.map((t, idx) => {
-          const avatarUrl = AVATAR_FALLBACK_IMAGES[idx % AVATAR_FALLBACK_IMAGES.length];
+          const avatarUrl = t.avatarUrl || AVATAR_FALLBACK_IMAGES[idx % AVATAR_FALLBACK_IMAGES.length];
 
           return (
             <div
               key={t.id}
-              className="w-[85vw] sm:w-[380px] lg:w-[calc(33.333%-1rem)] shrink-0 snap-center sm:snap-start flex flex-col h-full"
+              className="w-[76vw] xs:w-[72vw] sm:w-[380px] lg:w-[calc(33.333%-1rem)] shrink-0 snap-center sm:snap-start flex flex-col h-full transform-gpu transition-all duration-300"
             >
-              <Reveal delay={idx * 60} className="h-full flex flex-col">
-                <div className="bg-[#FDFBF7] rounded-3xl p-6 sm:p-7 border border-brand-border/60 shadow-2xs hover:shadow-xl hover:border-[#6B6832]/50 hover:-translate-y-2 transform-gpu transition-all duration-300 flex flex-col justify-between relative group h-full select-none">
-                  {/* Rating y Quote Icon */}
-                  <div className="flex items-center justify-between mb-4">
+              {/* Tarjeta con Desglose Completo y Elegante */}
+              <div className="bg-[#FDFBF7] dark:bg-card/80 rounded-3xl p-5 sm:p-7 border border-brand-border/60 shadow-2xs hover:shadow-xl hover:border-[#6B6832]/50 hover:-translate-y-1.5 active:scale-[0.98] transform-gpu transition-all duration-300 flex flex-col justify-between relative group h-full select-none">
+                {/* 1. Header del Testimonio: Rating + Comillas + Badge Verificado */}
+                <div className="flex flex-col gap-2.5 mb-4">
+                  <div className="flex items-center justify-between">
                     <StarRatingDisplay rating={t.rating} size="sm" />
-                    <Quote className="h-5 w-5 text-[#A38A3E]/40 group-hover:text-[#A38A3E] group-hover:rotate-12 transition-all duration-300" />
+                    <Quote className="h-5 w-5 sm:h-6 sm:w-6 text-[#A38A3E]/35 group-hover:text-[#A38A3E] group-hover:rotate-12 transition-all duration-300 shrink-0" />
                   </div>
 
-                  {/* Cita */}
-                  <p className="font-serif text-sm sm:text-base text-[#34351F] italic leading-relaxed mb-6">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-[10px] font-semibold border border-emerald-500/20 w-fit">
+                    <BadgeCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Compra verificada</span>
+                  </div>
+                </div>
 
-                  {/* Autor del Testimonio */}
-                  <div className="flex items-center gap-3 pt-4 border-t border-brand-border/40 mt-auto">
-                    <Avatar className="h-11 w-11 ring-2 ring-[#A38A3E]/30 transition-transform duration-300 group-hover:scale-105">
+                {/* 2. Cuerpo del Testimonio: Cita / Reseña */}
+                <p className="font-serif text-xs sm:text-sm lg:text-base text-[#34351F] dark:text-stone-200 italic leading-relaxed mb-6 line-clamp-4 min-h-[4rem] sm:min-h-[4.5rem]">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+
+                {/* 3. Desglose del Cliente (Pie de Tarjeta): Avatar + Nombre + Ubicación */}
+                <div className="flex items-center justify-between pt-4 border-t border-brand-border/40 mt-auto">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-10 w-10 sm:h-11 sm:w-11 ring-2 ring-[#A38A3E]/30 shrink-0 transition-transform duration-300 group-hover:scale-105">
                       <AvatarImage src={avatarUrl} alt={t.clientName} className="object-cover" />
                       <AvatarFallback className="bg-[#6B6832] text-white text-xs font-semibold">
                         {t.clientName[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-[#34351F] leading-tight group-hover:text-primary transition-colors">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-bold text-[#34351F] dark:text-stone-100 leading-tight truncate group-hover:text-primary transition-colors">
                         {t.clientName}
                       </p>
-                      <p className="text-xs text-stone-500 mt-0.5">Cliente verificada</p>
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 truncate">
+                        {t.city ? `${t.city}, Colombia` : "Cliente verificada"}
+                      </p>
                     </div>
                   </div>
+
+                  {/* Indicador sutil de satisfacción */}
+                  <span className="hidden sm:inline-block text-[10px] font-medium text-stone-400 uppercase tracking-wider shrink-0 ml-2">
+                    5.0 ★
+                  </span>
                 </div>
-              </Reveal>
+              </div>
             </div>
           );
         })}

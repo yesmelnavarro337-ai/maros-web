@@ -76,7 +76,7 @@ export function CategoryQuickLinks({ categories }: { categories: CategoryQuickLi
     if (!el) return;
 
     const firstCard = el.firstElementChild as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.82;
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.7;
     const gap = 16;
     const scrollAmount = cardWidth + gap;
 
@@ -91,7 +91,7 @@ export function CategoryQuickLinks({ categories }: { categories: CategoryQuickLi
     if (!el) return;
 
     const firstCard = el.firstElementChild as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.82;
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.7;
     const gap = 16;
     const targetLeft = index * (cardWidth + gap);
 
@@ -152,47 +152,49 @@ export function CategoryQuickLinks({ categories }: { categories: CategoryQuickLi
         </div>
       </Reveal>
 
-      {/* Carrusel Deslizante con CSS Scroll Snap (snap-x snap-mandatory) para móviles */}
+      {/*
+        Carrusel Deslizante:
+        - En móvil: bleed con -mx-4 px-4 y ancho w-[70vw] xs:w-[68vw] para que la card siguiente SIEMPRE asome claramente con su foto.
+        - snap-x snap-mandatory para navegar exactamente de 1 en 1 categoría por cada impulso de scroll.
+      */}
       <div
         ref={scrollContainerRef}
         onScroll={updateScrollState}
-        className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 pt-1 px-1 -mx-1 gap-3.5 sm:gap-5 lg:gap-6 touch-manipulation"
+        className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 pt-1 px-4 -mx-4 sm:px-6 sm:-mx-6 lg:px-0 lg:mx-0 gap-3.5 sm:gap-5 lg:gap-6 touch-manipulation"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {categories.map((c, index) => {
+        {categories.map((c) => {
           const imageUrl = resolveCategoryImage(c.label, c.image);
 
           return (
             <div
               key={c.id}
-              className="w-[82vw] xs:w-[75vw] sm:w-[46vw] md:w-[31vw] lg:w-[calc(16.666%-1.1rem)] shrink-0 snap-start snap-always"
+              className="w-[70vw] xs:w-[68vw] sm:w-[45vw] md:w-[31vw] lg:w-[calc(16.666%-1.1rem)] shrink-0 snap-start snap-always transform-gpu transition-all duration-300"
             >
-              <Reveal delay={index * 50}>
-                <Link
-                  href={c.href}
-                  className="group relative aspect-[3/4] sm:aspect-[4/5] rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 shadow-xs border border-brand-border/40 transform-gpu transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-[#6B6832]/50 active:-translate-y-1 active:scale-[0.98] active:shadow-md block select-none"
-                >
-                  {/* Imagen Fotográfica con zoom suave al interactuar */}
-                  <Image
-                    src={imageUrl}
-                    alt={`Pijamas categoría ${c.label}`}
-                    fill
-                    sizes="(max-width: 640px) 82vw, (max-width: 1024px) 33vw, 17vw"
-                    className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110 group-active:scale-105"
-                  />
+              <Link
+                href={c.href}
+                className="group relative aspect-[3/4] sm:aspect-[4/5] rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 shadow-xs border border-brand-border/40 transform-gpu transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-[#6B6832]/50 active:scale-[0.98] block select-none"
+              >
+                {/* Imagen Fotográfica con zoom suave al interactuar */}
+                <Image
+                  src={imageUrl}
+                  alt={`Pijamas categoría ${c.label}`}
+                  fill
+                  sizes="(max-width: 640px) 70vw, (max-width: 1024px) 33vw, 17vw"
+                  className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110 group-active:scale-105"
+                />
 
-                  {/* Sutil sombreado inferior para contraste */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-65 group-hover:opacity-45 transition-opacity" />
+                {/* Sutil sombreado inferior para contraste */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-65 group-hover:opacity-45 transition-opacity" />
 
-                  {/* Botón / Píldora de Categoría en la parte inferior */}
-                  <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl py-2 px-3 sm:px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group-hover:bg-[#34351F] group-hover:text-white group-active:bg-[#34351F] group-active:text-white group-hover:scale-[1.02] group-active:scale-[0.98]">
-                    <span className="font-medium text-xs sm:text-sm text-[#34351F] group-hover:text-white group-active:text-white transition-colors truncate">
-                      {c.label}
-                    </span>
-                    <ArrowRight className="h-3.5 w-3.5 text-[#A38A3E] group-hover:text-white group-active:text-white group-hover:translate-x-1 group-active:translate-x-1 transition-all shrink-0 ml-1" />
-                  </div>
-                </Link>
-              </Reveal>
+                {/* Botón / Píldora de Categoría en la parte inferior */}
+                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl py-2 px-3 sm:px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group-hover:bg-[#34351F] group-hover:text-white group-active:bg-[#34351F] group-active:text-white group-hover:scale-[1.02] group-active:scale-[0.98]">
+                  <span className="font-medium text-xs sm:text-sm text-[#34351F] group-hover:text-white group-active:text-white transition-colors truncate">
+                    {c.label}
+                  </span>
+                  <ArrowRight className="h-3.5 w-3.5 text-[#A38A3E] group-hover:text-white group-active:text-white group-hover:translate-x-1 group-active:translate-x-1 transition-all shrink-0 ml-1" />
+                </div>
+              </Link>
             </div>
           );
         })}

@@ -52,8 +52,8 @@ export function RelatedProducts({ products }: { products: RelatedProduct[] }) {
     if (!el) return;
 
     const firstCard = el.firstElementChild as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.82;
-    const gap = 20;
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.7;
+    const gap = 20; // gap-5 is 20px
     const scrollAmount = cardWidth + gap;
 
     el.scrollBy({
@@ -67,7 +67,7 @@ export function RelatedProducts({ products }: { products: RelatedProduct[] }) {
     if (!el) return;
 
     const firstCard = el.firstElementChild as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.82;
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : el.clientWidth * 0.7;
     const gap = 20;
     const targetLeft = index * (cardWidth + gap);
 
@@ -82,64 +82,68 @@ export function RelatedProducts({ products }: { products: RelatedProduct[] }) {
   return (
     <section className="mt-16 w-full">
       {/* Encabezado con flechas de desplazamiento adyacentes al enlace */}
-      <div className="flex items-end justify-between mb-6 sm:mb-8 gap-4">
-        <div>
-          <h2 className="font-heading text-2xl sm:text-3xl text-foreground">
-            También te pueden <span className="text-primary italic">interesar</span>
-          </h2>
-          <p className="font-sans text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-1.5">
-            Prendas seleccionadas especialmente para complementar tu estilo.
-          </p>
-        </div>
+      <Reveal>
+        <div className="flex items-end justify-between mb-6 sm:mb-8 gap-4">
+          <div>
+            <h2 className="font-heading text-2xl sm:text-3xl text-foreground">
+              También te pueden <span className="text-primary italic">interesar</span>
+            </h2>
+            <p className="font-sans text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-1.5">
+              Prendas seleccionadas especialmente para complementar tu estilo.
+            </p>
+          </div>
 
-        {/* Enlace y flechas de navegación ítem a ítem */}
-        <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
-          <Link
-            href="/catalogo"
-            className="group inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-[#6B6832] dark:text-[#A38A3E] hover:text-foreground transition-colors active:scale-95 py-1 px-1.5"
-          >
-            <span>Ver catálogo</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-          </Link>
+          {/* Enlace y flechas de navegación ítem a ítem */}
+          <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
+            <Link
+              href="/catalogo"
+              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-[#6B6832] dark:text-[#A38A3E] hover:text-foreground transition-colors active:scale-95 py-1 px-1.5"
+            >
+              <span>Ver catálogo</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </Link>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 border-l border-border/70 pl-2 sm:pl-3">
-            <button
-              type="button"
-              onClick={() => handleScroll("left")}
-              disabled={!canScrollLeft}
-              aria-label="Producto anterior"
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/80 bg-background/95 backdrop-blur-xs flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-background/95 disabled:hover:text-foreground shadow-2xs active:scale-95 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleScroll("right")}
-              disabled={!canScrollRight}
-              aria-label="Siguiente producto"
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/80 bg-background/95 backdrop-blur-xs flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-background/95 disabled:hover:text-foreground shadow-2xs active:scale-95 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1 sm:gap-1.5 border-l border-border/70 pl-2 sm:pl-3">
+              <button
+                type="button"
+                onClick={() => handleScroll("left")}
+                disabled={!canScrollLeft}
+                aria-label="Producto anterior"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/80 bg-background/95 backdrop-blur-xs flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-background/95 disabled:hover:text-foreground shadow-2xs active:scale-95 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleScroll("right")}
+                disabled={!canScrollRight}
+                aria-label="Siguiente producto"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/80 bg-background/95 backdrop-blur-xs flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-background/95 disabled:hover:text-foreground shadow-2xs active:scale-95 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </Reveal>
 
-      {/* Pista deslizable con soporte gestual táctil y snap de 1 en 1 en móvil */}
+      {/*
+        Pista deslizable con soporte gestual táctil:
+        - En móvil: bleed con -mx-4 px-4 y ancho w-[70vw] xs:w-[68vw] para que la card siguiente SIEMPRE asome claramente con su foto.
+        - snap-x snap-mandatory para navegar exactamente de 1 en 1 producto por impulso.
+      */}
       <div
         ref={scrollContainerRef}
         onScroll={updateScrollState}
-        className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 pt-1 px-1 -mx-1 gap-4 sm:gap-5 touch-manipulation"
+        className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 pt-1 px-4 -mx-4 sm:px-6 sm:-mx-6 lg:px-0 lg:mx-0 gap-4 sm:gap-5 touch-manipulation"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {products.map((p, index) => (
+        {products.map((p) => (
           <div
             key={p.id}
-            className="w-[82vw] xs:w-[76vw] sm:w-[46vw] md:w-[32vw] lg:w-[calc(25%-0.95rem)] shrink-0 snap-start snap-always flex flex-col h-full"
+            className="w-[70vw] xs:w-[68vw] sm:w-[45vw] md:w-[32vw] lg:w-[calc(25%-0.95rem)] shrink-0 snap-start snap-always flex flex-col h-full transform-gpu transition-all duration-300"
           >
-            <Reveal delay={index * 50} className="h-full flex flex-col">
-              <ProductCard product={p} onQuickView={openQuickView} />
-            </Reveal>
+            <ProductCard product={p} onQuickView={openQuickView} />
           </div>
         ))}
       </div>
