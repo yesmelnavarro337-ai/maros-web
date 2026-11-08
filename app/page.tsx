@@ -28,30 +28,41 @@ const primaryBenefits = [
   { icon: Truck, title: "Envíos", subtitle: "a todo el país" },
 ];
 
-// Categorías que no deben aparecer en el Home. "Batas" se reemplaza por "Parejas".
-const EXCLUDED_CATEGORY_SLUGS = new Set(["batas"]);
-
-// Orden editorial preferido de las tarjetas del Home. Las categorías no listadas
-// se conservan después en el orden recibido del backend.
-const FEATURED_CATEGORY_ORDER = ["mujer", "hombre", "parejas", "familia", "ninos-y-bebes"];
+// 6 Categorías destacadas requeridas para el Home:
+// Algodón, Familia, Hombre, Mujer, Niños y Bebés, Parejas
+const REQUIRED_CATEGORIES = [
+  { key: "algodon", label: "Algodón", slug: "algodon", href: "/catalogo?categoria=algodon" },
+  { key: "familia", label: "Familia", slug: "familia", href: "/catalogo?categoria=familia" },
+  { key: "hombre", label: "Hombre", slug: "hombre", href: "/catalogo?categoria=hombre" },
+  { key: "mujer", label: "Mujer", slug: "mujer", href: "/catalogo?categoria=mujer" },
+  { key: "ninos", label: "Niños y Bebés", slug: "ninos-y-bebes", href: "/catalogo?categoria=ninos-y-bebes" },
+  { key: "parejas", label: "Parejas", slug: "parejas", href: "/catalogo?categoria=parejas" },
+];
 
 async function getCategoryQuickLinks(): Promise<CategoryQuickLink[]> {
-  const categories = await getCategories();
+  let categories: { id: string; name: string; slug: string; imageUrl?: string | null }[] = [];
+  try {
+    categories = await getCategories();
+  } catch {
+    categories = [];
+  }
 
-  const rank = (slug: string) => {
-    const index = FEATURED_CATEGORY_ORDER.indexOf(slug.toLowerCase());
-    return index === -1 ? FEATURED_CATEGORY_ORDER.length : index;
-  };
+  const categoryBySlug = new Map(
+    categories.map((c) => [c.slug.toLowerCase().trim(), c])
+  );
 
-  return categories
-    .filter((c) => !EXCLUDED_CATEGORY_SLUGS.has(c.slug.toLowerCase()))
-    .sort((a, b) => rank(a.slug) - rank(b.slug))
-    .map((c) => ({
-      id: c.id,
-      label: c.name,
-      image: c.imageUrl || "",
-      href: `/catalogo?categoria=${c.slug}`,
-    }));
+  return REQUIRED_CATEGORIES.map((target) => {
+    const found =
+      categoryBySlug.get(target.slug) ||
+      categories.find((c) => c.name.toLowerCase().includes(target.key));
+
+    return {
+      id: found?.id || `cat-${target.slug}`,
+      label: target.label,
+      image: found?.imageUrl || "",
+      href: target.href,
+    };
+  });
 }
 
 export default async function HomePage() {

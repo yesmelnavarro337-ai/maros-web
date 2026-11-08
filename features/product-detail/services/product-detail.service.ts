@@ -302,23 +302,23 @@ export async function getRelatedProducts(product: ProductDetail, currentSlug: st
   };
 
   for (const categoryId of product.categoryIds) {
-    if (results.length >= 4) break;
+    if (results.length >= 8) break;
     const categoryProducts = await fetchRelatedList(new URLSearchParams({ categoryId }));
     push(categoryProducts.filter((p) => p.available));
   }
 
-  if (results.length < 4) {
+  if (results.length < 8) {
     for (const collectionId of product.collectionIds) {
-      if (results.length >= 4) break;
+      if (results.length >= 8) break;
       const collectionProducts = await fetchRelatedList(new URLSearchParams({ collectionId }));
       push(collectionProducts.filter((p) => p.available));
     }
   }
 
-  if (results.length < 4) {
+  if (results.length < 8) {
     const latest = await fetchRelatedList(new URLSearchParams());
     push(latest.filter((p) => p.available));
   }
 
-  return results.slice(0, 4);
+  return results.slice(0, 8);
 }

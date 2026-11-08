@@ -407,19 +407,19 @@ export function ProductInfoPanel({
 
       {/* ── Control de Categoría / Línea (Adultos vs Infantil) - Atelier Segmented Capsule ── */}
       <div className="space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.18em]">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.18em] truncate">
               Línea / Categoría
             </p>
           </div>
-          <span className="text-[11px] font-serif italic text-muted-foreground">
+          <span className="text-[11px] font-serif italic text-muted-foreground shrink-0">
             {selectedLine === "adulto" ? "Línea Adultos" : "Línea Infantil"}
           </span>
         </div>
         <div
-          className="grid grid-cols-2 p-1.5 bg-muted/50 rounded-2xl border border-border shadow-2xs gap-1.5"
+          className="grid grid-cols-2 p-1 sm:p-1.5 bg-muted/50 rounded-2xl border border-border shadow-2xs gap-1 sm:gap-1.5 select-none touch-manipulation"
           role="tablist"
           aria-label="Selección de línea de producto"
         >
@@ -428,24 +428,24 @@ export function ProductInfoPanel({
             role="tab"
             aria-selected={selectedLine === "adulto"}
             onClick={() => handleLineChange("adulto")}
-            className={`group relative flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 px-3 rounded-xl transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border ${
+            className={`group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl transition-all duration-200 cursor-pointer min-w-0 select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border ${
               selectedLine === "adulto"
                 ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold scale-[1.01]"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-background/80 active:scale-95"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-background/80 active:scale-[0.98]"
             }`}
           >
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0 min-w-0">
               <User
-                className={`h-3.5 w-3.5 transition-colors ${
+                className={`h-3.5 w-3.5 shrink-0 transition-colors ${
                   selectedLine === "adulto"
                     ? "text-primary-foreground"
                     : "text-muted-foreground/60 group-hover:text-foreground"
                 }`}
               />
-              <span className="text-xs font-bold tracking-tight">Adultos</span>
+              <span className="text-xs sm:text-sm font-bold tracking-tight truncate">Adultos</span>
             </div>
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide transition-all ${
+              className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-semibold tracking-wide transition-all whitespace-nowrap shrink-0 ${
                 selectedLine === "adulto"
                   ? "bg-primary-foreground/20 text-primary-foreground border border-primary-foreground/25 shadow-2xs"
                   : "bg-muted text-muted-foreground border border-border/60"
@@ -459,24 +459,24 @@ export function ProductInfoPanel({
             role="tab"
             aria-selected={selectedLine === "infantil"}
             onClick={() => handleLineChange("infantil")}
-            className={`group relative flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 px-3 rounded-xl transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border ${
+            className={`group relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2.5 py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl transition-all duration-200 cursor-pointer min-w-0 select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border ${
               selectedLine === "infantil"
                 ? "bg-primary text-primary-foreground border-primary shadow-xs font-bold scale-[1.01]"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-background/80 active:scale-95"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-background/80 active:scale-[0.98]"
             }`}
           >
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0 min-w-0">
               <Baby
-                className={`h-3.5 w-3.5 transition-colors ${
+                className={`h-3.5 w-3.5 shrink-0 transition-colors ${
                   selectedLine === "infantil"
                     ? "text-primary-foreground"
                     : "text-muted-foreground/60 group-hover:text-foreground"
                 }`}
               />
-              <span className="text-xs font-bold tracking-tight">Infantil</span>
+              <span className="text-xs sm:text-sm font-bold tracking-tight truncate">Infantil</span>
             </div>
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide transition-all ${
+              className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-semibold tracking-wide transition-all whitespace-nowrap shrink-0 ${
                 selectedLine === "infantil"
                   ? "bg-primary-foreground/20 text-primary-foreground border border-primary-foreground/25 shadow-2xs"
                   : "bg-muted text-muted-foreground border border-border/60"
