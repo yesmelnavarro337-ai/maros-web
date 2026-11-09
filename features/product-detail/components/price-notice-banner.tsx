@@ -2,6 +2,7 @@ import { Info, Sparkles } from "lucide-react";
 import type { ProductDetailCategory } from "../types";
 import {
   isLargeSize,
+  isInfantilYouthSize,
   computeCategorySurcharge,
   findActiveCategory,
 } from "../utils/price-helpers";
@@ -14,6 +15,8 @@ interface PriceNoticeBannerProps {
   basePrice?: number;
   /** When set, only show the notice for the category matching this slug. */
   filterCategorySlug?: string;
+  /** Indica si la prenda pertenece a la línea infantil */
+  isInfantil?: boolean;
 }
 
 export function PriceNoticeBanner({
@@ -23,8 +26,10 @@ export function PriceNoticeBanner({
   surchargeReason,
   basePrice,
   filterCategorySlug,
+  isInfantil = false,
 }: PriceNoticeBannerProps) {
-  const isPlusSize = isLargeSize(selectedSize);
+  const isAdultPlusSize = !isInfantil && isLargeSize(selectedSize);
+  const isInfantYouth = isInfantil && isInfantilYouthSize(selectedSize);
 
   // ── Regla de banners de categoría ──
   // Sin filterCategorySlug (filtro "Todas" o acceso directo) → NO mostrar banners de categoría
@@ -47,14 +52,27 @@ export function PriceNoticeBanner({
     (categorySurcharge > 0 || Boolean(categoryReason));
 
   // Si no hay nada que mostrar, retornamos null
-  if (!isPlusSize && !showCategoryBanner) {
+  if (!isAdultPlusSize && !isInfantYouth && !showCategoryBanner) {
     return null;
   }
 
   return (
     <div className="flex flex-col gap-2.5 my-1">
-      {/* Aviso de talla especial (> L) — siempre visible si aplica */}
-      {isPlusSize && (
+      {/* Aviso de talla especial infantil (> 8: 10, 12, 14, 16) */}
+      {isInfantYouth && (
+        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-amber-950 dark:text-amber-200 text-xs sm:text-sm shadow-xs transition-all">
+          <Sparkles className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="leading-relaxed">
+            <span className="font-semibold text-amber-900 dark:text-amber-300 block mb-0.5">
+              Ajuste de precio por talla juvenil (Talla {selectedSize.toUpperCase()})
+            </span>
+            Las tallas infantiles mayores a la 8 (como {selectedSize.toUpperCase()}) incluyen un ajuste de +$10.000 COP por el mayor consumo de tela e insumos en la confección.
+          </div>
+        </div>
+      )}
+
+      {/* Aviso de talla especial adulto (> L: XL, 2XL, 3XL) — siempre visible si aplica */}
+      {isAdultPlusSize && (
         <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-amber-950 dark:text-amber-200 text-xs sm:text-sm shadow-xs transition-all">
           <Sparkles className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="leading-relaxed">

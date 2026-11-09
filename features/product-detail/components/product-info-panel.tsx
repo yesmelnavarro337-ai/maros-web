@@ -688,6 +688,7 @@ export function ProductInfoPanel({
         categoryName={product.categoryName}
         basePrice={product.basePrice}
         filterCategorySlug={categorySlug}
+        isInfantil={selectedLine === "infantil"}
       />
 
       {selectedVariant && selectedVariant.stock <= 0 && (

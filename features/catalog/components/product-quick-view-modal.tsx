@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { RichText } from "@/components/shared/rich-text";
+import { PriceNoticeBanner } from "@/features/product-detail/components/price-notice-banner";
 import { useCart } from "@/features/cart/cart-context";
 import {
   calculateProductPriceDetails,
@@ -1166,6 +1167,15 @@ export function ProductQuickViewModal({
                   </button>
                 </div>
               </div>
+
+              {/* ── Price Notice Banner (Tallas especiales / categorías) ── */}
+              <PriceNoticeBanner
+                selectedSize={selectedSize}
+                categories={product.categories}
+                categoryName={product.categoryName}
+                basePrice={product.basePrice}
+                isInfantil={selectedLine === "infantil"}
+              />
 
               {/* Out of stock notice */}
               {selectedVariant && selectedVariant.stock <= 0 && (
