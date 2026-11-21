@@ -65,12 +65,13 @@ function adaptProduct(p: ApiCatalogProduct): CatalogProductItem {
 }
 
 export async function getCategories(): Promise<ApiCategory[]> {
-  return serverApiFetch<ApiCategory[]>("categories", { tags: ["categories"] });
+  return serverApiFetch<ApiCategory[]>("categories", { revalidateSeconds: 300, tags: ["categories"] });
 }
 
 export async function getFeaturedCatalog(): Promise<CatalogProductItem[]> {
   const products = await serverApiFetch<ApiCatalogProduct[]>("products/featured-catalog", {
-    tags: ["featured-catalog"],
+    revalidateSeconds: 300,
+    tags: ["featured-catalog", "products"],
   });
   return products.map(adaptProduct);
 }

@@ -30,6 +30,13 @@ export async function POST(request: NextRequest) {
       revalidateTag("categories", { expire: 0 });
       revalidateTag("products", { expire: 0 });
       revalidateTag("home-content", { expire: 0 });
+      revalidateTag("home", { expire: 0 });
+      revalidateTag("featured-catalog", { expire: 0 });
+      revalidateTag("season", { expire: 0 });
+      revalidateTag("settings", { expire: 0 });
+      revalidateTag("testimonials", { expire: 0 });
+      revalidateTag("collections", { expire: 0 });
+      revalidateTag("page-headers", { expire: 0 });
       revalidatePath("/", "page");
       revalidatePath("/catalogo", "page");
       revalidatePath("/colecciones", "page");

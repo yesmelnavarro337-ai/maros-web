@@ -49,14 +49,13 @@ const cachedServerFetch = cache(async (key: string) => {
 });
 
 export function serverApiFetch<T>(path: string, options: ServerFetchOptions = {}): Promise<T> {
-  const isProductOrCategoryPath = path.startsWith("products") || path.startsWith("categories");
-  const defaultCache = isProductOrCategoryPath ? "no-store" : options.cache;
-  const defaultRevalidate = isProductOrCategoryPath ? 0 : (options.revalidateSeconds ?? (defaultCache === "no-store" ? 0 : 60));
+  // Por defecto usa caché con revalidación cada 5 minutos (300 s).
+  // Los llamadores pueden sobreescribir con { cache: "no-store", revalidateSeconds: 0 }
+  // cuando necesiten datos siempre frescos (ej. modos mantenimiento).
+  const revalidate = options.revalidateSeconds ?? 300;
+  const cacheMode = options.cache ?? (revalidate === 0 ? "no-store" : "force-cache");
 
-  const cacheMode = options.cache || defaultCache || "no-store";
-  const revalidate = options.revalidateSeconds ?? defaultRevalidate;
-
-  const cacheStr = cacheMode ? `cache:${cacheMode}` : "cache:no-store";
+  const cacheStr = `cache:${cacheMode}`;
   const tagsStr = options.tags ? options.tags.join(",") : "";
   return cachedServerFetch(`${path}|revalidate:${revalidate}|${cacheStr}|tags:${tagsStr}`) as Promise<T>;
 }

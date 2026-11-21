@@ -125,7 +125,10 @@ function adaptTestimonial(t: ApiTestimonial, index: number): TestimonialPreview 
 
 export async function getTestimonials(): Promise<TestimonialPreview[]> {
   try {
-    const raw = await serverApiFetch<ApiTestimonial[]>("testimonials");
+    const raw = await serverApiFetch<ApiTestimonial[]>("testimonials", {
+      revalidateSeconds: 300,
+      tags: ["testimonials"],
+    });
     if (raw && raw.length >= 8) {
       return raw.map(adaptTestimonial);
     }

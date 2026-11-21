@@ -81,9 +81,9 @@ const DEFAULT_PERSONALIZE_SLIDE: Omit<HeroSlide, "id" | "image"> = {
 
 export async function getHeroContent(): Promise<HeroContent> {
   const [season, settings, homeSections] = await Promise.all([
-    serverApiFetch<SeasonPublicResponse | null>("season/active").catch(() => null),
-    serverApiFetch<SiteSettingsPublicResponse>("settings").catch(() => null),
-    serverApiFetch<HomeSectionResponse[]>("home-content").catch(() => null),
+    serverApiFetch<SeasonPublicResponse | null>("season/active", { revalidateSeconds: 300, tags: ["season"] }).catch(() => null),
+    serverApiFetch<SiteSettingsPublicResponse>("settings", { revalidateSeconds: 300, tags: ["settings"] }).catch(() => null),
+    serverApiFetch<HomeSectionResponse[]>("home-content", { revalidateSeconds: 300, tags: ["home-content"] }).catch(() => null),
   ]);
 
   const slides: HeroSlide[] = [];
@@ -191,7 +191,7 @@ interface HomePageResponse {
 }
 
 export async function getFeaturedProducts(): Promise<ProductPreview[]> {
-  const home = await serverApiFetch<HomePageResponse>("home");
+  const home = await serverApiFetch<HomePageResponse>("home", { revalidateSeconds: 300, tags: ["home", "products"] });
   return home.featuredProducts.map((p) => ({
     id: p.id,
     slug: p.slug,

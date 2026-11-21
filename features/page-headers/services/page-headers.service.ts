@@ -50,7 +50,10 @@ function adaptPageHeader(h: ApiPageHeader): PageHeader {
 }
 
 export async function getPageHeaders(): Promise<PageHeader[]> {
-  const headers = await serverApiFetch<ApiPageHeader[]>("page-headers");
+  const headers = await serverApiFetch<ApiPageHeader[]>("page-headers", {
+    revalidateSeconds: 300,
+    tags: ["page-headers"],
+  });
   return headers.map(adaptPageHeader);
 }
 
