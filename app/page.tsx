@@ -18,8 +18,7 @@ import { JsonLd, itemListJsonLd } from "@/lib/seo/json-ld";
 import { PromoBannerStrip } from "@/features/banners/components/promo-banner-strip";
 import type { CategoryQuickLink } from "@/features/home/types";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 const primaryBenefits = [
   { icon: Star, title: "+6 Años", subtitle: "de experiencia" },

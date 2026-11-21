@@ -14,8 +14,7 @@ import { getPublicSettings } from "@/features/settings/services/settings.server"
 import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/json-ld";
 import { MaintenanceView } from "@/features/settings/components/maintenance-view";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 const inter = Inter({
   subsets: ["latin"],

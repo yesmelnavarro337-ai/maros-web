@@ -30,6 +30,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
 }
 
+export const revalidate = 300;
+
 export default async function ProductDetailPage({
   params,
   searchParams,

@@ -1,8 +1,7 @@
 import { CollectionCard } from "@/components/shared/collection-card";
 import { getCollections } from "@/features/collections/services/collections.service";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 export default async function ColeccionPage({ params }: { params: { slug: string } }) {
   const collections = await getCollections();

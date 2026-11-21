@@ -4,8 +4,7 @@ import { PageHeroSection } from "@/components/shared/page-hero-section";
 import { getCollections } from "@/features/collections/services/collections.service";
 import { getPageHeader } from "@/features/page-headers/services/page-headers.service";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 export const metadata = {
   title: "Colecciones",
