@@ -18,6 +18,11 @@ function adaptBanner(b: ApiBanner, index: number): BannerItem {
 }
 
 export async function getActiveBanners(position: string): Promise<BannerItem[]> {
-  const banners = await serverApiFetch<ApiBanner[]>(`banners?position=${encodeURIComponent(position)}`);
-  return banners.map(adaptBanner);
+  try {
+    const banners = await serverApiFetch<ApiBanner[]>(`banners?position=${encodeURIComponent(position)}`);
+    return banners.map(adaptBanner);
+  } catch (error) {
+    console.error(`Error fetching banners for ${position}:`, error);
+    return [];
+  }
 }

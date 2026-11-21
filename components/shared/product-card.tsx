@@ -9,6 +9,7 @@ import type { ProductPreview } from "@/types/product";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
 import { sortSizes } from "@/lib/sizes";
 import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
+import { isInfantilCategory } from "@/features/product-detail/utils/size-helpers";
 
 export function ProductCard({
   product,
@@ -31,6 +32,7 @@ export function ProductCard({
     // El nombre del estilo define la tarifa; la categoría solo aporta el género.
     categoryName: product.categoryName ?? categorySlug,
     styleName: product.styleName,
+    line: isInfantilCategory(product.categoryName ?? categorySlug) ? "infantil" : "adulto",
   });
 
   return (

@@ -16,7 +16,7 @@ import { countActiveFilters, parseFilterList } from "@/features/catalog/filter-u
 import { buildMetadata } from "@/lib/seo";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 
-export const PAGE_SIZE = 12;
+const PAGE_SIZE = 12;
 
 interface CatalogoPageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;

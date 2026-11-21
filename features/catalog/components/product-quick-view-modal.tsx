@@ -46,6 +46,9 @@ import {
   isInfantilCategory,
   isInfantilStyleName,
   resolveSelectedSize,
+  resolveInitialLine,
+  resolveInitialStyle,
+  resolveInitialSize,
 } from "@/features/product-detail/utils/size-helpers";
 
 import type { ProductPreview } from "@/types/product";
@@ -424,12 +427,8 @@ export function ProductQuickViewModal({
   );
 
   // ── Selector de Categoría (Adultos vs Infantil) ──
-  const isProductCategoryInfantil = isInfantilCategory(product?.categoryName);
-  const initialCandidate = product?.styles?.[0] ?? "";
-  const initialLine: "adulto" | "infantil" =
-    isProductCategoryInfantil || (initialCandidate ? isInfantilStyleName(initialCandidate) : false)
-      ? "infantil"
-      : "adulto";
+  // Se prioriza adultos a menos que el producto sea estrictamente infantil
+  const initialLine: "adulto" | "infantil" = resolveInitialLine(product ?? previewProduct);
 
   const [selectedLine, setSelectedLine] = useState<"adulto" | "infantil">(initialLine);
 
@@ -448,26 +447,14 @@ export function ProductQuickViewModal({
 
   // ── Size, Style, Material, Quantity, Embroidery states ──
   const initialStyle = useMemo(() => {
-    const rawStyles = product?.styles && product.styles.length > 0 ? product.styles : [];
-    const filtered = rawStyles.filter((st) =>
-      initialLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st)
-    );
-    const finalStyles =
-      filtered.length > 0
-        ? filtered
-        : initialLine === "infantil"
-        ? INFANTIL_STYLES.map((s) => s.name)
-        : ADULT_STYLES.map((s) => s.name);
-    return finalStyles[0] ?? "";
+    return resolveInitialStyle(product?.styles, initialLine);
   }, [product?.styles, initialLine]);
 
   const [selectedStyle, setSelectedStyle] = useState<string>(initialStyle);
 
-  const initialSizes = useMemo(() => {
-    return filterSizesForStyle(product?.sizes ?? [], initialStyle, initialLine === "infantil");
-  }, [product?.sizes, initialStyle, initialLine]);
-
-  const [selectedSize, setSelectedSize] = useState<string>(() => initialSizes[0] ?? "");
+  const [selectedSize, setSelectedSize] = useState<string>(() => {
+    return resolveInitialSize(product?.sizes, initialStyle, initialLine === "infantil");
+  });
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [hasEmbroidery, setHasEmbroidery] = useState(false);
@@ -497,25 +484,15 @@ export function ProductQuickViewModal({
   const [previousProductId, setPreviousProductId] = useState<string | number | undefined>(product?.id);
   if (previousProductId !== product?.id) {
     setPreviousProductId(product?.id);
-    const prodInfantil = isInfantilCategory(product?.categoryName);
-    const prodFirstStyle = product?.styles?.[0] ?? "";
-    const nextLine: "adulto" | "infantil" =
-      prodInfantil || (prodFirstStyle ? isInfantilStyleName(prodFirstStyle) : false)
-        ? "infantil"
-        : "adulto";
+    const nextLine: "adulto" | "infantil" = resolveInitialLine(product ?? previewProduct);
     setSelectedLine(nextLine);
 
-    const nextStyles = (product?.styles && product.styles.length > 0 ? product.styles : [])
-      .filter((st) => nextLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st));
-    const finalStyles = nextStyles.length > 0
-      ? nextStyles
-      : (nextLine === "infantil" ? INFANTIL_STYLES.map((s) => s.name) : ADULT_STYLES.map((s) => s.name));
-    const nextStyle = finalStyles[0] ?? "";
+    const nextStyle = resolveInitialStyle(product?.styles, nextLine);
+    const nextSize = resolveInitialSize(product?.sizes, nextStyle, nextLine === "infantil");
 
     setSelectedColorName(availableColors[0]?.name ?? "");
     setSelectedStyle(nextStyle);
-    const initialLineSizes = filterSizesForStyle(product?.sizes ?? [], nextStyle, nextLine === "infantil");
-    setSelectedSize(sortSizes(initialLineSizes)[0] ?? "");
+    setSelectedSize(nextSize);
     setSelectedMaterial(product?.materials?.[0] ?? "");
     setQuantity(1);
     setHasEmbroidery(false);

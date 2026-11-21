@@ -1,4 +1,9 @@
-import { isInfantilCategory, resolveInfantilStyle } from "./price-helpers";
+import {
+  isInfantilCategory,
+  resolveInfantilStyle,
+  ADULT_STYLES,
+  INFANTIL_STYLES,
+} from "./price-helpers";
 import { sortSizes } from "@/lib/sizes";
 
 /* ─────────────────────────── Catálogos de tallas por línea ─────────────────────────── */
@@ -135,6 +140,88 @@ export function resolveSelectedSize(
   const stillValid = availableSizes.some((s) => normalizeSizeKey(s) === normalized);
   if (stillValid) return currentSize;
   return availableSizes[0] ?? "";
+}
+
+export function isAdultSize(size?: string | null): boolean {
+  if (!size) return false;
+  return ADULT_SIZES.includes(normalizeSizeKey(size) as any);
+}
+
+export function isInfantilSize(size?: string | null): boolean {
+  if (!size) return false;
+  return INFANT_SIZES.includes(normalizeSizeKey(size) as any);
+}
+
+/**
+ * Determina la línea inicial (adulto vs infantil) priorizando SIEMPRE la línea de adultos
+ * cuando existan estilos, tallas o variantes de adulto disponibles.
+ * Solo selecciona "infantil" si el producto es estrictamente infantil (ej: categoría infantil
+ * y sin ningún estilo, talla o variante de adulto).
+ */
+export function resolveInitialLine(
+  product?: {
+    categoryName?: string | null;
+    categories?: { name?: string; slug?: string }[] | null;
+    styles?: string[] | null;
+    sizes?: string[] | null;
+    variants?: { styleName?: string | null; size?: string | null }[] | null;
+  } | null,
+  categorySlug?: string
+): SizeLine {
+  if (!product) return "adulto";
+
+  const isCatInfantil =
+    isInfantilCategory(product.categoryName) ||
+    isInfantilCategory(categorySlug) ||
+    (product.categories?.some((c) => isInfantilCategory(c.name) || isInfantilCategory(c.slug)) ?? false);
+
+  const hasAdultStyles = (product.styles || []).some((st) => !isInfantilStyleName(st));
+  const hasAdultSizes = (product.sizes || []).some((s) => isAdultSize(s));
+  const hasAdultVariants = (product.variants || []).some(
+    (v) => (!v.styleName || !isInfantilStyleName(v.styleName)) && (!v.size || isAdultSize(v.size))
+  );
+
+  // Si tiene cualquier indicio o disponibilidad de adultos, priorizamos adulto
+  if (hasAdultStyles || hasAdultSizes || hasAdultVariants) {
+    return "adulto";
+  }
+
+  // Si es estrictamente de categoría infantil sin opciones de adulto
+  if (isCatInfantil) {
+    return "infantil";
+  }
+
+  return "adulto";
+}
+
+/**
+ * Obtiene el estilo inicial según la línea activa, priorizando estilos de adulto cuando line === 'adulto'.
+ */
+export function resolveInitialStyle(styles?: string[] | null, line: SizeLine = "adulto"): string {
+  const rawStyles = styles && styles.length > 0 ? styles : [];
+  const filtered = rawStyles.filter((st) =>
+    line === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st)
+  );
+
+  if (filtered.length > 0) return filtered[0];
+
+  return line === "infantil" ? INFANTIL_STYLES[0].name : ADULT_STYLES[0].name;
+}
+
+/**
+ * Obtiene la talla inicial para un estilo, priorizando tallas de adulto si no es infantil.
+ */
+export function resolveInitialSize(
+  productSizes: string[] | undefined | null,
+  styleName: string | null,
+  isInfantil: boolean
+): string {
+  const available = filterSizesForStyle(productSizes || [], styleName, isInfantil);
+  if (!isInfantil) {
+    const adultCandidate = available.find((s) => isAdultSize(s));
+    if (adultCandidate) return adultCandidate;
+  }
+  return available[0] ?? "";
 }
 
 export { isInfantilCategory };

@@ -39,8 +39,13 @@ function adaptDetail(p: ApiBlogPost): BlogPostDetail {
 const CACHE_TIMEOUT = 60;
 
 async function getAllPosts(revalidate: number = CACHE_TIMEOUT): Promise<ApiBlogPost[]> {
-  const posts = await serverApiFetch<ApiBlogPost[]>("blog", { revalidateSeconds: revalidate });
-  return posts;
+  try {
+    const posts = await serverApiFetch<ApiBlogPost[]>("blog", { revalidateSeconds: revalidate });
+    return posts || [];
+  } catch (error) {
+    console.error("Error fetching blog posts:", error);
+    return [];
+  }
 }
 
 export async function getBlogCategories(revalidate: number = CACHE_TIMEOUT): Promise<string[]> {

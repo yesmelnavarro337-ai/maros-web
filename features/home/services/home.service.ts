@@ -191,15 +191,20 @@ interface HomePageResponse {
 }
 
 export async function getFeaturedProducts(): Promise<ProductPreview[]> {
-  const home = await serverApiFetch<HomePageResponse>("home", { revalidateSeconds: 300, tags: ["home", "products"] });
-  return home.featuredProducts.map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    price: p.basePrice,
-    image: p.thumbnailUrl ?? "",
-    images: p.images ?? [],
-    categoryName: p.categoryName ?? undefined,
-    styleName: p.styleName ?? undefined,
-  }));
+  try {
+    const home = await serverApiFetch<HomePageResponse>("home", { revalidateSeconds: 300, tags: ["home", "products"] });
+    return home.featuredProducts.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      price: p.basePrice,
+      image: p.thumbnailUrl ?? "",
+      images: p.images ?? [],
+      categoryName: p.categoryName ?? undefined,
+      styleName: p.styleName ?? undefined,
+    }));
+  } catch (error) {
+    console.error("Error fetching featured products for home:", error);
+    return [];
+  }
 }

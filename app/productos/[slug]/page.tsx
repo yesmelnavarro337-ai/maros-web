@@ -8,7 +8,7 @@ import { getProductDetail, getRelatedProducts } from "@/features/product-detail/
 import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
 import { JsonLd, breadcrumbJsonLd, productJsonLd } from "@/lib/seo/json-ld";
-import { cloudinaryUrlList } from "@/lib/images/cloudinary";
+import { cloudinaryUrl, cloudinaryUrlList } from "@/lib/images/cloudinary";
 import { getPublicSettings } from "@/features/settings/services/settings.server";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -22,11 +22,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     .replace(/\s+/g, " ")
     .trim();
 
+  const rawImage = product.seoSocialImageUrl || product.images?.[0];
+  const imageUrl = rawImage ? (rawImage.startsWith("http") ? rawImage : cloudinaryUrl(rawImage)) : undefined;
+
   return buildMetadata({
-    title: product.seoTitle || product.name,
-    description: cleanDescription.slice(0, 160),
+    title: product.seoTitle || `${product.name} | Maro's Pijamas`,
+    description: cleanDescription ? cleanDescription.slice(0, 160) : `Pijama personalizada ${product.name} confeccionada a mano con amor en Colombia.`,
     path: `/productos/${product.slug}`,
-    image: product.seoSocialImageUrl || product.images[0],
+    image: imageUrl,
   });
 }
 

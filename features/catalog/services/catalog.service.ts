@@ -65,15 +65,25 @@ function adaptProduct(p: ApiCatalogProduct): CatalogProductItem {
 }
 
 export async function getCategories(): Promise<ApiCategory[]> {
-  return serverApiFetch<ApiCategory[]>("categories", { revalidateSeconds: 300, tags: ["categories"] });
+  try {
+    return await serverApiFetch<ApiCategory[]>("categories", { revalidateSeconds: 300, tags: ["categories"] });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
 }
 
 export async function getFeaturedCatalog(): Promise<CatalogProductItem[]> {
-  const products = await serverApiFetch<ApiCatalogProduct[]>("products/featured-catalog", {
-    revalidateSeconds: 300,
-    tags: ["featured-catalog", "products"],
-  });
-  return products.map(adaptProduct);
+  try {
+    const products = await serverApiFetch<ApiCatalogProduct[]>("products/featured-catalog", {
+      revalidateSeconds: 300,
+      tags: ["featured-catalog", "products"],
+    });
+    return products.map(adaptProduct);
+  } catch (error) {
+    console.error("Error fetching featured catalog:", error);
+    return [];
+  }
 }
 
 function applySort(products: CatalogProductItem[], sort?: SortOption): CatalogProductItem[] {
@@ -85,52 +95,57 @@ function applySort(products: CatalogProductItem[], sort?: SortOption): CatalogPr
 }
 
 export async function getCatalogProducts(params: CatalogSearchParams): Promise<CatalogProductItem[]> {
-  const query = new URLSearchParams();
+  try {
+    const query = new URLSearchParams();
 
-  // Filtros multi-valor: el backend espera valores separados por coma.
-  if (params.categoria) query.set("categories", params.categoria);
-  if (params.talla) query.set("sizes", params.talla);
-  if (params.color) query.set("colors", params.color);
-  if (params.buscar) query.set("search", params.buscar);
+    // Filtros multi-valor: el backend espera valores separados por coma.
+    if (params.categoria) query.set("categories", params.categoria);
+    if (params.talla) query.set("sizes", params.talla);
+    if (params.color) query.set("colors", params.color);
+    if (params.buscar) query.set("search", params.buscar);
 
-  const queryString = query.toString();
-  const products = await serverApiFetch<ApiCatalogProduct[]>(
-    `products${queryString ? `?${queryString}` : ""}`,
-    {
-      tags: ["products", "categories"],
-    }
-  );
-  let adapted = products.map(adaptProduct);
-
-  // Filtrado defensivo en memoria (por si el catálogo se sirve desde una API
-  // sin soporte multi-valor): mantiene coherencia con los filtros de la URL.
-  const categorySlugs = parseFilterList(params.categoria).map((slug) => slug.toLowerCase());
-  if (categorySlugs.length > 0) {
-    adapted = adapted.filter((p) =>
-      p.categories.some((c) => categorySlugs.includes((c.slug || "").toLowerCase()))
+    const queryString = query.toString();
+    const products = await serverApiFetch<ApiCatalogProduct[]>(
+      `products${queryString ? `?${queryString}` : ""}`,
+      {
+        tags: ["products", "categories"],
+      }
     );
-  }
+    let adapted = products.map(adaptProduct);
 
-  const sizeList = parseFilterList(params.talla).map((size) => size.toLowerCase());
-  if (sizeList.length > 0) {
-    adapted = adapted.filter((p) => p.sizes.some((s) => sizeList.includes(s.toLowerCase())));
-  }
+    // Filtrado defensivo en memoria (por si el catálogo se sirve desde una API
+    // sin soporte multi-valor): mantiene coherencia con los filtros de la URL.
+    const categorySlugs = parseFilterList(params.categoria).map((slug) => slug.toLowerCase());
+    if (categorySlugs.length > 0) {
+      adapted = adapted.filter((p) =>
+        p.categories.some((c) => categorySlugs.includes((c.slug || "").toLowerCase()))
+      );
+    }
 
-  const colorList = parseFilterList(params.color).map((color) => color.toLowerCase());
-  if (colorList.length > 0) {
-    adapted = adapted.filter((p) => p.colors.some((c) => colorList.includes(c.name.toLowerCase())));
-  }
+    const sizeList = parseFilterList(params.talla).map((size) => size.toLowerCase());
+    if (sizeList.length > 0) {
+      adapted = adapted.filter((p) => p.sizes.some((s) => sizeList.includes(s.toLowerCase())));
+    }
 
-  if (params.precioMin) {
-    const min = Number(params.precioMin);
-    if (!Number.isNaN(min)) adapted = adapted.filter((p) => p.price >= min);
-  }
-  if (params.precioMax) {
-    const max = Number(params.precioMax);
-    if (!Number.isNaN(max)) adapted = adapted.filter((p) => p.price <= max);
-  }
+    const colorList = parseFilterList(params.color).map((color) => color.toLowerCase());
+    if (colorList.length > 0) {
+      adapted = adapted.filter((p) => p.colors.some((c) => colorList.includes(c.name.toLowerCase())));
+    }
 
-  return applySort(adapted, params.orden);
+    if (params.precioMin) {
+      const min = Number(params.precioMin);
+      if (!Number.isNaN(min)) adapted = adapted.filter((p) => p.price >= min);
+    }
+    if (params.precioMax) {
+      const max = Number(params.precioMax);
+      if (!Number.isNaN(max)) adapted = adapted.filter((p) => p.price <= max);
+    }
+
+    return applySort(adapted, params.orden);
+  } catch (error) {
+    console.error("Error fetching catalog products:", error);
+    return [];
+  }
 }
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];

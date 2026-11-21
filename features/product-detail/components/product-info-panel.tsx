@@ -19,6 +19,9 @@ import {
   isInfantilCategory,
   isInfantilStyleName,
   resolveSelectedSize,
+  resolveInitialLine,
+  resolveInitialStyle,
+  resolveInitialSize,
 } from "../utils/size-helpers";
 import {
   calculateProductPriceDetails,
@@ -87,16 +90,8 @@ export function ProductInfoPanel({
   }, [colorsList, colorName]);
 
   // ── Selector de Categoría (Adultos vs Infantil) ──
-  const isProductCategoryInfantil =
-    isInfantilCategory(product.categoryName) ||
-    isInfantilCategory(categorySlug) ||
-    (product.categories?.some((c) => isInfantilCategory(c.name) || isInfantilCategory(c.slug)) ?? false);
-
-  const initialCandidate = product.styles?.[0] ?? "";
-  const initialLine: "adulto" | "infantil" =
-    isProductCategoryInfantil || (initialCandidate ? isInfantilStyleName(initialCandidate) : false)
-      ? "infantil"
-      : "adulto";
+  // Se prioriza adultos a menos que el producto sea estrictamente infantil
+  const initialLine: "adulto" | "infantil" = resolveInitialLine(product, categorySlug);
 
   const [selectedLine, setSelectedLine] = useState<"adulto" | "infantil">(initialLine);
   const [styleError, setStyleError] = useState(false);
@@ -116,36 +111,15 @@ export function ProductInfoPanel({
       : ADULT_STYLES.map((s) => s.name);
   }, [product.styles, selectedLine]);
 
-  // Se inicializa el estilo garantizando auto-selección del primer estilo disponible
+  // Se inicializa el estilo garantizando auto-selección priorizando adultos
   const [style, setStyle] = useState<string>(() => {
-    const rawStyles = product.styles && product.styles.length > 0 ? product.styles : [];
-    const filtered = rawStyles.filter((st) =>
-      initialLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st)
-    );
-    const stylesList =
-      filtered.length > 0
-        ? filtered
-        : initialLine === "infantil"
-        ? INFANTIL_STYLES.map((s) => s.name)
-        : ADULT_STYLES.map((s) => s.name);
-    return stylesList[0] ?? "";
+    return resolveInitialStyle(product.styles, initialLine);
   });
 
-  // Tallas iniciales según el estilo inicial
+  // Tallas iniciales según el estilo inicial (priorizando tallas de adulto si initialLine === 'adulto')
   const [size, setSize] = useState<string>(() => {
-    const rawStyles = product.styles && product.styles.length > 0 ? product.styles : [];
-    const filtered = rawStyles.filter((st) =>
-      initialLine === "infantil" ? isInfantilStyleName(st) : !isInfantilStyleName(st)
-    );
-    const stylesList =
-      filtered.length > 0
-        ? filtered
-        : initialLine === "infantil"
-        ? INFANTIL_STYLES.map((s) => s.name)
-        : ADULT_STYLES.map((s) => s.name);
-    const defaultStyle = stylesList[0] ?? "";
-    const lineSizes = filterSizesForStyle(product.sizes, defaultStyle, initialLine === "infantil");
-    return lineSizes[0] ?? "";
+    const defaultStyle = resolveInitialStyle(product.styles, initialLine);
+    return resolveInitialSize(product.sizes, defaultStyle, initialLine === "infantil");
   });
 
   const [material, setMaterial] = useState(product.materials?.[0] ?? "");

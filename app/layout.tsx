@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/features/cart/cart-context";
 import { WishlistProvider } from "@/features/wishlist/wishlist-context";
 import { getPublicSettings } from "@/features/settings/services/settings.server";
+import { cloudinaryUrl } from "@/lib/images/cloudinary";
 import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/json-ld";
 import { MaintenanceView } from "@/features/settings/components/maintenance-view";
 
@@ -31,15 +32,29 @@ const playfair = Playfair_Display({
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSettings();
   const siteName = settings.siteName || "Maro's Pijamas";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://maros-pijamas.vercel.app";
   const title = settings.seoMetaTitle || `${siteName} — Pijamas personalizadas hechas a mano`;
   const description = settings.seoMetaDescription || settings.description;
 
-  // Imagen social por defecto: /og-image.png (1200x630) en public/. Si el admin
-  // configuró una social image propia, esa tiene prioridad.
-  const ogImage = settings.seoSocialImageUrl
-    ? { url: settings.seoSocialImageUrl, width: 1200, height: 630, alt: title }
-    : { url: "/og-image.png", width: 1200, height: 630, alt: title };
+  // Imagen social por defecto: si el admin configuró una imagen social propia en HTTPS se usa esa;
+  // de lo contrario, el logo/banner oficial en HTTPS.
+  let ogImageUrl = `${siteUrl}/og-image.png`;
+  if (settings.seoSocialImageUrl) {
+    ogImageUrl = settings.seoSocialImageUrl.startsWith("http")
+      ? settings.seoSocialImageUrl
+      : cloudinaryUrl(settings.seoSocialImageUrl);
+  } else if (settings.logoUrl) {
+    ogImageUrl = settings.logoUrl.startsWith("http")
+      ? settings.logoUrl
+      : cloudinaryUrl(settings.logoUrl);
+  }
+
+  const ogImage = {
+    url: ogImageUrl,
+    width: 1200,
+    height: 630,
+    alt: `${siteName} — Pijamas personalizadas`,
+  };
 
   return {
     metadataBase: new URL(siteUrl),
@@ -51,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: "/",
+      url: siteUrl,
       siteName,
       locale: "es_CO",
       type: "website",
@@ -61,11 +76,10 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
-      images: settings.seoSocialImageUrl ? [settings.seoSocialImageUrl] : ["/og-image.png"],
+      images: [ogImageUrl],
     },
     icons: {
-      // ?v=2 fuerza a los navegadores a re-descargar el favicon (la caché de
-      // favicons es agresiva y no se actualiza con recargas normales).
+      // ?v=2 fuerza a los navegadores a re-descargar el favicon
       icon: [{ url: "/favicon.ico?v=2", sizes: "any", type: "image/x-icon" }],
       apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
     },

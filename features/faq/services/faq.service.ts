@@ -15,6 +15,11 @@ function adaptFaq(item: ApiFaqItem, index: number): FaqItem {
 }
 
 export async function getFaqItems(): Promise<FaqItem[]> {
-  const items = await serverApiFetch<ApiFaqItem[]>("faq");
-  return items.map(adaptFaq);
+  try {
+    const items = await serverApiFetch<ApiFaqItem[]>("faq");
+    return items.map(adaptFaq);
+  } catch (error) {
+    console.error("Error fetching FAQ items:", error);
+    return [];
+  }
 }

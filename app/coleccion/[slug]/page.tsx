@@ -3,9 +3,10 @@ import { getCollections } from "@/features/collections/services/collections.serv
 
 export const revalidate = 300;
 
-export default async function ColeccionPage({ params }: { params: { slug: string } }) {
+export default async function ColeccionPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const collections = await getCollections();
-  const collection = collections.find((c) => c.id === params.slug || c.name.toLowerCase().includes(params.slug.toLowerCase()));
+  const collection = collections.find((c) => c.id === slug || c.name.toLowerCase().includes(slug.toLowerCase()));
 
   if (!collection) {
     return (

@@ -10,6 +10,11 @@ import { submitQuotation } from "@/features/quotation/services/quotation.service
 import { getProductSummaryClient } from "@/features/product-detail/services/product-detail.client";
 import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
 import {
+  resolveInitialLine,
+  resolveInitialStyle,
+  resolveInitialSize,
+} from "@/features/product-detail/utils/size-helpers";
+import {
   getFabrics,
   getColors,
   getPrints,
@@ -84,17 +89,19 @@ export default function CotizarPage() {
           return;
         }
 
-        const size = searchParams.get("talla") ?? product.sizes[0] ?? "";
+        const initialLine = resolveInitialLine(product);
+        const style = searchParams.get("estilo") || resolveInitialStyle(product.styles, initialLine);
+        const size = searchParams.get("talla") || resolveInitialSize(product.sizes, style, initialLine === "infantil");
         const colorHex = searchParams.get("color") ?? "";
         const quantity = Math.max(1, Number(searchParams.get("cantidad") ?? "1"));
         const colorName = product.colors.find((c) => c.hex === colorHex)?.name;
-        const style = searchParams.get("estilo") ?? "";
 
         const priceDetails = calculateProductPriceDetails({
           basePrice: product.basePrice,
-          categoryName: product.categoryName,
+          categoryName: initialLine === "infantil" ? "Infantil" : product.categoryName,
           styleName: style,
           size,
+          line: initialLine,
         });
 
         const unitPrice = priceDetails.finalPrice;
