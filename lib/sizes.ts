@@ -7,6 +7,14 @@
  * el filtro lateral y los selectores pueden mostrar tallas desordenadas.
  */
 export const SIZE_ORDER = [
+  // Línea adultos (prioridad canónica en catálogo, tarjetas y filtros)
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "2XL",
+  "3XL",
   // Línea infantil
   "0-3M",
   "3-6M",
@@ -20,14 +28,6 @@ export const SIZE_ORDER = [
   "12",
   "14",
   "16",
-  // Línea adultos
-  "XS",
-  "S",
-  "M",
-  "L",
-  "XL",
-  "2XL",
-  "3XL",
 ] as const;
 
 export type KnownSize = (typeof SIZE_ORDER)[number];

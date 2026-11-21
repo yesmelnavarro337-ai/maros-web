@@ -481,14 +481,15 @@ export function ProductQuickViewModal({
    * Cada vez que cambia el producto (apertura del modal o cambio de preview con
    * el modal abierto) las selecciones vuelven a sus valores iniciales acordes a la línea.
    */
-  const [previousProductId, setPreviousProductId] = useState<string | number | undefined>(product?.id);
-  if (previousProductId !== product?.id) {
-    setPreviousProductId(product?.id);
+  const currentTargetId = product?.id || previewProduct?.id;
+  const [previousProductId, setPreviousProductId] = useState<string | number | undefined>(currentTargetId);
+  if (previousProductId !== currentTargetId) {
+    setPreviousProductId(currentTargetId);
     const nextLine: "adulto" | "infantil" = resolveInitialLine(product ?? previewProduct);
     setSelectedLine(nextLine);
 
     const nextStyle = resolveInitialStyle(product?.styles, nextLine);
-    const nextSize = resolveInitialSize(product?.sizes, nextStyle, nextLine === "infantil");
+    const nextSize = resolveInitialSize(product?.sizes ?? previewProduct?.sizes, nextStyle, nextLine === "infantil");
 
     setSelectedColorName(availableColors[0]?.name ?? "");
     setSelectedStyle(nextStyle);

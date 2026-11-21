@@ -9,7 +9,13 @@ import type { ProductPreview } from "@/types/product";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
 import { sortSizes } from "@/lib/sizes";
 import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
-import { isInfantilCategory } from "@/features/product-detail/utils/size-helpers";
+import {
+  isInfantilCategory,
+  isAdultSize,
+  isInfantilStyleName,
+  resolveInitialLine,
+  resolveInitialStyle,
+} from "@/features/product-detail/utils/size-helpers";
 
 export function ProductCard({
   product,
@@ -27,13 +33,21 @@ export function ProductCard({
     ? `/productos/${product.slug}?categoria=${encodeURIComponent(categorySlug)}`
     : `/productos/${product.slug}`;
 
+  const line = resolveInitialLine(product, categorySlug);
+  const effectiveStyle =
+    line === "adulto" && isInfantilStyleName(product.styleName)
+      ? resolveInitialStyle(null, "adulto")
+      : (product.styleName ?? resolveInitialStyle(null, line));
+
   const priceDetails = calculateProductPriceDetails({
     basePrice: product.price,
-    // El nombre del estilo define la tarifa; la categoría solo aporta el género.
-    categoryName: product.categoryName ?? categorySlug,
-    styleName: product.styleName,
-    line: isInfantilCategory(product.categoryName ?? categorySlug) ? "infantil" : "adulto",
+    categoryName: line === "infantil" ? (product.categoryName ?? categorySlug) : (isInfantilCategory(product.categoryName) ? "Pijamas de mujer" : product.categoryName ?? categorySlug),
+    styleName: effectiveStyle,
+    line,
   });
+
+  const adultSizes = sortSizes((product.sizes ?? []).filter(isAdultSize));
+  const displaySizes = line === "adulto" && adultSizes.length > 0 ? adultSizes : sortSizes(product.sizes ?? []);
 
   return (
     <Link
@@ -124,11 +138,9 @@ export function ProductCard({
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
           No disponible en tallas
         </span>
-      ) : product.sizes && product.sizes.length > 0 ? (
+      ) : displaySizes.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-          {/* Se ordenan para que el resumen de tallas sea siempre el mismo,
-              y no dependa del orden en que la API las devuelve. */}
-          {sortSizes(product.sizes).slice(0, 4).map((s) => (
+          {displaySizes.slice(0, 4).map((s) => (
             <span
               key={s}
               className="h-6 min-w-6 px-1.5 inline-flex items-center justify-center rounded-md border border-border text-[10px] font-medium text-foreground"
@@ -136,13 +148,13 @@ export function ProductCard({
               {s}
             </span>
           ))}
-          {product.sizes.length > 4 && (
-            <span className="text-[10px] text-muted-foreground">+{product.sizes.length - 4}</span>
+          {displaySizes.length > 4 && (
+            <span className="text-[10px] text-muted-foreground">+{displaySizes.length - 4}</span>
           )}
-          {product.sizes.length > 0 && (
+          {displaySizes.length > 0 && (
             <span className="inline-flex items-center gap-0.5 text-[10px] text-primary">
               <Check className="h-3 w-3" />
-              {product.sizes.length} tallas
+              {displaySizes.length} tallas
             </span>
           )}
         </div>
