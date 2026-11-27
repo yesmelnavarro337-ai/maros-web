@@ -28,6 +28,7 @@ import {
   ADULT_STYLES,
   INFANTIL_STYLES,
 } from "../utils/price-helpers";
+import { BlackDaysPriceTag } from "@/features/promotions/components/black-days-card-badge";
 
 /**
  * Coincidencia tolerante de estilo: compara nombres normalizados ignorando sufijos
@@ -332,14 +333,19 @@ export function ProductInfoPanel({
 
       {/* ── Bloque de precio con desglose ── */}
       <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-baseline gap-2">
-          <span className="font-heading text-3xl font-extrabold text-foreground">
-            ${priceDetails.finalPrice.toLocaleString("es-CO")} COP
-          </span>
-          {priceDetails.hasDiscount && (
-            <span className="text-sm text-muted-foreground line-through">
-              ${priceDetails.subtotalPrice.toLocaleString("es-CO")} COP
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="font-heading text-3xl font-extrabold text-foreground">
+              ${priceDetails.finalPrice.toLocaleString("es-CO")} COP
             </span>
+            {priceDetails.hasDiscount && (
+              <span className="text-sm text-muted-foreground line-through">
+                ${priceDetails.subtotalPrice.toLocaleString("es-CO")} COP
+              </span>
+            )}
+          </div>
+          {priceDetails.hasDiscount && (
+            <BlackDaysPriceTag />
           )}
         </div>
 
@@ -347,7 +353,7 @@ export function ProductInfoPanel({
           {priceDetails.hasDiscount && (
             <Badge variant="secondary" className="bg-primary text-primary-foreground border-transparent shadow-xs">
               <Sparkles className="h-3 w-3 mr-1 text-accent" />
-              5% OFF
+              Black Days 5% OFF
             </Badge>
           )}
           {priceDetails.isPlusSize && (

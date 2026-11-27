@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderSummaryCard } from "@/features/quotation/components/order-summary-card";
+import { BlackDaysPromoNotice } from "@/features/promotions/components/black-days-promo-notice";
 import { QuotationForm } from "@/features/quotation/components/quotation-form";
 import { QuotationSuccess } from "@/features/quotation/components/quotation-success";
 import { submitQuotation } from "@/features/quotation/services/quotation.service";
@@ -204,6 +205,8 @@ export default function CotizarPage() {
       <p className="text-muted-foreground mb-6">
         Completa tus datos y te contactaremos por WhatsApp.
       </p>
+
+      <BlackDaysPromoNotice compact className="mb-5" />
 
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_280px] gap-8">
         <QuotationForm onSubmit={handleSubmit} submitting={submitting} />

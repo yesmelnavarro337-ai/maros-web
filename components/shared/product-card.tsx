@@ -10,6 +10,10 @@ import { cloudinaryUrl } from "@/lib/images/cloudinary";
 import { sortSizes } from "@/lib/sizes";
 import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
 import {
+  BlackDaysCardBadge,
+  BlackDaysPriceTag,
+} from "@/features/promotions/components/black-days-card-badge";
+import {
   isInfantilCategory,
   isAdultSize,
   isInfantilStyleName,
@@ -80,16 +84,15 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Badges superiores: Agotado ó 5% OFF */}
+        {/* Badges superiores: Agotado ó Black Days 5% OFF */}
         {soldOut ? (
           <span className="absolute top-2 left-2 rounded-full bg-foreground/90 text-background text-[10px] font-medium uppercase tracking-wide px-2.5 py-1 z-10 shadow-xs">
             Agotado
           </span>
         ) : priceDetails.hasDiscount ? (
-          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-foreground text-background text-[9px] font-semibold tracking-wide px-2 py-1 shadow-xs max-w-[calc(100%-3rem)] animate-[pulse_3s_ease-in-out_infinite]">
-            <Sparkles className="h-3 w-3 shrink-0 text-accent animate-spin-slow" />
-            5% OFF
-          </span>
+          <div className="absolute top-2 left-2 z-10 select-none max-w-[calc(100%-3rem)]">
+            <BlackDaysCardBadge />
+          </div>
         ) : null}
 
         <WishlistButton
@@ -122,15 +125,23 @@ export function ProductCard({
 
       <p className="font-heading text-base text-foreground mt-2.5 truncate group-hover:text-primary transition-colors duration-200">{product.name}</p>
 
-      {/* Bloque de Precio con Descuento del 5% */}
-      <div className="flex items-baseline gap-1.5 mt-0.5">
-        <span className="text-sm font-bold text-foreground">
-          ${priceDetails.finalPrice.toLocaleString("es-CO")} COP
-        </span>
-        {priceDetails.hasDiscount && (
-          <span className="text-xs text-muted-foreground line-through">
-            ${priceDetails.subtotalPrice.toLocaleString("es-CO")}
+      {/* Bloque de Precio con Descuento de Black Days y etiqueta 5% OFF */}
+      <div className="flex items-center justify-between gap-1.5 mt-1 min-h-[22px]">
+        <div className="flex items-baseline gap-1.5 min-w-0 flex-wrap">
+          <span className="text-sm sm:text-base font-bold text-foreground tracking-tight">
+            ${priceDetails.finalPrice.toLocaleString("es-CO")}
           </span>
+          {priceDetails.hasDiscount ? (
+            <span className="text-[11px] sm:text-xs text-muted-foreground line-through">
+              ${priceDetails.subtotalPrice.toLocaleString("es-CO")}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground font-normal">COP</span>
+          )}
+        </div>
+
+        {priceDetails.hasDiscount && (
+          <BlackDaysPriceTag />
         )}
       </div>
 

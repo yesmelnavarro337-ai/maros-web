@@ -1,16 +1,10 @@
 import type { ProductDetailCategory } from "../types";
+import { isBlackDaysActive, PROMO_DISCOUNT_PERCENT } from "@/lib/promotions/black-days";
 
-/** Rango de fechas del 5% de descuento activo a todo el catálogo (04 de octubre al 09 de noviembre). */
-export const PROMO_DISCOUNT_PERCENT = 0.05;
+export { PROMO_DISCOUNT_PERCENT } from "@/lib/promotions/black-days";
 
 export function isPromoActive(currentDate = new Date()): boolean {
-  const year = currentDate.getFullYear();
-  // Mes 9 es Octubre (0-indexed: 0=Enero ... 9=Octubre)
-  const startDate = new Date(year, 9, 4, 0, 0, 0);
-  // Mes 10 es Noviembre (10=Noviembre)
-  const endDate = new Date(year, 10, 9, 23, 59, 59);
-
-  return currentDate >= startDate && currentDate <= endDate;
+  return isBlackDaysActive(currentDate);
 }
 
 /** Determina si una talla es mayor a L (> L). */
@@ -63,7 +57,7 @@ const isPantalon = (text: string) => text.includes("pantalón") || text.includes
 /**
  * Nota: Las tallas infantiles mayores a la 8 (> 8: 10, 12, 14, 16) aplican un recargo
  * automático de +$10.000 COP (SURCHARGE_INFANTIL_YOUTH), armonizado con la línea de adultos.
- * El descuento promocional (5% OFF) se aplica limpiamente sobre el precio base del estilo.
+ * El descuento de Black Days (5% OFF) se aplica limpiamente sobre el precio base del estilo.
  */
 
 /**
@@ -379,7 +373,7 @@ export interface CalculatedPriceDetails {
   sizeSurcharge: number;
   embroiderySurcharge: number;
   subtotalPrice: number; // Subtotal sin descuento (base + recargos)
-  discountAmount: number; // 5% de descuento sobre precio base
+  discountAmount: number; // 5% de descuento Black Days sobre precio base
   finalPrice: number; // PrecioFinal = (PrecioEstiloBase - 5% Desc) + recargo talla + bordado
   hasDiscount: boolean;
   isPlusSize: boolean;

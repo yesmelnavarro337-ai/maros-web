@@ -39,6 +39,10 @@ import {
   ADULT_STYLES,
   INFANTIL_STYLES,
 } from "@/features/product-detail/utils/price-helpers";
+import {
+  BlackDaysCardBadge,
+  BlackDaysPriceTag,
+} from "@/features/promotions/components/black-days-card-badge";
 import { filterImagesByColor } from "@/features/product-detail/utils/image-filter";
 import { sortSizes } from "@/lib/sizes";
 import {
@@ -279,6 +283,7 @@ function QuickViewGallery({
         className="relative flex-1 w-full min-w-0 aspect-[3/4] max-h-[500px] md:max-h-[min(500px,calc(90vh-3rem))] rounded-xl bg-secondary overflow-hidden select-none"
         style={{ touchAction: "pan-y" }}
       >
+        <BlackDaysCardBadge className="absolute top-2.5 left-2.5 z-20" />
         {activeImage?.url ? (
           <Image
             src={cloudinaryUrl(activeImage.url)}
@@ -783,14 +788,19 @@ export function ProductQuickViewModal({
 
               {/* Price */}
               <div className="flex flex-col gap-1">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-heading text-2xl font-bold text-foreground">
-                    ${priceDetails.finalPrice.toLocaleString("es-CO")} COP
-                  </span>
-                  {priceDetails.hasDiscount && (
-                    <span className="text-xs text-muted-foreground line-through">
-                      ${priceDetails.subtotalPrice.toLocaleString("es-CO")} COP
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <span className="font-heading text-2xl font-bold text-foreground">
+                      ${priceDetails.finalPrice.toLocaleString("es-CO")} COP
                     </span>
+                    {priceDetails.hasDiscount && (
+                      <span className="text-xs text-muted-foreground line-through">
+                        ${priceDetails.subtotalPrice.toLocaleString("es-CO")} COP
+                      </span>
+                    )}
+                  </div>
+                  {priceDetails.hasDiscount && (
+                    <BlackDaysPriceTag />
                   )}
                 </div>
 
@@ -798,7 +808,7 @@ export function ProductQuickViewModal({
                   {priceDetails.hasDiscount && (
                     <Badge variant="secondary" className="bg-primary text-primary-foreground border-transparent text-[10px] shadow-xs">
                       <Sparkles className="h-2.5 w-2.5 mr-1 text-accent" />
-                      5% OFF
+                      Black Days 5% OFF
                     </Badge>
                   )}
                   {priceDetails.isPlusSize && (

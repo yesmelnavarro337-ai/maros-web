@@ -11,6 +11,16 @@ import { useQuickView } from "@/features/catalog/hooks/use-quick-view";
 import type { ProductPreview } from "@/types/product";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
 import { calculateProductPriceDetails } from "@/features/product-detail/utils/price-helpers";
+import {
+  BlackDaysCardBadge,
+  BlackDaysPriceTag,
+} from "@/features/promotions/components/black-days-card-badge";
+import {
+  isInfantilCategory,
+  isInfantilStyleName,
+  resolveInitialLine,
+  resolveInitialStyle,
+} from "@/features/product-detail/utils/size-helpers";
 
 export function FeaturedProducts({ products }: { products: ProductPreview[] }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -149,10 +159,17 @@ export function FeaturedProducts({ products }: { products: ProductPreview[] }) {
           const secondImage = productImages.length > 1 ? productImages[1] : undefined;
           const soldOut = product.available === false;
 
+          const line = resolveInitialLine(product);
+          const effectiveStyle =
+            line === "adulto" && isInfantilStyleName(product.styleName)
+              ? resolveInitialStyle(null, "adulto")
+              : (product.styleName ?? resolveInitialStyle(null, line));
+
           const priceDetails = calculateProductPriceDetails({
             basePrice: product.price,
-            categoryName: product.categoryName,
-            styleName: product.styleName,
+            categoryName: line === "infantil" ? product.categoryName : (isInfantilCategory(product.categoryName) ? "Pijamas de mujer" : product.categoryName),
+            styleName: effectiveStyle,
+            line,
           });
 
           return (
@@ -190,16 +207,15 @@ export function FeaturedProducts({ products }: { products: ProductPreview[] }) {
                     )}
                   </Link>
 
-                  {/* Badges superiores: Agotado ó 5% OFF */}
+                  {/* Badges superiores: Agotado ó Black Days */}
                   {soldOut ? (
                     <span className="absolute top-2.5 left-2.5 z-10 rounded-full bg-foreground/90 text-background text-[10px] font-medium uppercase tracking-wide px-2.5 py-1 shadow-xs">
                       Agotado
                     </span>
                   ) : priceDetails.hasDiscount ? (
-                    <span className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#34351F] text-white text-[9px] font-semibold tracking-wide px-2 py-1 shadow-xs max-w-[calc(100%-3rem)] animate-[pulse_3s_ease-in-out_infinite]">
-                      <Sparkles className="h-3 w-3 shrink-0 text-[#B6AE3A]" />
-                      5% OFF
-                    </span>
+                    <div className="absolute top-2.5 left-2.5 z-10 select-none max-w-[calc(100%-3rem)]">
+                      <BlackDaysCardBadge />
+                    </div>
                   ) : null}
 
                   {/* Botón de Favoritos flotante */}
@@ -236,15 +252,21 @@ export function FeaturedProducts({ products }: { products: ProductPreview[] }) {
                     <Link href={`/productos/${product.slug}`}>{product.name}</Link>
                   </h3>
 
-                  {/* Precio con descuento promocional */}
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="font-sans text-xs sm:text-sm font-semibold text-[#34351F]">
-                      $ {priceDetails.finalPrice.toLocaleString("es-CO")}
-                    </span>
-                    {priceDetails.hasDiscount && (
-                      <span className="text-[11px] text-stone-400 line-through">
-                        $ {priceDetails.subtotalPrice.toLocaleString("es-CO")}
+                  {/* Bloque de Precio con Descuento de Black Days y etiqueta 5% OFF */}
+                  <div className="flex items-center justify-between gap-1.5 mt-1 min-h-[22px]">
+                    <div className="flex items-baseline gap-1.5 min-w-0 flex-wrap">
+                      <span className="font-sans text-xs sm:text-sm lg:text-[15px] font-bold text-[#34351F]">
+                        ${priceDetails.finalPrice.toLocaleString("es-CO")}
                       </span>
+                      {priceDetails.hasDiscount && (
+                        <span className="text-[11px] sm:text-xs text-stone-400 line-through">
+                          ${priceDetails.subtotalPrice.toLocaleString("es-CO")}
+                        </span>
+                      )}
+                    </div>
+
+                    {priceDetails.hasDiscount && (
+                      <BlackDaysPriceTag />
                     )}
                   </div>
                 </div>

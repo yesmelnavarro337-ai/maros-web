@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import type { ProductDetailImage } from "../types";
 import { filterImagesByColor } from "../utils/image-filter";
+import { BlackDaysCardBadge } from "@/features/promotions/components/black-days-card-badge";
 
 export type GalleryImageInput = string | ProductDetailImage;
 
@@ -156,6 +157,7 @@ export function ProductGallery({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          <BlackDaysCardBadge className="absolute top-3 left-3 z-20" />
           {activeImage?.url ? (
             <Image
               src={cloudinaryUrl(activeImage.url)}

@@ -10,6 +10,8 @@ import { AmbientAudioPlayer } from "@/components/shared/ambient-audio-player";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/features/cart/cart-context";
 import { WishlistProvider } from "@/features/wishlist/wishlist-context";
+import { BlackDaysCountdownProvider } from "@/features/promotions/components/black-days-countdown-provider";
+import { isPromoActive } from "@/features/product-detail/utils/price-helpers";
 import { getPublicSettings } from "@/features/settings/services/settings.server";
 import { cloudinaryUrl } from "@/lib/images/cloudinary";
 import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/json-ld";
@@ -111,19 +113,21 @@ export default async function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground min-h-screen overflow-x-hidden`}>
         <CartProvider>
           <WishlistProvider>
-            {/* min-h-screen + flex-col adhiere el footer al fondo del viewport y
-                evita el bloque blanco que aparecía debajo al hacer scroll en móvil. */}
-            <div className="min-h-screen flex flex-col overflow-x-hidden">
-              <AnnouncementBar />
-              <Header settings={settings} />
-              <main className="flex-1">{children}</main>
-              <Footer settings={settings} />
-              <WhatsAppFloatButton settings={settings} />
-            </div>
-            {/* Nieve navideña sutil: capa fija z-30, no intercepta clics ni scroll */}
-            <SnowEffect />
-            {/* Reproductor de audio ambiental persistente */}
-            <AmbientAudioPlayer />
+            <BlackDaysCountdownProvider initiallyActive={isPromoActive()}>
+              {/* min-h-screen + flex-col adhiere el footer al fondo del viewport y
+                  evita el bloque blanco que aparecía debajo al hacer scroll en móvil. */}
+              <div className="min-h-screen flex flex-col overflow-x-hidden">
+                <AnnouncementBar />
+                <Header settings={settings} />
+                <main className="flex-1">{children}</main>
+                <Footer settings={settings} />
+                <WhatsAppFloatButton settings={settings} />
+              </div>
+              {/* Nieve navideña sutil: capa fija z-30, no intercepta clics ni scroll */}
+              <SnowEffect />
+              {/* Reproductor de audio ambiental persistente */}
+              <AmbientAudioPlayer />
+            </BlackDaysCountdownProvider>
           </WishlistProvider>
         </CartProvider>
         <JsonLd
